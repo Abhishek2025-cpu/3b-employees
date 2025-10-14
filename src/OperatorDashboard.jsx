@@ -257,8 +257,8 @@ const baseStyles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom:"25px",
-   // Pushes to the bottom of the flex container
+    marginBottom: "25px",
+    // Pushes to the bottom of the flex container
     transition: 'background-color 0.2s',
   },
   logoutButtonHover: {
@@ -415,6 +415,10 @@ function OperatorDashboard() {
   const mainContentClasses = `main-content ${!isMobile ? 'main-content-shifted' : ''}`;
   const dashboardContainerClasses = `dashboard-container ${isMobile && isSidebarOpen ? 'sidebar-open-mobile' : ''}`;
 
+  const handleAssignedTaskClick = () => {
+    navigate('/assignments'); // navigate to assignments page
+  };
+
 
   return (
     <div style={baseStyles.dashboardContainer} className={dashboardContainerClasses}>
@@ -453,7 +457,7 @@ function OperatorDashboard() {
         </nav>
 
         {/* Logout button always at the bottom of the sidebar */}
-        <button onClick={handleLogout} style={{...baseStyles.logoutButton, ...baseStyles.logoutButtonHover}} className="logout-button">
+        <button onClick={handleLogout} style={{ ...baseStyles.logoutButton, ...baseStyles.logoutButtonHover }} className="logout-button">
           <FontAwesomeIcon icon={faSignOutAlt} style={baseStyles.sidebarNavIcon} />
           Logout
         </button>
@@ -496,32 +500,32 @@ function OperatorDashboard() {
         </div>
 
         {/* Dashboard Cards Grid - These stay in the main content */}
-        <div style={baseStyles.cardsGrid}>
-          <div style={{...baseStyles.card, ...baseStyles.cardHover}}>
+        <div style={baseStyles.cardsGrid} >
+          <div style={{ ...baseStyles.card, ...baseStyles.cardHover }}  onClick={handleAssignedTaskClick} >
             <FontAwesomeIcon icon={faClipboardList} style={baseStyles.cardIcon} />
             <h3 style={baseStyles.cardTitle}>Assigned Task</h3>
             <p style={baseStyles.cardCount}>{assignedTasks}</p>
           </div>
 
-          <div style={{...baseStyles.card, ...baseStyles.cardHover}}>
+          <div style={{ ...baseStyles.card, ...baseStyles.cardHover }}>
             <FontAwesomeIcon icon={faHourglassHalf} style={baseStyles.cardIcon} />
             <h3 style={baseStyles.cardTitle}>Ongoing Task</h3>
             <p style={baseStyles.cardCount}>{ongoingTasks}</p>
           </div>
 
-          <div style={{...baseStyles.card, ...baseStyles.cardHover}}>
+          <div style={{ ...baseStyles.card, ...baseStyles.cardHover }}>
             <FontAwesomeIcon icon={faCheckCircle} style={baseStyles.cardIcon} />
             <h3 style={baseStyles.cardTitle}>Completed Task</h3>
             <p style={baseStyles.cardCount}>{completedTasks}</p>
           </div>
 
-           <div style={{...baseStyles.card, ...baseStyles.cardHover}}>
+          <div style={{ ...baseStyles.card, ...baseStyles.cardHover }}>
             <FontAwesomeIcon icon={faRightLeft} style={baseStyles.cardIcon} />
             <h3 style={baseStyles.cardTitle}>Transfer Tasks</h3>
             <p style={baseStyles.cardCount}>{TransferTasks}</p>
           </div>
 
-          <div style={{...baseStyles.card, ...baseStyles.cardHover}}>
+          <div style={{ ...baseStyles.card, ...baseStyles.cardHover }}>
             <FontAwesomeIcon icon={faChartBar} style={baseStyles.cardIcon} />
             <h3 style={baseStyles.cardTitle}>Reports</h3>
             <p style={baseStyles.cardCount}>{reportsGenerated}</p>
