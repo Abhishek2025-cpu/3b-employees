@@ -107,64 +107,62 @@ function LoginPage() {
     }
   };
 
-  const handleVerifyOtp = async (e) => {
-    e.preventDefault();
-    if (!otp) {
-      return showToast('Please enter the OTP.', 'error');
+ const handleVerifyOtp = async (e) => {
+  e.preventDefault();
+  if (!otp) {
+    return showToast('Please enter the OTP.', 'error');
+  }
+  if (!/^\d{6}$/.test(otp)) { // Assuming OTP is 6 digits
+      return showToast('Please enter a valid 6-digit OTP.', 'error');
+  }
+
+  setIsLoading(true);
+
+  try {
+    const response = await fetch('https://threebtest.onrender.com/api/staff/employee/login/verify-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ otp, mobile }), // Removed sessionId since it's mocked now
+    });
+    const result = await response.json();
+
+    if (result.status) {
+      showToast(result.message, 'success');
+
+      // Store employee details in localStorage
+      localStorage.setItem('employeeId', result.employeeId);
+      localStorage.setItem('employeeName', result.name);
+      localStorage.setItem('employeeRole', result.role || 'guest');
+
+      setTimeout(() => {
+        // Redirect based on role
+        switch (result.role) {
+          case 'Admin':
+            navigate('/admin-dashboard'); 
+            break;
+          case 'Manager':
+            navigate('/manager-dashboard'); 
+            break;
+          case 'Operator':
+            navigate('/operator-dashboard'); 
+            break;
+          default:
+            navigate('/'); 
+            break;
+        }
+      }, 800);
+
+    } else {
+      showToast(result.message || 'OTP verification failed.', 'error');
     }
-    if (!/^\d{6}$/.test(otp)) { // Assuming OTP is 6 digits
-        return showToast('Please enter a valid 6-digit OTP.', 'error');
-    }
+  } catch (error) {
+    console.error('Verify OTP error:', error);
+    showToast('Network error. Please try again.', 'error');
+  } finally {
+    setIsLoading(false);
+  }
+};
 
-    setIsLoading(true);
-
-    try {
-      const response = await fetch('https://threebtest.onrender.com/api/staff/employee/login/verify-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId, otp, mobile }),
-      });
-      const result = await response.json();
-
-      if (result.status) {
-        showToast(result.message, 'success');
-
-        const userRole = result.employee?.role;
-        const userName = result.employee?.name || 'Employee';
-        const authToken = result.sessionId; // Using sessionId as a placeholder for authToken for now
-
-        localStorage.setItem('userName', userName);
-        localStorage.setItem('userRole', userRole || 'guest');
-        localStorage.setItem('authToken', authToken);
-
-        setTimeout(() => {
-          // Redirect based on role
-          switch (userRole) {
-            case 'Admin':
-              navigate('/admin-dashboard'); // Example route for Admin
-              break;
-            case 'Manager':
-              navigate('/manager-dashboard'); // Example route for Manager
-              break;
-            case 'Operator':
-              navigate('/operator-dashboard'); // Example route for Operator
-              break;
-            default:
-              navigate('/'); // Default or guest dashboard
-              break;
-          }
-        }, 800);
-
-      } else {
-        showToast(result.message || 'OTP verification failed.', 'error');
-      }
-    } catch (error) {
-      console.error('Verify OTP error:', error);
-      showToast('Network error. Please try again.', 'error');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const toastStyle = {
     ...styles.toast,
