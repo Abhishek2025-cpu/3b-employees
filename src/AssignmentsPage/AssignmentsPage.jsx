@@ -62,13 +62,48 @@ function AssignmentsPage() {
   const [employeeId, setEmployeeId] = useState('');
   const [showModal, setShowModal] = useState(false);
 
+  // Initialize form state with potential pre-fill values
   const [form, setForm] = useState({
     machineName: '',
     employeeName: '',
     mainItemId: '',
-    shift: '',
     operatorTable: '',
+    itemName: '',  // new field
+    shift: '',     // new field
   });
+
+
+  const handleSave = async (formData) => {
+  try {
+    // Prepare data for API
+    const payload = {
+      machineId: formData.machineId,         // machine ID
+      employeeIds: formData.employeeIds,     // array of employee IDs
+      mainItemId: formData.mainItemId,       // main item ID
+      shift: formData.shift,                 // shift
+      operatorTable: JSON.stringify(formData.operatorTable || []), // stringify operator table
+    };
+
+    // Call the API
+    const response = await axios.post(
+      "https://threebtest.onrender.com/api/machines/assign-machine",
+      payload
+    );
+
+    if (response.data.success) {
+      alert("Assignment saved successfully!");
+      setShowModal(false);
+
+      // Update assignments locally
+      setAssignments(prev => [...prev, response.data.data]);
+    } else {
+      alert("Failed: " + response.data.message);
+    }
+  } catch (err) {
+    console.error("API Error:", err);
+    alert("Server error while saving assignment.");
+  }
+};
 
   useEffect(() => {
     const fetchAssignments = async () => {
@@ -86,6 +121,19 @@ function AssignmentsPage() {
       try {
         const response = await getAssignmentsByEmployee(storedId);
         setAssignments(response || []);
+
+   // In AssignmentsPage.jsx, inside useEffect where you fetch assignments:
+        if (response && response.length > 0) {
+          const firstAssignment = response[0];
+          setForm(prevForm => ({
+            ...prevForm,
+            machineId: firstAssignment.machine?._id || '',
+            employeeIds: [storedId],
+            mainItemId: firstAssignment.mainItem?.itemNo || '',   // CHANGED: itemName -> mainItemId
+            shift: firstAssignment.mainItem?.shift || '',
+          }));
+        }
+
       } catch (err) {
         console.error("Error fetching assignments:", err);
         setAssignments([]);
@@ -95,16 +143,25 @@ function AssignmentsPage() {
     };
 
     fetchAssignments();
-  }, []);
+  }, []); // Empty dependency array means this runs once on mount
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSave = () => {
-    console.log("Form Data:", form);
-    alert('Data saved (check console)');
-    setShowModal(false);
+  
+
+ const handleAddButtonClick = () => {
+   
+    setForm(prevForm => ({
+    ...prevForm,
+    employeeName: employeeName,
+    machineName: assignments.length > 0 ? assignments[0].machine?.name || '' : '',
+    mainItemId: assignments.length > 0 ? assignments[0].mainItem?.itemNo || '' : '', // CHANGED: itemName -> mainItemId
+    shift: assignments.length > 0 ? assignments[0].mainItem?.shift || '' : '',
+  }));
+
+    setShowModal(true);
   };
 
   if (loading)
@@ -147,13 +204,17 @@ function AssignmentsPage() {
               <p style={baseStyles.cardRow}><strong>Helper:</strong> {a.mainItem?.helper?.name || 'N/A'}</p>
               <p style={baseStyles.cardRow}><strong>Shift:</strong> {a.mainItem?.shift || 'N/A'}</p>
               <p style={baseStyles.cardRow}><strong>Company:</strong> {a.mainItem?.company || 'N/A'}</p>
+              <p style={baseStyles.cardRow}><strong>Item Name:</strong> {a.mainItem?.itemNo || 'N/A'}</p>
+              <p style={baseStyles.cardRow}><strong>Shift:</strong> {a.mainItem?.shift || 'N/A'}</p>
+
+
             </div>
           ))}
         </div>
       )}
 
       {/* Floating Add Button */}
-      <button style={baseStyles.addButton} onClick={() => setShowModal(true)}>
+      <button style={baseStyles.addButton} onClick={handleAddButtonClick}>
         + Add Assignment
       </button>
 
