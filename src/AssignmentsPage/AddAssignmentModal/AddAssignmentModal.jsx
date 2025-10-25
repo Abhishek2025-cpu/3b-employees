@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Toast } from 'bootstrap'; // Assuming Bootstrap JS is available globally or imported
 
-const OperatorForm = () => {
+const AddAssignmentModal = () => {
   const [formData, setFormData] = useState({
     modelNumber: '',
     machineNumber: '',
@@ -199,4 +199,4 @@ const OperatorForm = () => {
   );
 };
 
-export default OperatorForm;
+export default AddAssignmentModal;
