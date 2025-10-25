@@ -84,7 +84,7 @@ function LoginPage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('https://threebtest.onrender.com/api/staff/employee/login/send-otp', {
+      const response = await fetch('https://threeb-1067354145699.asia-south1.run.app/api/staff/employee/login/send-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mobile }),
@@ -119,7 +119,7 @@ function LoginPage() {
   setIsLoading(true);
 
   try {
-    const response = await fetch('https://threebtest.onrender.com/api/staff/employee/login/verify-otp', {
+    const response = await fetch('https://threeb-1067354145699.asia-south1.run.app/api/staff/employee/login/verify-otp', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ otp, mobile }), // Removed sessionId since it's mocked now
