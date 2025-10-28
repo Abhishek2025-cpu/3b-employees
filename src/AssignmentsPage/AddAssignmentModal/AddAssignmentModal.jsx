@@ -1,54 +1,91 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-const AddAssignmentModal = ({ show, onClose, initialData, onSubmitSuccess }) => {
+import { getAssignmentsByEmployee } from "../../api/allApi/getAsignMachine.js";
+
+import assignMachineWithOperator from "../../api/allApi/assignMachine.js";
+
+
+const AddAssignmentModal = ({ show, onClose, initialData, onSubmitSuccess, employeeId }) => {
   const [formData, setFormData] = useState({
-    modelNumber: '',
-    machineNumber: '',
+    machineId: '',
+    machineName: '',
+    employeeId: '',
+    employeeName: '',
+    mainItemId: '',
+    mainItemNo: '',
     date: '',
     time: '9 - 10 A.M',
+    mainItemShift: '',
+    operatorTableShift: '',
     frameLength: '',
     numberOfBox: '',
     boxWeight: '',
     frameWeight: '',
     description: '',
-    // New field for image URL (if storing URL in DB)
     selfieUrl: '',
   });
+
   const [confirmChecked, setConfirmChecked] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastSuccess, setToastSuccess] = useState(true);
-  const [selectedImage, setSelectedImage] = useState(null); // To hold the File object
-  const [imagePreviewUrl, setImagePreviewUrl] = useState(''); // To hold the URL for preview
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState('');
 
-  const fileInputRef = useRef(null); // Ref to trigger file input click
+  const fileInputRef = useRef(null);
 
-  // Effect to populate form data when initialData changes (for editing)
+
   useEffect(() => {
-    if (initialData) {
-      setFormData({
-        modelNumber: initialData.modelNumber || '',
-        machineNumber: initialData.machineNumber || '',
-        date: initialData.date || new Date().toISOString().slice(0, 10),
-        time: initialData.time || '9 - 10 A.M',
-        frameLength: initialData.frameLength || '',
-        numberOfBox: initialData.numberOfBox || '',
-        boxWeight: initialData.boxWeight || '',
-        frameWeight: initialData.frameWeight || '',
-        description: initialData.description || '',
-        selfieUrl: initialData.selfieUrl || '', // Populate existing selfie URL
-      });
-      // Set image preview if an initial selfieUrl exists
-      if (initialData.selfieUrl) {
-        setImagePreviewUrl(initialData.selfieUrl);
+    const fetchAssignmentDetails = async () => {
+      try {
+        if (!employeeId) return;
+
+        const assignments = await getAssignmentsByEmployee(employeeId);
+
+        console.log("Fetched Assignments:", assignments);
+
+        if (assignments.length > 0) {
+          const firstAssignment = assignments[0];
+          const machine = firstAssignment.machine;
+          const employee = firstAssignment.employees[0];
+          const mainItem = firstAssignment.mainItem;
+
+          const today = new Date();
+          const yyyy = today.getFullYear();
+          const mm = String(today.getMonth() + 1).padStart(2, '0');
+          const dd = String(today.getDate()).padStart(2, '0');
+          const formattedDate = `${yyyy}-${mm}-${dd}`;
+
+          setFormData(prev => ({
+            ...prev,
+            machineId: machine?._id || '',
+            machineName: machine?.name || '',
+            employeeId: employee?._id || '',
+            employeeName: employee?.name || '',
+            mainItemId: mainItem?._id || '',
+            mainItemNo: mainItem?.itemNo || '',
+            mainItemShift: mainItem?.shift?.toLowerCase() || '',
+            date: formattedDate,
+          }));
+        }
+      } catch (error) {
+        console.error("Error loading assignment details:", error);
       }
-    } else {
-      // Reset form for new assignment
+    };
+
+    if (show) {
+      fetchAssignmentDetails();
       setFormData({
-        modelNumber: '',
-        machineNumber: '',
-        date: new Date().toISOString().slice(0, 10), // Default to current date for new
+        machineId: '',
+        machineName: '',
+        employeeId: '',
+        employeeName: '',
+        mainItemId: '',
+        mainItemNo: '',
+        date: '',
         time: '9 - 10 A.M',
+        mainItemShift: '',
+        operatorTableShift: '',
         frameLength: '',
         numberOfBox: '',
         boxWeight: '',
@@ -56,13 +93,13 @@ const AddAssignmentModal = ({ show, onClose, initialData, onSubmitSuccess }) => 
         description: '',
         selfieUrl: '',
       });
-      setImagePreviewUrl(''); // Clear preview for new assignment
-      setSelectedImage(null); // Clear selected file
+      setSelectedImage(null);
+      setImagePreviewUrl('');
+      setConfirmChecked(false);
     }
-    setConfirmChecked(false); // Always uncheck on modal open/data change
-  }, [initialData, show]);
+  }, [show, employeeId]);
 
-  // Function to show Bootstrap toast (simplified, ensure Bootstrap Toast JS is loaded)
+
   const showToast = (message, isSuccess = true) => {
     setToastMessage(message);
     setToastSuccess(isSuccess);
@@ -73,7 +110,6 @@ const AddAssignmentModal = ({ show, onClose, initialData, onSubmitSuccess }) => 
     }
   };
 
-  // Input change handler for form fields
   const handleChange = (e) => {
     const { id, value, type, checked } = e.target;
     if (type === 'checkbox') {
@@ -86,112 +122,104 @@ const AddAssignmentModal = ({ show, onClose, initialData, onSubmitSuccess }) => 
     }
   };
 
-  // Handle image file selection
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       setSelectedImage(file);
-      setImagePreviewUrl(URL.createObjectURL(file)); // Create a URL for preview
+      setImagePreviewUrl(URL.createObjectURL(file));
     } else {
       setSelectedImage(null);
       setImagePreviewUrl('');
     }
   };
 
-  // Trigger file input click (to open camera/gallery)
   const handleSelfieButtonClick = () => {
     fileInputRef.current.click();
   };
 
-  // Validate frame length
-  const validateFrameLength = (str) => {
-    const parts = str.split(',').map(s => s.trim());
-    return parts.length >= 4 && parts.every(num => /^\d{3}$/.test(num));
-  };
 
-  // Form submission handler
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const { frameLength, numberOfBox, boxWeight, frameWeight } = formData;
-
-    if (!validateFrameLength(frameLength)) {
-      showToast("Frame length must include at least four 3-digit numbers.", false);
+    if (!confirmChecked) {
+      showToast("Please confirm before submitting.", false);
       return;
+    }
+
+    if (!formData.operatorTableShift) {
+        showToast("Please select the shift for this assignment.", false);
+        return;
     }
 
     setIsSubmitting(true);
 
-    // --- IMPORTANT: Handling file uploads requires FormData ---
-    // If you need to upload an image along with other data,
-    // you must use FormData and not JSON.
-    const uploadFormData = new FormData();
-
-    uploadFormData.append('time', formData.time);
-    uploadFormData.append('frameLength', frameLength.split(",").map(s => s.trim()).join(',')); // Send as comma-separated string
-    uploadFormData.append('numberOfBox', parseInt(numberOfBox));
-    uploadFormData.append('boxWeight', parseInt(boxWeight));
-    uploadFormData.append('frameWeight', parseInt(frameWeight));
-    uploadFormData.append('description', formData.description.trim() || "NA");
-    uploadFormData.append('machineNumber', formData.machineNumber);
-    uploadFormData.append('modelNumber', formData.modelNumber);
-    uploadFormData.append('date', formData.date);
-
-    // Append the image file if selected
-    if (selectedImage) {
-      uploadFormData.append('selfie', selectedImage); // 'selfie' should be the field name your backend expects for the file
-    } else if (formData.selfieUrl && !selectedImage) {
-      // If there's an existing selfieUrl but no new image selected,
-      // send the existing URL so the backend knows to keep it or update if needed.
-      uploadFormData.append('selfieUrl', formData.selfieUrl);
-    }
-
-
-    if (initialData && initialData._id) {
-      uploadFormData.append('_id', initialData._id); // Include _id for updates
-    }
-
-
     try {
-      const url = initialData && initialData._id
-        ? "https://b2b-1ccx.onrender.com/update-assignment" // Assuming an update endpoint
-        : "https://b2b-1ccx.onrender.com/submit"; // Your original submit endpoint
+      console.log("🟢 --- FORM SUBMISSION STARTED ---");
+      console.log("🧾 Current Form Data:", formData);
+      console.log("🖼️ Selected Image Object:", selectedImage);
 
-      const method = initialData && initialData._id ? "PUT" : "POST";
+      const formDataToSend = new FormData();
 
-      const res = await fetch(url, {
-        method: method,
-        // IMPORTANT: Do NOT set Content-Type header when sending FormData
-        // The browser sets it automatically with the correct boundary.
-        // headers: { "Content-Type": "application/json" }, // REMOVE THIS LINE
-        body: uploadFormData // Send FormData directly
-      });
+      formDataToSend.append("machineId", formData.machineId);
+      formDataToSend.append("mainItemId", formData.mainItemId);
+      formDataToSend.append("shift", formData.mainItemShift);
+      formDataToSend.append("employeeIds", formData.employeeId);
 
-      const result = await res.json();
 
-      if (res.ok) {
-        showToast(`✅ Entry ${initialData ? 'updated' : 'submitted'} successfully!`);
-        if (onSubmitSuccess) {
-          onSubmitSuccess(); // Notify parent to re-fetch assignments
-        }
-      } else {
-        showToast(`❌ Error: ${result.message || 'Something went wrong'}`, false);
+      console.log("⚙️ Required Fields Added");
+
+      const operatorTable = [
+        {
+          // Removed: date: formData.date, <--- THIS LINE IS REMOVED
+          time: formData.time,
+          shift: formData.operatorTableShift,
+          frameLength: formData.frameLength.split(",").map(num => Number(num.trim())),
+          numberOfBox: Number(formData.numberOfBox),
+          boxWeight: formData.boxWeight + "kg",
+          frameWeight: formData.frameWeight + "kg",
+          description: formData.description,
+        },
+      ];
+
+
+      console.log("📊 Operator Table Object:", operatorTable);
+
+      formDataToSend.append("operatorTable", JSON.stringify(operatorTable));
+
+      if (selectedImage) {
+        formDataToSend.append("operatorImages", selectedImage);
+        console.log("📸 Image appended to formData:", selectedImage.name, selectedImage.type, selectedImage.size);
       }
-    } catch (err) {
-      console.error("Error:", err);
-      showToast("❌ Submission failed. Try again later.", false);
+
+      console.group("📦 FormData Contents:");
+      for (let [key, value] of formDataToSend.entries()) {
+        console.log(key, value);
+      }
+      console.groupEnd();
+
+      const response = await assignMachineWithOperator(formDataToSend);
+
+      if (response.success) {
+        showToast("✅ Machine assigned successfully!");
+        onSubmitSuccess?.();
+        onClose();
+      } else {
+        showToast(response.message || "Failed to assign machine.", false);
+      }
+    } catch (error) {
+      console.error("Error assigning machine:", error);
+      showToast("Server error while assigning machine.", false);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Render nothing if not shown
+
   if (!show) {
     return null;
   }
 
   return (
-    // Bootstrap Modal structure
     <div className={`modal fade ${show ? 'show d-block' : ''}`} tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
       <div className="modal-dialog modal-dialog-centered modal-lg">
         <div className="modal-content">
@@ -203,17 +231,55 @@ const AddAssignmentModal = ({ show, onClose, initialData, onSubmitSuccess }) => 
             <form onSubmit={handleSubmit}>
               <div className="row g-2 mb-3">
                 <div className="col-md-4">
-                  <label className="form-label"><i className="bi bi-cpu"></i> Model No</label>
-                  <input type="text" className="form-control form-control-sm" id="modelNumber" value={formData.modelNumber} onChange={handleChange} />
+                  <label className="form-label"><i className="bi bi-cpu"></i> Machine</label>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm"
+                    value={formData.machineName}
+                    readOnly
+                  />
+                  <input type="hidden" value={formData.machineId} />
                 </div>
+
                 <div className="col-md-4">
-                  <label className="form-label"><i className="bi bi-hdd-network"></i> Machine No</label>
-                  <input type="text" className="form-control form-control-sm" id="machineNumber" value={formData.machineNumber} onChange={handleChange} />
+                  <label className="form-label"><i className="bi bi-person-badge"></i> Employee</label>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm"
+                    value={formData.employeeName}
+                    readOnly
+                  />
+                  <input type="hidden" value={formData.employeeId} />
                 </div>
+
+                <div className="col-md-4">
+                  <label className="form-label"><i className="bi bi-box-seam"></i> Item No / Name</label>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm"
+                    value={formData.mainItemNo}
+                    readOnly
+                  />
+                  <input type="hidden" value={formData.mainItemId} />
+                </div>
+
                 <div className="col-md-4">
                   <label className="form-label"><i className="bi bi-calendar3"></i> Date</label>
                   <input type="date" className="form-control form-control-sm" id="date" value={formData.date} onChange={handleChange} />
                 </div>
+              </div>
+
+              <div className="mb-3">
+                <label htmlFor="mainItemShift" className="form-label">
+                  <i className="bi bi-briefcase me-2"></i>Main Item Shift (from API)
+                </label>
+                <input
+                  type="text"
+                  className="form-control"
+                  id="mainItemShift"
+                  value={formData.mainItemShift === 'day' ? '🌞 Day Shift' : formData.mainItemShift === 'night' ? '🌙 Night Shift' : ''}
+                  readOnly
+                />
               </div>
 
               <div className="mb-3">
@@ -231,6 +297,23 @@ const AddAssignmentModal = ({ show, onClose, initialData, onSubmitSuccess }) => 
                   <option value="6 - 7 P.M">6:00 - 7:00 P.M</option>
                   <option value="7 - 8 P.M">7:00 - 8:00 P.M</option>
                   <option value="8 - 9 P.M">8:00 - 9:00 P.M</option>
+                </select>
+              </div>
+
+              <div className="mb-3">
+                <label htmlFor="operatorTableShift" className="form-label">
+                  <i className="bi bi-brightness-alt-high-fill me-2"></i>Assignment Shift <span className="text-danger">*</span>
+                </label>
+                <select
+                  className="form-select"
+                  id="operatorTableShift"
+                  value={formData.operatorTableShift}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Select Shift for this Assignment</option>
+                  <option value="day">🌞 Day Shift</option>
+                  <option value="night">🌙 Night Shift</option>
                 </select>
               </div>
 
@@ -259,17 +342,16 @@ const AddAssignmentModal = ({ show, onClose, initialData, onSubmitSuccess }) => 
                 <textarea className="form-control" id="description" rows="2" placeholder="B/Quality, Power cut, Total waste" value={formData.description} onChange={handleChange}></textarea>
               </div>
 
-              {/* --- Selfie Upload Section --- */}
               <div className="mb-3">
                 <label className="form-label"><i className="bi bi-camera"></i> Selfie Upload</label>
                 <input
                   type="file"
-                  ref={fileInputRef} // Assign ref to the hidden input
+                  ref={fileInputRef}
                   className="form-control"
                   accept="image/*"
-                  capture="user" // Suggests front camera on mobile
+                  capture="user"
                   onChange={handleImageChange}
-                  style={{ display: 'none' }} // Hide the actual input
+                  style={{ display: 'none' }}
                 />
                 <button
                   type="button"
@@ -279,34 +361,31 @@ const AddAssignmentModal = ({ show, onClose, initialData, onSubmitSuccess }) => 
                   <i className="bi bi-camera-fill me-2"></i> Take Photo or Choose from Gallery
                 </button>
 
-                {/* Image Preview */}
                 {(imagePreviewUrl || formData.selfieUrl) && (
                   <div className="mt-3 text-center">
                     <p className="mb-2">Image Preview:</p>
                     <img
-                      src={imagePreviewUrl || formData.selfieUrl} // Use new preview first, then existing URL
+                      src={imagePreviewUrl || formData.selfieUrl}
                       alt="Selfie Preview"
                       style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '8px', objectFit: 'contain' }}
                       className="img-thumbnail"
                     />
-                    {imagePreviewUrl && ( // Only show clear button if a new image is selected
-                       <button
-                         type="button"
-                         className="btn btn-sm btn-outline-danger mt-2"
-                         onClick={() => {
-                           setSelectedImage(null);
-                           setImagePreviewUrl('');
-                           if (fileInputRef.current) fileInputRef.current.value = ''; // Clear file input
-                         }}
-                       >
-                         Clear Image
-                       </button>
+                    {imagePreviewUrl && (
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-danger mt-2"
+                        onClick={() => {
+                          setSelectedImage(null);
+                          setImagePreviewUrl('');
+                          if (fileInputRef.current) fileInputRef.current.value = '';
+                        }}
+                      >
+                        Clear Image
+                      </button>
                     )}
                   </div>
                 )}
               </div>
-              {/* --- End Selfie Upload Section --- */}
-
 
               <div className="form-check mb-3">
                 <input className="form-check-input" type="checkbox" id="confirmCheck" checked={confirmChecked} onChange={handleChange} />
@@ -324,7 +403,6 @@ const AddAssignmentModal = ({ show, onClose, initialData, onSubmitSuccess }) => 
         </div>
       </div>
 
-      {/* Toast - positioned at a fixed spot */}
       <div className="toast-container position-fixed bottom-0 end-0 p-3">
         <div id="operatorFormToast" className={`toast align-items-center text-white border-0 ${toastSuccess ? 'bg-success' : 'bg-danger'}`} role="alert">
           <div className="d-flex">

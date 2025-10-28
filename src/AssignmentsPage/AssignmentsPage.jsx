@@ -83,6 +83,9 @@ function AssignmentsPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingAssignment, setEditingAssignment] = useState(null); // State to hold data of assignment being edited
 
+
+  
+
   // Function to fetch assignments
   const fetchAssignments = async () => {
     const storedId = localStorage.getItem('employeeId');
@@ -215,6 +218,7 @@ function AssignmentsPage() {
         onClose={handleModalClose}
         initialData={editingAssignment} // Pass data if editing
         onSubmitSuccess={handleAssignmentSubmitted}
+         employeeId={employeeId}   // ✅ add this line
       />
     </div>
   );
