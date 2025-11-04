@@ -138,7 +138,7 @@ const AddAssignmentModal = ({ show, onClose, initialData, onSubmitSuccess, emplo
   };
 
 
-  const handleSubmit = async (e) => {
+const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!confirmChecked) {
@@ -162,21 +162,40 @@ const AddAssignmentModal = ({ show, onClose, initialData, onSubmitSuccess, emplo
 
       formDataToSend.append("machineId", formData.machineId);
       formDataToSend.append("mainItemId", formData.mainItemId);
+      // Ensure this 'shift' matches what the top-level API expects (e.g., 'day' or 'night')
       formDataToSend.append("shift", formData.mainItemShift);
-      formDataToSend.append("employeeIds", formData.employeeId);
 
+      // This is crucial: Your Postman payload uses a comma-separated string for employeeIds.
+      // Your current React code only sends `formData.employeeId` which is a single ID.
+      // If the backend strictly expects a comma-separated string *always*, even for one ID,
+      // you should format it this way.
+      // Option 1: If your `formData.employeeId` is guaranteed to be a single string ID
+      // and your backend handles a single string in the "employeeIds" field, this is fine.
+      // Option 2 (Safer, closer to Postman example): If you expect multiple or want to send
+      // a single ID as a comma-separated string (e.g., "id1" vs "id1,id2")
+      // If your backend expects a comma-separated string for `employeeIds` like "id1,id2"
+      // and `formData.employeeId` might only contain one ID, format it.
+      // Assuming `formData.employeeId` is a string like "685a868e53a207af3de40650"
+      formDataToSend.append("employeeIds", formData.employeeId);
+      // If you ever need to send multiple from the UI, you'd need to update how
+      // `employeeIds` are managed in state (e.g., an array) and then `formData.employeeIds.join(',')`
 
       console.log("⚙️ Required Fields Added");
 
+      // Handle frameLength parsing more robustly, splitting by comma and ensuring numbers
+      const parsedFrameLength = formData.frameLength
+                                  .split(',')
+                                  .map(num => Number(num.trim()))
+                                  .filter(num => !isNaN(num)); // Filter out any non-numeric results
+
       const operatorTable = [
         {
-          // Removed: date: formData.date, <--- THIS LINE IS REMOVED
           time: formData.time,
           shift: formData.operatorTableShift,
-          frameLength: formData.frameLength.split(",").map(num => Number(num.trim())),
-          numberOfBox: Number(formData.numberOfBox),
-          boxWeight: formData.boxWeight + "kg",
-          frameWeight: formData.frameWeight + "kg",
+          frameLength: parsedFrameLength.length > 0 ? parsedFrameLength : [], // Ensure it's an array
+          numberOfBox: Number(formData.numberOfBox) || 0, // Default to 0 if parsing fails
+          boxWeight: formData.boxWeight ? formData.boxWeight + "kg" : "0kg", // Ensure "kg" suffix
+          frameWeight: formData.frameWeight ? formData.frameWeight + "kg" : "0kg", // Ensure "kg" suffix
           description: formData.description,
         },
       ];
@@ -208,7 +227,9 @@ const AddAssignmentModal = ({ show, onClose, initialData, onSubmitSuccess, emplo
       }
     } catch (error) {
       console.error("Error assigning machine:", error);
-      showToast("Server error while assigning machine.", false);
+      // Access the specific error message from the backend if available
+      const errorMessage = error.response?.data?.message || "Server error while assigning machine.";
+      showToast(errorMessage, false);
     } finally {
       setIsSubmitting(false);
     }

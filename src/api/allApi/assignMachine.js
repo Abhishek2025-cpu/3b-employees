@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASE_URL = "https://threeb-1067354145699.asia-south1.run.app/api/machines";
+const BASE_URL = "https://threebapi-1067354145699.asia-south1.run.app/api/machines";
 
  const assignMachineWithOperator = async (formData) => {
   try {
