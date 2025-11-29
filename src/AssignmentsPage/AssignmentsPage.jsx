@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import { getAssignmentsByEmployee } from '../api/allApi/getAsignMachine.js';
-import AddAssignmentModal from './AddAssignmentModal/AddAssignmentModal.jsx'; // Make sure this path is correct
+import AddAssignmentModal from './AddAssignmentModal/AddAssignmentModal.jsx';
+import ConfirmationModal from '../ConfirmationModal/ConfirmationModal.jsx'; // New Component
+import Toast from '../Toast/Toast.jsx'; // New Component
 
 const baseStyles = {
   pageContainer: {
@@ -28,7 +31,7 @@ const baseStyles = {
     boxShadow: '0 4px 10px rgba(0,0,0,0.08)',
     display: 'flex',
     flexDirection: 'column',
-    justifyContent: 'space-between', // Pushes button to bottom
+    justifyContent: 'space-between',
   },
   cardHeader: {
     fontSize: '1.3rem',
@@ -41,6 +44,12 @@ const baseStyles = {
     color: '#333',
     marginBottom: '8px',
   },
+  cardButtonContainer: {
+    display: 'flex',
+    justifyContent: 'space-between', // Aligns buttons to left and right
+    marginTop: '15px',
+    gap: '10px', // Space between buttons
+  },
   cardButton: {
     backgroundColor: '#7853C2',
     color: '#fff',
@@ -50,12 +59,28 @@ const baseStyles = {
     fontSize: '0.9rem',
     fontWeight: '500',
     cursor: 'pointer',
-    marginTop: '15px', // Space from other content
-    alignSelf: 'flex-end', // Align button to the right within the card
     transition: 'background-color 0.3s',
+    flexGrow: 1, // Allows buttons to grow and fill space
+    textAlign: 'center',
+  },
+  markCompleteButton: {
+    backgroundColor: '#28a745', // Green for complete
+    color: '#fff',
+    border: 'none',
+    padding: '10px 15px',
+    borderRadius: '8px',
+    fontSize: '0.9rem',
+    fontWeight: '500',
+    cursor: 'pointer',
+    transition: 'background-color 0.3s',
+    flexGrow: 1,
+    textAlign: 'center',
   },
   cardButtonHover: {
     backgroundColor: '#452983',
+  },
+  markCompleteButtonHover: {
+    backgroundColor: '#218838',
   },
   addButton: {
     position: 'fixed',
@@ -71,87 +96,203 @@ const baseStyles = {
     cursor: 'pointer',
     boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
     transition: 'all 0.3s',
-    zIndex: 1000, // Ensure it's above other content
+    zIndex: 1000,
   },
 };
 
 function AssignmentsPage() {
+  const navigate = useNavigate(); // Initialize useNavigate
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [employeeName, setEmployeeName] = useState('');
   const [employeeId, setEmployeeId] = useState('');
-  const [showModal, setShowModal] = useState(false);
-  const [editingAssignment, setEditingAssignment] = useState(null); // State to hold data of assignment being edited
+  const [showModal, setShowModal] = useState(false); // For AddAssignmentModal (Operator)
+  const [editingAssignment, setEditingAssignment] = useState(null); // For AddAssignmentModal (Operator)
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [assignmentToComplete, setAssignmentToComplete] = useState(null);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState('success');
 
+const fetchAssignments = async () => {
+  const storedId = localStorage.getItem('_id');
+  const storedName = localStorage.getItem('name');
 
-  
+  if (!storedId) {
+    setLoading(false);
+    return;
+  }
 
-  // Function to fetch assignments
-  const fetchAssignments = async () => {
-    const storedId = localStorage.getItem('employeeId');
-    const storedName = localStorage.getItem('employeeName');
+  setEmployeeId(storedId);
+  setEmployeeName(storedName || '');
 
-    if (!storedId) {
-      setLoading(false);
-      return;
+  try {
+    const response = await getAssignmentsByEmployee(storedId);
+
+    console.log("Assignments API response:", response);
+
+    // response itself is the array
+    const items = Array.isArray(response) ? response : [];
+
+    if (items.length > 0) {
+      const firstItem = items[0];
+
+      // Extract values
+      const itemNo =
+        firstItem.itemNo?.trim() ||
+        firstItem.product?.name?.trim() ||
+        "Unknown";
+
+      const machineNumber =
+        firstItem.machineNumber?.toString().trim() || "N/A";
+
+      // SAVE TO LOCAL STORAGE
+      localStorage.setItem("currentItemNo", itemNo);
+      localStorage.setItem("currentMachineNo", machineNumber);
+
+      console.log("Saved Item No:", itemNo);
+      console.log("Saved Machine No:", machineNumber);
+
+    } else {
+      console.warn("No items found to store itemNo or machineNumber.");
     }
 
-    setEmployeeId(storedId);
-    setEmployeeName(storedName || '');
+    setAssignments(items);
 
-    try {
-      const response = await getAssignmentsByEmployee(storedId);
-      setAssignments(response || []);
-    } catch (err) {
-      console.error("Error fetching assignments:", err);
-      setAssignments([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  } catch (error) {
+    console.error("Error fetching assignments:", error);
+    setAssignments([]);
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+
 
   useEffect(() => {
     fetchAssignments();
   }, []);
 
   const handleOpenAddModal = () => {
-    setEditingAssignment(null); // Clear any editing data
+    setEditingAssignment(null);
     setShowModal(true);
   };
 
   const handleOpenEditModal = (assignment) => {
-    // Transform assignment data to fit AddAssignmentModal's formData structure
-    // This is crucial because your form expects modelNumber, machineNumber, etc.
-    // while your assignment object has machine.name, mainItem.itemNo etc.
+    console.log("🧾 Raw assignment for Operator Edit:", assignment);
+
     const transformedData = {
-      modelNumber: assignment.machine?.name || '', // Assuming machine name can be model number
-      machineNumber: assignment.machine?.name || '', // Assuming machine name can be machine number
-      date: new Date().toISOString().slice(0, 10), // Current date for edit, or fetch from assignment if available
-      time: assignment.mainItem?.shift || '9 - 10 A.M', // Pre-fill with existing shift
-      // These fields might not be directly available in your existing assignment structure
-      // You'll need to decide how to map them or if they should remain empty for editing.
+      _id: assignment._id,
+      itemName: assignment.product?.name || assignment.itemNo || '',
+      mainItemId:
+        assignment.itemId ||
+        assignment.mainItemId ||
+        assignment.product?._id ||
+        assignment._id || '',
+      machineNumber: assignment.machine?.name || assignment.machineNumber || '',
+      machineId:
+        assignment.machineId ||
+        assignment.machine?._id ||
+        '',
+      shift: assignment.shift || '',
+      company: assignment.company || '',
+      length: assignment.length || '',
+      noOfSticks: assignment.noOfSticks || '',
+      helperId: assignment.helpers?.[0]?._id || '',
+      helperName: assignment.helpers?.[0]?.name || '',
+      operatorId: assignment.operators?.[0]?._id || '',
+      operatorName: assignment.operators?.[0]?.name || '',
+      description: assignment.product?.description || '',
+      date: new Date().toISOString().slice(0, 10),
+      time: '9-10', // Default or fetch actual time if available
       frameLength: '',
       numberOfBox: '',
       boxWeight: '',
       frameWeight: '',
-      description: '',
-      // You might also want to pass the original assignment ID for update operations
-      _id: assignment._id,
     };
+
+    console.log("✅ Transformed data for Operator modal:", transformedData);
+
     setEditingAssignment(transformedData);
     setShowModal(true);
   };
 
+const handleOpenMixtureEditModal = (assignment) => {
+  console.log("🧾 Raw assignment for Mixture Form:", assignment);
+
+  // Determine itemId safely
+  const itemId =
+    assignment?.itemId ||                  // Direct itemId
+    assignment?.mainItemId ||              // Fallback if mainItemId exists
+    assignment?.product?._id ||            // If assignment.product exists
+    assignment?._id ||                     // Last fallback
+    '';                                    // Empty string if none found
+
+  const mixtureId =
+    assignment?.mixtures?.[0]?._id || ''; // First mixture id if available
+
+  const initialFormDataForMixture = {
+    productName: assignment?.product?.name || 'N/A',
+    mixtureName: assignment?.mixtures?.[0]?.name || 'N/A',
+    machineNo: assignment?.mixtureMachine || 'N/A',
+    itemId,        // Correctly mapped itemId
+    mixtureId,     // Correctly mapped mixtureId
+    date: new Date().toISOString().slice(0, 10),
+    shift: assignment?.shift || 'Day',
+    time: '9:00-10:00',
+  };
+
+  console.log("✅ Initial data for MixtureForm:", initialFormDataForMixture);
+
+  // Save to localStorage so MixtureForm can access it
+  localStorage.setItem('initialMixtureForm', JSON.stringify(initialFormDataForMixture));
+  localStorage.setItem('currentItemId', itemId); // Also store separately if needed
+
+  // Navigate to the MixtureForm page
+  navigate('/mixture-form');
+};
+
+
+
   const handleModalClose = () => {
     setShowModal(false);
-    setEditingAssignment(null); // Clear editing data on close
+    setEditingAssignment(null);
   };
 
   const handleAssignmentSubmitted = async () => {
-    // After an assignment is added or edited, re-fetch the list to update the UI
     await fetchAssignments();
-    setShowModal(false); // Close the modal
-    setEditingAssignment(null); // Clear editing data
+    setShowModal(false);
+    setEditingAssignment(null);
+  };
+
+  const handleMarkAsCompleteClick = (assignment) => {
+    setAssignmentToComplete(assignment);
+    setShowConfirmation(true);
+  };
+
+  const handleConfirmComplete = async () => {
+    console.log(`Marking assignment ${assignmentToComplete._id} as complete.`);
+
+    // Simulate API call success
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    setShowConfirmation(false);
+    setAssignmentToComplete(null);
+    setToastMessage('Assignment marked as complete!');
+    setToastType('success');
+    setShowToast(true);
+
+    fetchAssignments();
+  };
+
+  const handleCancelComplete = () => {
+    setShowConfirmation(false);
+    setAssignmentToComplete(null);
+  };
+
+  const handleCloseToast = () => {
+    setShowToast(false);
   };
 
   if (loading)
@@ -186,39 +327,98 @@ function AssignmentsPage() {
         <p>No assignments found. Click "Add Assignment" to add one.</p>
       ) : (
         <div style={baseStyles.assignmentsGrid}>
-          {assignments.map((a) => (
-            <div key={a._id} style={baseStyles.assignmentCard}>
-              <div> {/* Content wrapper for spacing */}
-                <h2 style={baseStyles.cardHeader}>Machine: {a.machine?.name || 'N/A'}</h2>
-                <p style={baseStyles.cardRow}><strong>Main Item:</strong> {a.mainItem?.itemNo || 'N/A'}</p>
-                <p style={baseStyles.cardRow}><strong>Operator:</strong> {a.mainItem?.operator?.name || 'N/A'}</p>
-                <p style={baseStyles.cardRow}><strong>Helper:</strong> {a.mainItem?.helper?.name || 'N/A'}</p>
-                <p style={baseStyles.cardRow}><strong>Shift:</strong> {a.mainItem?.shift || 'N/A'}</p>
-                <p style={baseStyles.cardRow}><strong>Company:</strong> {a.mainItem?.company || 'N/A'}</p>
+          {assignments.map((assignment) => (
+            <div key={assignment._id} style={baseStyles.assignmentCard}>
+              <div>
+                <h2 style={baseStyles.cardHeader}>Item No: {assignment.itemNo || 'N/A'}</h2>
+                {/* <p style={baseStyles.cardRow}><strong>Mixture Machine Number:</strong> {assignment.mixtureMachine || 'N/A'}</p> */}
+                <p style={baseStyles.cardRow}><strong>Operator Machine Number:</strong> {assignment.machineNumber || 'N/A'}</p>
+                <p style={baseStyles.cardRow}><strong>Length:</strong> {assignment.length || 'N/A'}</p>
+                <p style={baseStyles.cardRow}><strong>No. of Sticks:</strong> {assignment.noOfSticks || 'N/A'}</p>
+
+  {assignment.product && (
+  <div style={baseStyles.cardRow}>
+    <strong>Product Description:</strong>
+    {assignment.product?.description ?? 'N/A'}
+  </div>
+)}
+
+
+
+                <p style={baseStyles.cardRow}>
+                  <strong>Mixture:</strong> {assignment.mixtures && assignment.mixtures.length > 0
+                    ? assignment.mixtures[0].name
+                    : 'N/A'}
+                </p>
+
+                <p style={baseStyles.cardRow}>
+                  <strong>Operator:</strong> {assignment.operators && assignment.operators.length > 0
+                    ? assignment.operators[0].name
+                    : 'N/A'}
+                </p>
+                <p style={baseStyles.cardRow}>
+                  <strong>Helper:</strong> {assignment.helpers && assignment.helpers.length > 0
+                    ? assignment.helpers[0].name
+                    : 'N/A'}
+                </p>
+                <p style={baseStyles.cardRow}><strong>Shift:</strong> {assignment.shift || 'N/A'}</p>
+                <p style={baseStyles.cardRow}><strong>Company:</strong> {assignment.company || 'N/A'}</p>
               </div>
-              <button
-                style={baseStyles.cardButton}
-                onClick={() => handleOpenEditModal(a)}
-              >
-                Edit Assignment
-              </button>
+              <div style={baseStyles.cardButtonContainer}>
+                <button
+                  style={baseStyles.markCompleteButton}
+                  onClick={() => handleMarkAsCompleteClick(assignment)}
+                >
+                  Mark as Complete
+                </button>
+                <button
+                  style={baseStyles.cardButton}
+                  onClick={() => {
+                    const role = localStorage.getItem("role");
+                    console.log("User Role from LocalStorage:", role);
+
+                    if (role === "Operator" || role ==='Helper') {
+                      console.log("Calling handleOpenEditModal() for Operator");
+                      handleOpenEditModal(assignment);
+                    }
+                    else if (role === "Mixture") {
+                      console.log("Calling handleOpenMixtureEditModal() for Mixture");
+                      handleOpenMixtureEditModal(assignment);
+                    }
+                    else {
+                      console.log("No matching role found in localStorage for Edit Assignment.");
+                    }
+                  }}
+                >
+                  Edit Assignment
+                </button>
+              </div>
             </div>
           ))}
         </div>
       )}
 
-      {/* Floating Add Button */}
-      {/* <button style={baseStyles.addButton} onClick={handleOpenAddModal}>
-        + Add New Assignment
-      </button> */}
-
-      {/* The AddAssignmentModal component, now properly integrated */}
+      {/* AddAssignmentModal is for Operator role, so it remains here */}
       <AddAssignmentModal
         show={showModal}
         onClose={handleModalClose}
-        initialData={editingAssignment} // Pass data if editing
+        initialData={editingAssignment}
         onSubmitSuccess={handleAssignmentSubmitted}
-         employeeId={employeeId}   // ✅ add this line
+        employeeId={employeeId}
+      />
+
+      <ConfirmationModal
+        show={showConfirmation}
+        message="Are you sure you want to mark this assignment as complete?"
+        onConfirm={handleConfirmComplete}
+        onCancel={handleCancelComplete}
+      />
+
+      <Toast
+        show={showToast}
+        message={toastMessage}
+        type={toastType}
+        onClose={handleCloseToast}
       />
     </div>
   );

@@ -1,0 +1,376 @@
+/* =========================================================
+   🌿 Base Styling & Theme Tokens
+========================================================= */
+:root {
+  --brand-dark: #114232;
+  --brand-light: #e6f4ec;
+  --brand-accent: #25d366;
+  --gray-bg: #f5f5f5;
+  --gray-border: #ddd;
+  --shadow-light: 0 2px 6px rgba(0, 0, 0, 0.05);
+  --font-main: 'Segoe UI', sans-serif;
+  --font-heading: 'Roboto Slab', serif;
+}
+
+body {
+  font-family: var(--font-main);
+  background-color: var(--gray-bg);
+  margin: 0;
+  padding: 0;
+}
+
+/* =========================================================
+   📊 Table Container
+========================================================= */
+.table-container {
+  overflow-x: auto;
+  margin-top: 20px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: var(--shadow-light);
+  padding: 10px;
+}
+
+/* =========================================================
+   ⏳ Loader
+========================================================= */
+.loader {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+}
+.loader .spinner-border {
+  width: 3rem;
+  height: 3rem;
+}
+
+/* =========================================================
+   📋 Table Structure
+========================================================= */
+table {
+  width: 100%;
+  min-width: 900px;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+thead th {
+  background-color: var(--brand-dark);
+  color: #fff;
+  position: sticky;
+  top: 0;
+  text-align: center;
+  font-family: var(--font-heading);
+  padding: 10px;
+  z-index: 5;
+}
+tbody td, thead th {
+  vertical-align: middle;
+  text-align: center;
+  padding: 10px;
+  font-size: 0.95rem;
+}
+tbody tr:nth-child(even) {
+  background-color: #f8f9fa;
+}
+
+/* =========================================================
+   📌 Fixed Columns
+========================================================= */
+.fixed-col {
+  position: sticky;
+  left: 0;
+  background-color: var(--brand-light) !important;
+  z-index: 3;
+  width: 80px;
+  font-weight: 600;
+  color: #000000;
+}
+
+.time-col {
+  position: sticky;
+  left: 80px;
+  background-color: var(--brand-light) !important;
+  color: var(--brand-dark);
+  font-weight: 700;
+  font-family: var(--font-heading);
+  border-right: 1px solid #ccc;
+  width: 100px;
+  z-index: 3;
+}
+
+/* =========================================================
+   🏷️ Badge System
+========================================================= */
+.badge {
+  display: inline-block;
+  border-radius: 12px;
+  padding: 4px 10px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  margin: 2px;
+  white-space: nowrap;
+  color: #111827 !important;
+  background-color: #f9fafb;
+  border: 1px solid transparent;
+}
+
+/* Variants */
+.badge-time {
+  background-color: var(--brand-light) !important;
+  color: var(--brand-dark) !important;
+  border-color: #b7e4c7;
+}
+
+.badge-frame {
+  background-color: #dbeafe !important;
+  color: #1e3a8a !important;
+  border-color: #93c5fd;
+}
+
+.badge-box {
+  background-color: #fef9c3 !important;
+  color: #854d0e !important;
+  border-color: #fde68a;
+}
+
+.badge-weight {
+  background-color: #d1fae5 !important;
+  color: #065f46 !important;
+  border-color: #6ee7b7;
+}
+
+.badge-frame-weight {
+  background-color: #fde68a !important;
+  color: #7a4f01 !important;
+  border-color: #fcd34d;
+}
+
+/* =========================================================
+   🧾 Cell-specific Spans
+========================================================= */
+td.time-col span,
+td.box-col span,
+.box-weight,
+.frame-weight {
+  border-radius: 10px;
+  padding: 4px 10px;
+  display: inline-block;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+td.time-col span {
+  background-color: var(--brand-light);
+  color: var(--brand-dark);
+}
+
+td.box-col span {
+  background-color: #fff3cd;
+  color: #7a4f01;
+}
+
+.box-weight {
+  background-color: #d0ebff;
+  color: #084298;
+}
+
+.frame-weight {
+  background-color: #ffe5b4;
+  color: #7a4f01;
+}
+
+/* =========================================================
+   🧮 Summary Row
+========================================================= */
+.summary-row {
+  background-color: #f0fdf4;
+  font-weight: bold;
+  color: var(--brand-dark);
+}
+
+/* =========================================================
+   🔽 Dropdown
+========================================================= */
+.dropdown-toggle {
+  width: 100%;
+  background: none;
+  border: none;
+  text-align: center;
+  color: #084298;
+  font-weight: 500;
+}
+
+.dropdown-menu {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+/* =========================================================
+   🪪 Info Card
+========================================================= */
+.info-card {
+  background-color: #fff;
+  border-left: 5px solid var(--brand-dark);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  padding: 10px 20px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  display: none;
+}
+.info-card h6 {
+  margin: 0;
+  font-family: var(--font-heading);
+}
+
+/* =========================================================
+   📱 Bottom Bar
+========================================================= */
+.bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: #f8f9fa;
+  border-top: 1px solid var(--gray-border);
+  padding: 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 1050;
+}
+.bottom-bar .checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1rem;
+  font-weight: 500;
+}
+.bottom-bar .share-btn {
+  background-color: var(--brand-accent);
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 30px;
+  font-size: 1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  position: relative;
+}
+
+/* =========================================================
+   📤 Popup Export Menu
+========================================================= */
+.popup {
+  position: absolute;
+  bottom: 50px;
+  right: 0;
+  background-color: #fff;
+  border: 1px solid var(--gray-border);
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  padding: 15px;
+  width: 200px;
+  display: none;
+  z-index: 1060;
+  animation: slide-in 0.3s ease-out;
+}
+.popup h5 {
+  margin: 0 0 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+}
+.popup button {
+  width: 100%;
+  margin-top: 10px;
+  padding: 8px;
+  border: none;
+  border-radius: 5px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.popup .pdf-btn {
+  background-color: #dc3545;
+  color: #fff;
+}
+.popup .excel-btn {
+  background-color: #007bff;
+  color: #fff;
+}
+
+/* =========================================================
+   🧾 Header & Footer
+========================================================= */
+#fetchedHeaderRow th {
+  background-color: var(--brand-light);
+  color: #000;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 10px;
+  text-align: left;
+  border-bottom: 2px solid var(--gray-border);
+}
+#fetchedHeaderRow th div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+tfoot td {
+  text-align: center;
+  vertical-align: middle;
+  font-weight: bold;
+}
+
+/* =========================================================
+   🎞️ Animations
+========================================================= */
+@keyframes slide-in {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* =========================================================
+   📱 Responsive Design
+========================================================= */
+@media (max-width: 768px) {
+  table {
+    min-width: 100%;
+  }
+  thead th, tbody td {
+    font-size: 0.8rem;
+    padding: 8px;
+  }
+  .fixed-col { width: 60px; }
+  .time-col { left: 60px; width: 80px; }
+  .badge, td span {
+    font-size: 0.75rem;
+    padding: 3px 8px;
+  }
+  .bottom-bar {
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px;
+  }
+  .bottom-bar .share-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  .popup {
+    right: 10px;
+    width: 90%;
+  }
+}

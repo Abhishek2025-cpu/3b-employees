@@ -1,5 +1,3 @@
-// src/OperatorDashboard.jsx
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -26,7 +24,8 @@ import {
 import adminLogo from './assets/3b.png'; // Assuming you have this logo
 import userProfilePlaceholder from './assets/user-profile.jpg'; // Placeholder for user profile image (add this to src/assets)
 
-// Define base styles for all elements
+
+// --- STYLES CONFIGURATION (Identical to Admin) ---
 const baseStyles = {
   dashboardContainer: {
     display: 'flex',
@@ -34,7 +33,6 @@ const baseStyles = {
     backgroundColor: '#f0f2f5',
     fontFamily: "'Roboto', sans-serif",
   },
-
   sidebar: {
     width: '280px',
     backgroundColor: '#452983',
@@ -43,13 +41,13 @@ const baseStyles = {
     boxShadow: '2px 0 5px rgba(0,0,0,0.1)',
     display: 'flex',
     flexDirection: 'column',
-    position: 'fixed', // Default fixed for mobile drawer behavior
+    position: 'fixed',
     height: '100%',
     zIndex: 1000,
     transition: 'transform 0.3s ease-in-out',
-    transform: 'translateX(-100%)', // Hidden by default (mobile)
+    transform: 'translateX(-100%)', 
   },
-  sidebarHeader: { // For mobile sidebar profile
+  sidebarHeader: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
@@ -88,7 +86,7 @@ const baseStyles = {
     right: '10px',
   },
   sidebarNav: {
-    flexGrow: 1, // Allows nav items to push logout to bottom
+    flexGrow: 1,
   },
   sidebarNavItem: {
     display: 'flex',
@@ -119,7 +117,7 @@ const baseStyles = {
     padding: '20px',
     width: '100%',
     boxSizing: 'border-box',
-    marginLeft: '0', // Mobile default
+    marginLeft: '0',
     transition: 'margin-left 0.3s ease-in-out',
   },
   header: {
@@ -136,7 +134,6 @@ const baseStyles = {
   headerLeft: {
     display: 'flex',
     alignItems: 'center',
-    flexGrow: 1, // Allows search bar to take space
   },
   menuButton: {
     background: 'none',
@@ -150,31 +147,10 @@ const baseStyles = {
     fontSize: '1.8rem',
     fontWeight: 'bold',
     color: '#452983',
-    marginRight: '20px',
-  },
-  searchWrapper: {
-    position: 'relative',
-    flexGrow: 1,
-    maxWidth: '400px', // Limit search bar width
-  },
-  searchInput: {
-    width: '100%',
-    padding: '10px 15px 10px 40px', // Left padding for icon
-    border: '1px solid #ddd',
-    borderRadius: '25px',
-    fontSize: '1rem',
-  },
-  searchIcon: {
-    position: 'absolute',
-    left: '15px',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    color: '#aaa',
   },
   headerRight: {
     display: 'flex',
     alignItems: 'center',
-    marginLeft: 'auto', // Push to right
   },
   headerNotification: {
     fontSize: '1.8rem',
@@ -216,10 +192,7 @@ const baseStyles = {
   },
   cardsGrid: {
     display: 'grid',
-   
-  gridTemplateColumns: 'repeat(2, 1fr)',  // 🔥 Always 2 cards per row
-  gap: '25px',
-  marginBottom: '30px',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
     gap: '25px',
     marginBottom: '30px',
   },
@@ -230,6 +203,7 @@ const baseStyles = {
     boxShadow: '0 4px 10px rgba(0,0,0,0.08)',
     textAlign: 'center',
     transition: 'transform 0.2s, box-shadow 0.2s',
+    cursor: 'pointer',
   },
   cardHover: {
     transform: 'translateY(-5px)',
@@ -238,7 +212,7 @@ const baseStyles = {
   cardIcon: {
     fontSize: '3.5rem',
     marginBottom: '15px',
-    color: '#7853C2',
+    color: '#7853C2', 
   },
   cardTitle: {
     fontSize: '1.3rem',
@@ -263,7 +237,6 @@ const baseStyles = {
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: "25px",
-    // Pushes to the bottom of the flex container
     transition: 'background-color 0.2s',
   },
   logoutButtonHover: {
@@ -271,96 +244,40 @@ const baseStyles = {
   },
 };
 
-// Define CSS with media queries to be injected
 const responsiveCss = `
-  body {
-    margin: 0;
-    padding: 0;
-    overflow-x: hidden; /* Prevent horizontal scroll when sidebar is open */
-  }
+  body { margin: 0; padding: 0; overflow-x: hidden; }
+  .sidebar-open { transform: translateX(0) !important; }
+  .main-content-shifted { margin-left: 280px !important; }
+  .dashboard-container.sidebar-open-mobile { overflow: hidden; }
 
-  /* Sidebar specific classes */
-  .sidebar-open {
-    transform: translateX(0) !important;
-  }
-
-  /* Main content classes for desktop */
-  .main-content-shifted {
-    margin-left: 280px !important; /* Adjusted for wider sidebar */
-  }
-
-  /* Hide scrollbar when sidebar is open on mobile */
-  .dashboard-container.sidebar-open-mobile {
-    overflow: hidden;
-  }
-
-  /* Media Queries for Responsiveness */
   @media (min-width: 768px) {
-    /* Sidebar on Desktop */
     .sidebar {
-      transform: translateX(0) !important; /* Always visible on desktop */
-      position: relative !important; /* Change from fixed to relative */
-      box-shadow: none !important; /* Remove shadow when relative */
+      transform: translateX(0) !important;
+      position: relative !important;
+      box-shadow: none !important;
     }
-    .sidebar-header {
-        display: none !important; /* Hide mobile profile in sidebar on desktop */
-    }
-    .sidebar .close-button {
-      display: none !important; /* Hide close button on desktop */
-    }
-    .sidebar .logout-button {
-        margin-top: auto !important; /* Ensure it stays at the bottom */
-    }
-
-    /* Main Content on Desktop */
-    .main-content {
-      margin-left: 0 !important; /* Adjust margin for sidebar when it's relative */
-    }
-
-    /* Header elements on Desktop */
-    .menu-button {
-      display: none !important; /* Hide mobile menu button on desktop */
-    }
-    .desktop-header-title {
-        display: block !important; /* Show desktop title */
-    }
-    .search-wrapper {
-        display: block !important; /* Show search bar */
-    }
-    .header-profile {
-        display: flex !important; /* Show desktop profile */
-    }
+    .sidebar-header { display: none !important; }
+    .sidebar .close-button { display: none !important; }
+    .sidebar .logout-button { margin-top: auto !important; }
+    .main-content { margin-left: 0 !important; }
+    .menu-button { display: none !important; }
+    .desktop-header-title { display: block !important; }
+    .header-profile { display: flex !important; }
   }
 
   @media (max-width: 767px) {
-    /* Mobile specific overrides */
-    .sidebar {
-        box-shadow: 2px 0 5px rgba(0,0,0,0.1) !important; /* Re-add shadow for mobile drawer */
-    }
-    .main-content-shifted {
-      margin-left: 0 !important; /* No margin shift on mobile */
-    }
-    .header .desktop-header-title,
-    .header .search-wrapper,
-    .header .header-profile {
-      display: none !important; /* Hide desktop elements on mobile */
-    }
-    .header .menu-button {
-        display: block !important; /* Show mobile menu button */
-    }
-    .header .header-notification {
-        margin-left: auto !important; /* Push notification to right */
-    }
-    .sidebar-header {
-        display: flex !important; /* Show mobile profile in sidebar */
-    }
-    .sidebar .logout-button {
-        margin-top: 30px !important; /* Ensure separation from nav items */
-    }
+    .sidebar { box-shadow: 2px 0 5px rgba(0,0,0,0.1) !important; }
+    .main-content-shifted { margin-left: 0 !important; }
+    .header .desktop-header-title { display: none !important; }
+    .header .menu-button { display: block !important; }
+    .header .header-notification { margin-left: auto !important; }
+    .header .header-profile { display: none !important; }
+    .sidebar-header { display: flex !important; }
+    .sidebar .logout-button { margin-top: 30px !important; }
   }
 `;
 
-function OperatorDashboard() {
+const Helper = () => {
   const navigate = useNavigate();
   const [userName, setUserName] = useState('Operator');
   const [userRole, setUserRole] = useState('Role');
@@ -380,7 +297,7 @@ function OperatorDashboard() {
 
 
   useEffect(() => {
-  const employeeId = "68ef4b205892a32a6dc5c77b";
+  const employeeId = localStorage.getItem('_id'); 
 
   // ✅ Assigned Tasks
   fetch(`https://threebapi-1067354145699.asia-south1.run.app/api/items/items/employee/${employeeId}`)
@@ -434,8 +351,8 @@ function OperatorDashboard() {
 
     
 
-    const storedUserName = localStorage.getItem('userName');
-    const storedUserRole = localStorage.getItem('userRole');
+    const storedUserName = localStorage.getItem('name');
+    const storedUserRole = localStorage.getItem('role');
     if (storedUserName) setUserName(storedUserName);
     if (storedUserRole) setUserRole(storedUserRole);
     // Fetch actual profile image if available
@@ -540,11 +457,8 @@ const handleSubmitTaskClick = () => {
               </button>
             ) : ( // Desktop: Dashboard Title + Optional Search Bar
               <>
-                <h1 style={baseStyles.desktopHeaderTitle} className="desktop-header-title">Operator Dashboard</h1>
-                <div style={baseStyles.searchWrapper} className="search-wrapper">
-                  <FontAwesomeIcon icon={faSearch} style={baseStyles.searchIcon} />
-                  <input type="text" placeholder="Search for something" style={baseStyles.searchInput} />
-                </div>
+                <h1 style={baseStyles.desktopHeaderTitle} className="desktop-header-title">Helper Dashboard</h1>
+              
               </>
             )}
           </div>
@@ -569,18 +483,7 @@ const handleSubmitTaskClick = () => {
 
 
       <div style={baseStyles.cardsGrid}>
-  
-  <div style={{ ...baseStyles.card, ...baseStyles.cardHover }} onClick={handleReviewTaskClick}>
-    <FontAwesomeIcon icon={faClipboardCheck} style={baseStyles.cardIcon} />
-    <h3 style={baseStyles.cardTitle}>Review Tasks</h3>
-    <p style={baseStyles.cardCount}>{reviewTasks}</p>
-  </div>
 
-  <div style={{ ...baseStyles.card, ...baseStyles.cardHover }} onClick={handleSubmitTaskClick}>
-    <FontAwesomeIcon icon={faPaperPlane} style={baseStyles.cardIcon} />
-    <h3 style={baseStyles.cardTitle}>Submit Tasks</h3>
-    <p style={baseStyles.cardCount}>{submitTasks}</p>
-  </div>
 
   <div style={{ ...baseStyles.card, ...baseStyles.cardHover }} onClick={handleAssignedTaskClick}>
     <FontAwesomeIcon icon={faClipboardList} style={baseStyles.cardIcon} />
@@ -609,4 +512,4 @@ const handleSubmitTaskClick = () => {
   );
 }
 
-export default OperatorDashboard;
+export default Helper;

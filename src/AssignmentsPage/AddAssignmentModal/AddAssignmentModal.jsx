@@ -1,439 +1,306 @@
-import React, { useState, useEffect, useRef } from 'react';
-
-import { getAssignmentsByEmployee } from "../../api/allApi/getAsignMachine.js";
-
+import React, { useState, useEffect } from "react";
 import assignMachineWithOperator from "../../api/allApi/assignMachine.js";
+import { toast } from "react-toastify";
 
-
-const AddAssignmentModal = ({ show, onClose, initialData, onSubmitSuccess, employeeId }) => {
+const WorkerFormModal = ({ show, onClose, onSubmitSuccess, initialData }) => {
   const [formData, setFormData] = useState({
-    machineId: '',
-    machineName: '',
-    employeeId: '',
-    employeeName: '',
-    mainItemId: '',
-    mainItemNo: '',
-    date: '',
-    time: '9 - 10 A.M',
-    mainItemShift: '',
-    operatorTableShift: '',
-    frameLength: '',
-    numberOfBox: '',
-    boxWeight: '',
-    frameWeight: '',
-    description: '',
-    selfieUrl: '',
+    time: "9-10",
+    shift: "",
+    frameLength: "",
+    numberOfBox: "",
+    boxWeight: "",
+    frameWeight: "",
+    description: "",
+    machineId: "",
+    machineNumber: "",
+    mainItemId: "",
+    itemName: "",
   });
 
-  const [confirmChecked, setConfirmChecked] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
-  const [toastSuccess, setToastSuccess] = useState(true);
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [imagePreviewUrl, setImagePreviewUrl] = useState('');
 
-  const fileInputRef = useRef(null);
+useEffect(() => {
+  if (!show) return;
 
+  // Get values from localStorage
+  const storedItemNo = localStorage.getItem("currentItemNo") || "";
+  const storedMachineNo = localStorage.getItem("currentMachineNo") || "";
+  const storedItemId = localStorage.getItem("currentItemId") || "";
+  const storedMachineId = localStorage.getItem("currentMachineId") || "";
 
-  useEffect(() => {
-    const fetchAssignmentDetails = async () => {
-      try {
-        if (!employeeId) return;
+  // Machine number from initialData
+  const machineNumberFromInitial =
+    initialData?.machineNumber && initialData?.machineNumber !== "N/A"
+      ? initialData.machineNumber
+      : initialData?.machine?.name && initialData?.machine?.name !== "N/A"
+      ? initialData.machine.name
+      : "";
 
-        const assignments = await getAssignmentsByEmployee(employeeId);
+  // Item name from initialData
+  const itemNameFromInitial =
+    initialData?.itemNo ||
+    initialData?.product?.name?.trim() ||
+    "";
 
-        console.log("Fetched Assignments:", assignments);
+  // Machine _id from initialData
+  const machineIdFromInitial =
+    initialData?.machineId && initialData.machineId !== "N/A"
+      ? initialData.machineId
+      : initialData?.machine?._id && initialData.machine._id !== "N/A"
+      ? initialData.machine._id
+      : "";
 
-        if (assignments.length > 0) {
-          const firstAssignment = assignments[0];
-          const machine = firstAssignment.machine;
-          const employee = firstAssignment.employees[0];
-          const mainItem = firstAssignment.mainItem;
+  // Item _id from initialData
+  const itemIdFromInitial =
+    initialData?.mainItemId || initialData?.itemId || initialData?._id || "";
 
-          const today = new Date();
-          const yyyy = today.getFullYear();
-          const mm = String(today.getMonth() + 1).padStart(2, '0');
-          const dd = String(today.getDate()).padStart(2, '0');
-          const formattedDate = `${yyyy}-${mm}-${dd}`;
+  // Update form data
+  setFormData({
+    time: "9-10",
+    shift: initialData?.shift || "",
+    frameLength: "",
+    numberOfBox: "",
+    boxWeight: "",
+    frameWeight: "",
+    description: initialData?.description || "",
 
-          setFormData(prev => ({
-            ...prev,
-            machineId: machine?._id || '',
-            machineName: machine?.name || '',
-            employeeId: employee?._id || '',
-            employeeName: employee?.name || '',
-            mainItemId: mainItem?._id || '',
-            mainItemNo: mainItem?.itemNo || '',
-            mainItemShift: mainItem?.shift?.toLowerCase() || '',
-            date: formattedDate,
-          }));
-        }
-      } catch (error) {
-        console.error("Error loading assignment details:", error);
-      }
-    };
+    // MACHINE
+    machineId: machineIdFromInitial || storedMachineId || "",
+    machineNumber: machineNumberFromInitial || storedMachineNo || "",
 
-    if (show) {
-      fetchAssignmentDetails();
-      setFormData({
-        machineId: '',
-        machineName: '',
-        employeeId: '',
-        employeeName: '',
-        mainItemId: '',
-        mainItemNo: '',
-        date: '',
-        time: '9 - 10 A.M',
-        mainItemShift: '',
-        operatorTableShift: '',
-        frameLength: '',
-        numberOfBox: '',
-        boxWeight: '',
-        frameWeight: '',
-        description: '',
-        selfieUrl: '',
-      });
-      setSelectedImage(null);
-      setImagePreviewUrl('');
-      setConfirmChecked(false);
-    }
-  }, [show, employeeId]);
+    // ITEM
+    mainItemId: itemIdFromInitial || storedItemId || "",
+    itemName: itemNameFromInitial || storedItemNo || "",
+  });
+
+  // Store machine and item _id in localStorage for global access
+  if (itemIdFromInitial) localStorage.setItem("currentItemId", itemIdFromInitial);
+  if (machineIdFromInitial) localStorage.setItem("currentMachineId", machineIdFromInitial);
+
+  setIsSubmitting(false);
+}, [show, initialData]);
 
 
-  const showToast = (message, isSuccess = true) => {
-    setToastMessage(message);
-    setToastSuccess(isSuccess);
-    const toastEl = document.getElementById('operatorFormToast');
-    if (toastEl) {
-      const bsToast = new window.bootstrap.Toast(toastEl, { delay: 3000 });
-      bsToast.show();
-    }
-  };
+
 
   const handleChange = (e) => {
-    const { id, value, type, checked } = e.target;
-    if (type === 'checkbox') {
-      setConfirmChecked(checked);
-    } else {
-      setFormData(prevData => ({
-        ...prevData,
-        [id]: value,
-      }));
-    }
-  };
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setSelectedImage(file);
-      setImagePreviewUrl(URL.createObjectURL(file));
-    } else {
-      setSelectedImage(null);
-      setImagePreviewUrl('');
-    }
-  };
-
-  const handleSelfieButtonClick = () => {
-    fileInputRef.current.click();
+    const { id, value } = e.target;
+    setFormData((prev) => ({ ...prev, [id]: value }));
   };
 
 
 const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (!confirmChecked) {
-      showToast("Please confirm before submitting.", false);
+  const employeeId = localStorage.getItem("_id");
+  const machineName = localStorage.getItem("currentMachineNo");   // "9"
+  const itemName = localStorage.getItem("currentItemNo");         // "Shining Gold"
+
+  if (!employeeId) {
+    toast.error("Employee ID not found in localStorage");
+    return;
+  }
+
+  if (!machineName || !itemName) {
+    toast.error("Machine number and Item name are required");
+    return;
+  }
+
+  setIsSubmitting(true);
+
+  try {
+    const frameArray = formData.frameLength
+      .split(",")
+      .map((n) => Number(n.trim()))
+      .filter((n) => !isNaN(n) && n > 0);
+
+    if (frameArray.length === 0) {
+      toast.warning("Please provide valid frame lengths.");
+      setIsSubmitting(false);
       return;
     }
 
-    if (!formData.operatorTableShift) {
-        showToast("Please select the shift for this assignment.", false);
-        return;
+    const payload = {
+      time: [formData.time],
+      shift: formData.shift,
+      frameLength: frameArray,
+      numberOfBox: Number(formData.numberOfBox),
+      boxWeight: Number(formData.boxWeight),
+      frameWeight: Number(formData.frameWeight),
+      description: formData.description || "",
+      employeeId,
+
+      // ⬇️ **Now sending machine number + item name as strings**
+      machineName: machineName,
+      itemName: itemName,
+    };
+
+    console.log("🚀 Payload being sent:", payload);
+
+    const response = await assignMachineWithOperator(payload);
+
+    if (response.success) {
+      toast.success("Worker task added successfully!");
+      onSubmitSuccess?.();
+      onClose();
+    } else {
+      toast.error(response.message || "Failed to add worker");
     }
-
-    setIsSubmitting(true);
-
-    try {
-      console.log("🟢 --- FORM SUBMISSION STARTED ---");
-      console.log("🧾 Current Form Data:", formData);
-      console.log("🖼️ Selected Image Object:", selectedImage);
-
-      const formDataToSend = new FormData();
-
-      formDataToSend.append("machineId", formData.machineId);
-      formDataToSend.append("mainItemId", formData.mainItemId);
-      // Ensure this 'shift' matches what the top-level API expects (e.g., 'day' or 'night')
-      formDataToSend.append("shift", formData.mainItemShift);
-
-      // This is crucial: Your Postman payload uses a comma-separated string for employeeIds.
-      // Your current React code only sends `formData.employeeId` which is a single ID.
-      // If the backend strictly expects a comma-separated string *always*, even for one ID,
-      // you should format it this way.
-      // Option 1: If your `formData.employeeId` is guaranteed to be a single string ID
-      // and your backend handles a single string in the "employeeIds" field, this is fine.
-      // Option 2 (Safer, closer to Postman example): If you expect multiple or want to send
-      // a single ID as a comma-separated string (e.g., "id1" vs "id1,id2")
-      // If your backend expects a comma-separated string for `employeeIds` like "id1,id2"
-      // and `formData.employeeId` might only contain one ID, format it.
-      // Assuming `formData.employeeId` is a string like "685a868e53a207af3de40650"
-      formDataToSend.append("employeeIds", formData.employeeId);
-      // If you ever need to send multiple from the UI, you'd need to update how
-      // `employeeIds` are managed in state (e.g., an array) and then `formData.employeeIds.join(',')`
-
-      console.log("⚙️ Required Fields Added");
-
-      // Handle frameLength parsing more robustly, splitting by comma and ensuring numbers
-      const parsedFrameLength = formData.frameLength
-                                  .split(',')
-                                  .map(num => Number(num.trim()))
-                                  .filter(num => !isNaN(num)); // Filter out any non-numeric results
-
-      const operatorTable = [
-        {
-          time: formData.time,
-          shift: formData.operatorTableShift,
-          frameLength: parsedFrameLength.length > 0 ? parsedFrameLength : [], // Ensure it's an array
-          numberOfBox: Number(formData.numberOfBox) || 0, // Default to 0 if parsing fails
-          boxWeight: formData.boxWeight ? formData.boxWeight + "kg" : "0kg", // Ensure "kg" suffix
-          frameWeight: formData.frameWeight ? formData.frameWeight + "kg" : "0kg", // Ensure "kg" suffix
-          description: formData.description,
-        },
-      ];
-
-
-      console.log("📊 Operator Table Object:", operatorTable);
-
-      formDataToSend.append("operatorTable", JSON.stringify(operatorTable));
-
-      if (selectedImage) {
-        formDataToSend.append("operatorImages", selectedImage);
-        console.log("📸 Image appended to formData:", selectedImage.name, selectedImage.type, selectedImage.size);
-      }
-
-      console.group("📦 FormData Contents:");
-      for (let [key, value] of formDataToSend.entries()) {
-        console.log(key, value);
-      }
-      console.groupEnd();
-
-      const response = await assignMachineWithOperator(formDataToSend);
-
-      if (response.success) {
-        showToast("✅ Machine assigned successfully!");
-        onSubmitSuccess?.();
-        onClose();
-      } else {
-        showToast(response.message || "Failed to assign machine.", false);
-      }
-    } catch (error) {
-      console.error("Error assigning machine:", error);
-      // Access the specific error message from the backend if available
-      const errorMessage = error.response?.data?.message || "Server error while assigning machine.";
-      showToast(errorMessage, false);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-
-  if (!show) {
-    return null;
+  } catch (err) {
+    console.error("Error adding worker:", err);
+    toast.error("Error adding worker");
+  } finally {
+    setIsSubmitting(false);
   }
+};
+
+
+
+  if (!show) return null;
 
   return (
-    <div className={`modal fade ${show ? 'show d-block' : ''}`} tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-      <div className="modal-dialog modal-dialog-centered modal-lg">
-        <div className="modal-content">
-          <div className="modal-header">
-            <h5 className="modal-title">📋 {initialData ? 'Edit Assignment' : 'Add New Assignment'}</h5>
-            <button type="button" className="btn-close" onClick={onClose}></button>
-          </div>
-          <div className="modal-body">
-            <form onSubmit={handleSubmit}>
-              <div className="row g-2 mb-3">
-                <div className="col-md-4">
-                  <label className="form-label"><i className="bi bi-cpu"></i> Machine</label>
-                  <input
-                    type="text"
-                    className="form-control form-control-sm"
-                    value={formData.machineName}
-                    readOnly
-                  />
-                  <input type="hidden" value={formData.machineId} />
-                </div>
+    <div
+      className="modal fade show d-block"
+      style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+    >
+      <div className="modal-dialog modal-dialog-centered">
+        <div className="modal-content p-3">
+          <h5>Add Worker Task</h5>
 
-                <div className="col-md-4">
-                  <label className="form-label"><i className="bi bi-person-badge"></i> Employee</label>
-                  <input
-                    type="text"
-                    className="form-control form-control-sm"
-                    value={formData.employeeName}
-                    readOnly
-                  />
-                  <input type="hidden" value={formData.employeeId} />
-                </div>
+          <form onSubmit={handleSubmit}>
 
-                <div className="col-md-4">
-                  <label className="form-label"><i className="bi bi-box-seam"></i> Item No / Name</label>
-                  <input
-                    type="text"
-                    className="form-control form-control-sm"
-                    value={formData.mainItemNo}
-                    readOnly
-                  />
-                  <input type="hidden" value={formData.mainItemId} />
-                </div>
+            {/* Item Name */}
+            <div className="mb-2">
+              <label>Item</label>
+              <input
+                type="text"
+                className="form-control"
+                value={formData.itemName}
+                readOnly
+              />
+            </div>
 
-                <div className="col-md-4">
-                  <label className="form-label"><i className="bi bi-calendar3"></i> Date</label>
-                  <input type="date" className="form-control form-control-sm" id="date" value={formData.date} onChange={handleChange} />
-                </div>
-              </div>
+            {/* Machine Name */}
+            <div className="mb-2">
+              <label>Machine</label>
+              <input
+                type="text"
+                className="form-control"
+                value={formData.machineNumber}
+                readOnly
+              />
+            </div>
 
-              <div className="mb-3">
-                <label htmlFor="mainItemShift" className="form-label">
-                  <i className="bi bi-briefcase me-2"></i>Main Item Shift (from API)
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="mainItemShift"
-                  value={formData.mainItemShift === 'day' ? '🌞 Day Shift' : formData.mainItemShift === 'night' ? '🌙 Night Shift' : ''}
-                  readOnly
-                />
-              </div>
+            {/* Time Slot */}
+            <div className="mb-2">
+              <label>Time Slot</label>
+              <select
+                id="time"
+                className="form-select"
+                value={formData.time}
+                onChange={handleChange}
+              >
+                {[
+                  "9-10","10-11","11-12","12-1","1-2","2-3",
+                  "3-4","4-5","5-6","6-7","7-8","8-9",
+                ].map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </div>
 
-              <div className="mb-3">
-                <label htmlFor="time" className="form-label"><i className="bi bi-clock-history me-2"></i>Time</label>
-                <select className="form-select" id="time" value={formData.time} onChange={handleChange}>
-                  <option value="9 - 10 A.M">9:00 - 10:00 A.M</option>
-                  <option value="10 - 11 A.M">10:00 - 11:00 A.M</option>
-                  <option value="11 - 12 A.M">11:00 - 12:00 A.M</option>
-                  <option value="12 - 1 P.M">12:00 - 1:00 P.M</option>
-                  <option value="1 - 2 P.M">1:00 - 2:00 P.M</option>
-                  <option value="2 - 3 P.M">2:00 - 3:00 P.M</option>
-                  <option value="3 - 4 P.M">3:00 - 4:00 P.M</option>
-                  <option value="4 - 5 P.M">4:00 - 5:00 P.M</option>
-                  <option value="5 - 6 P.M">5:00 - 6:00 P.M</option>
-                  <option value="6 - 7 P.M">6:00 - 7:00 P.M</option>
-                  <option value="7 - 8 P.M">7:00 - 8:00 P.M</option>
-                  <option value="8 - 9 P.M">8:00 - 9:00 P.M</option>
-                </select>
-              </div>
+            {/* Shift */}
+            <div className="mb-2">
+              <label>Shift</label>
+              <select
+                id="shift"
+                className="form-select"
+                value={formData.shift}
+                onChange={handleChange}
+                required
+              >
+                <option value="">Select Shift</option>
+                <option value="day">Day</option>
+                <option value="night">Night</option>
+              </select>
+            </div>
 
-              <div className="mb-3">
-                <label htmlFor="operatorTableShift" className="form-label">
-                  <i className="bi bi-brightness-alt-high-fill me-2"></i>Assignment Shift <span className="text-danger">*</span>
-                </label>
-                <select
-                  className="form-select"
-                  id="operatorTableShift"
-                  value={formData.operatorTableShift}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="">Select Shift for this Assignment</option>
-                  <option value="day">🌞 Day Shift</option>
-                  <option value="night">🌙 Night Shift</option>
-                </select>
-              </div>
+            {/* Frame Length */}
+            <div className="mb-2">
+              <label>Frame Length (comma-separated)</label>
+              <input
+                type="text"
+                id="frameLength"
+                className="form-control"
+                placeholder="e.g. 452,453,454"
+                value={formData.frameLength}
+                onChange={handleChange}
+                required
+              />
+            </div>
 
-              <div className="mb-3">
-                <label className="form-label"><i className="bi bi-arrows-expand"></i>Frame Length</label>
-                <input type="text" className="form-control" id="frameLength" placeholder="e.g. 455,455,452,454" required value={formData.frameLength} onChange={handleChange} />
-              </div>
+            {/* Number of Box */}
+            <div className="mb-2">
+              <label>Number of Box</label>
+              <input
+                type="number"
+                id="numberOfBox"
+                className="form-control"
+                value={formData.numberOfBox}
+                onChange={handleChange}
+                required
+              />
+            </div>
 
-              <div className="mb-3">
-                <label className="form-label"><i className="bi bi-stack"></i>Number of Box</label>
-                <input type="number" className="form-control" id="numberOfBox" placeholder="e.g. 1" required value={formData.numberOfBox} onChange={handleChange} />
-              </div>
+            {/* Box Weight */}
+            <div className="mb-2">
+              <label>Box Weight</label>
+              <input
+                type="number"
+                id="boxWeight"
+                className="form-control"
+                value={formData.boxWeight}
+                onChange={handleChange}
+                required
+              />
+            </div>
 
-              <div className="mb-3">
-                <label className="form-label"><i className="bi bi-box"></i>Box Weight (Kg)</label>
-                <input type="number" className="form-control" id="boxWeight" placeholder="e.g. 50" required value={formData.boxWeight} onChange={handleChange} />
-              </div>
+            {/* Frame Weight */}
+            <div className="mb-2">
+              <label>Frame Weight</label>
+              <input
+                type="number"
+                id="frameWeight"
+                className="form-control"
+                value={formData.frameWeight}
+                onChange={handleChange}
+                required
+              />
+            </div>
 
-              <div className="mb-3">
-                <label className="form-label"><i className="bi bi-sliders"></i>Frame Weight(g)</label>
-                <input type="number" className="form-control" id="frameWeight" placeholder="e.g. 300" required value={formData.frameWeight} onChange={handleChange} />
-              </div>
+            {/* Description */}
+            <div className="mb-2">
+              <label>Description (Optional)</label>
+              <textarea
+                id="description"
+                className="form-control"
+                value={formData.description}
+                onChange={handleChange}
+              ></textarea>
+            </div>
 
-              <div className="mb-3">
-                <label className="form-label"><i className="bi bi-chat-left-dots"></i>Description</label>
-                <textarea className="form-control" id="description" rows="2" placeholder="B/Quality, Power cut, Total waste" value={formData.description} onChange={handleChange}></textarea>
-              </div>
+            <button type="submit" className="btn btn-dark w-100" disabled={isSubmitting}>
+              {isSubmitting ? "Saving..." : "Save"}
+            </button>
+          </form>
 
-              <div className="mb-3">
-                <label className="form-label"><i className="bi bi-camera"></i> Selfie Upload</label>
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  className="form-control"
-                  accept="image/*"
-                  capture="user"
-                  onChange={handleImageChange}
-                  style={{ display: 'none' }}
-                />
-                <button
-                  type="button"
-                  className="btn btn-outline-primary w-100 mb-2"
-                  onClick={handleSelfieButtonClick}
-                >
-                  <i className="bi bi-camera-fill me-2"></i> Take Photo or Choose from Gallery
-                </button>
-
-                {(imagePreviewUrl || formData.selfieUrl) && (
-                  <div className="mt-3 text-center">
-                    <p className="mb-2">Image Preview:</p>
-                    <img
-                      src={imagePreviewUrl || formData.selfieUrl}
-                      alt="Selfie Preview"
-                      style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '8px', objectFit: 'contain' }}
-                      className="img-thumbnail"
-                    />
-                    {imagePreviewUrl && (
-                      <button
-                        type="button"
-                        className="btn btn-sm btn-outline-danger mt-2"
-                        onClick={() => {
-                          setSelectedImage(null);
-                          setImagePreviewUrl('');
-                          if (fileInputRef.current) fileInputRef.current.value = '';
-                        }}
-                      >
-                        Clear Image
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              <div className="form-check mb-3">
-                <input className="form-check-input" type="checkbox" id="confirmCheck" checked={confirmChecked} onChange={handleChange} />
-                <label className="form-check-label" htmlFor="confirmCheck">
-                  I confirm that the details entered are correct.
-                </label>
-              </div>
-
-              <button type="submit" className="btn btn-dark w-100 submit-btn" disabled={!confirmChecked || isSubmitting}>
-                <span id="submitText" className={isSubmitting ? 'd-none' : ''}><i className="bi bi-save"></i> {initialData ? 'Update' : 'Save'}</span>
-                <span id="submitLoader" className={`spinner-border spinner-border-sm ${isSubmitting ? '' : 'd-none'}`}></span>
-              </button>
-            </form>
-          </div>
-        </div>
-      </div>
-
-      <div className="toast-container position-fixed bottom-0 end-0 p-3">
-        <div id="operatorFormToast" className={`toast align-items-center text-white border-0 ${toastSuccess ? 'bg-success' : 'bg-danger'}`} role="alert">
-          <div className="d-flex">
-            <div className="toast-body">{toastMessage}</div>
-            <button type="button" className="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-          </div>
+          <button className="btn btn-outline-secondary mt-2 w-100" onClick={onClose}>
+            Close
+          </button>
         </div>
       </div>
     </div>
   );
 };
 
-export default AddAssignmentModal;
+export default WorkerFormModal;
