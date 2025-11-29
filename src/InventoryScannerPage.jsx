@@ -10,34 +10,32 @@ const InventoryScannerPage = () => {
   const [qty, setQty] = useState("");
   const [boxes, setBoxes] = useState("");
 
-  const handleScan = async (scannedUrl) => {
-    try {
-      // Extract ID from scanned URL
-      const id = scannedUrl.split("/inventory/")[1];
+ const handleScan = async (scanned) => {
+  try {
+    let id = scanned;
 
-      if (!id) {
-        alert("Invalid QR Code");
-        return;
-      }
-
-      // Fetch product details
-      const response = await fetch(
-        `https://threebapi-1067354145699.asia-south1.run.app/api/inventory/single/${id}`
-      );
-
-      const json = await response.json();
-
-      if (!json.data) {
-        alert("Item not found");
-        return;
-      }
-
-      setProduct(json.data);
-    } catch (error) {
-      console.error("Error scanning:", error);
-      alert("Error fetching product");
+    if (scanned.includes("/inventory/")) {
+      id = scanned.split("/inventory/")[1];
     }
-  };
+
+    if (!id) {
+      alert("Invalid QR Code");
+      return;
+    }
+
+    const response = await fetch(
+      `https://threebapi-1067354145699.asia-south1.run.app/api/inventory/single/${id}`
+    );
+
+    const json = await response.json();
+
+    setProduct(json.data);
+
+  } catch (error) {
+    console.error(error);
+  }
+};
+
 
   const handleMove = async () => {
     if (!company || !type || !qty || !boxes) {
