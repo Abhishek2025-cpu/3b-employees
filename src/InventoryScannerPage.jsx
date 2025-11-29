@@ -10,7 +10,7 @@ const InventoryScannerPage = () => {
   const [qty, setQty] = useState("");
   const [boxes, setBoxes] = useState("");
 
- const handleScan = async (scanned) => {
+const handleScan = async (scanned) => {
   try {
     let id = scanned;
 
@@ -18,23 +18,32 @@ const InventoryScannerPage = () => {
       id = scanned.split("/inventory/")[1];
     }
 
-    if (!id) {
-      alert("Invalid QR Code");
-      return;
-    }
+    if (!id) return alert("Invalid QR Code");
 
     const response = await fetch(
       `https://threebapi-1067354145699.asia-south1.run.app/api/inventory/single/${id}`
     );
 
     const json = await response.json();
+    console.log("SCAN RESPONSE:", json);
 
-    setProduct(json.data);
+    const item =
+      json.data?.item ||
+      json.item ||
+      json.data ||
+      null;
 
-  } catch (error) {
-    console.error(error);
+    if (!item) {
+      alert("Item not found in response");
+      return;
+    }
+
+    setProduct(item);
+  } catch (err) {
+    console.error(err);
   }
 };
+
 
 
   const handleMove = async () => {
