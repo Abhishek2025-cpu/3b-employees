@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASE_URL = "https://threebapi-1067354145699.asia-south1.run.app/api";
+const BASE_URL = "https://threebapi-1067354145699.asia-south1.run.app/api"; //temprary
 
 /**
  * Sends worker task data to the backend (Add Task)
