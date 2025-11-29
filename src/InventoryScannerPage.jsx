@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import QrCodeScanner from "./QrCodeScanner";
+import QrCodeScanner from "./QRScanner";
 
 const InventoryScannerPage = () => {
   const [product, setProduct] = useState(null);

@@ -209,7 +209,7 @@ function AdminDashboard() {
         </div>
 
         <div style={baseStyles.sidebarNav}>
-          <div style={baseStyles.sidebarNavItem} onClick={() => navigate('/admin/qr-scanner')}>
+          <div style={baseStyles.sidebarNavItem} onClick={() => navigate('/admin/inventory-scanner')}>
             <FontAwesomeIcon icon={faUserPlus} style={baseStyles.sidebarNavIcon} />
             <span style={baseStyles.sidebarNavText}>Stock I/O</span>
           </div>

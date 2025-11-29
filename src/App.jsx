@@ -19,6 +19,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min'; 
 import Helper from './Helper.jsx';
 import QRScanner from './QRScanner';
+import InventoryScannerPage from './InventoryScannerPage';
 
 function App() {
   return (
@@ -39,6 +40,7 @@ function App() {
         <Route path="/review-tasks" element={<ReviewTasks />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
         <Route path="/admin/qr-scanner" element={<QRScanner />} />
+        <Route path="/admin/inventory-scanner" element={<InventoryScannerPage />} />
    
    
         
