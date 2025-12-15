@@ -21,6 +21,7 @@ import Helper from './Helper.jsx';
 import QRScanner from './QRScanner';
 import InventoryScannerPage from './InventoryScannerPage';
 
+
 function App() {
   return (
     <>
@@ -41,7 +42,10 @@ function App() {
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
         <Route path="/admin/qr-scanner" element={<QRScanner />} />
         <Route path="/admin/inventory-scanner" element={<InventoryScannerPage />} />
-   
+           {/* Auth */}
+     
+
+
    
         
         <Route path="/" element={<LoginPage />} />
