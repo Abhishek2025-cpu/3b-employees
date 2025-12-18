@@ -329,6 +329,157 @@ tfoot td {
   font-weight: bold;
 }
 
+
+/* ... (Aapki purani CSS yaha rahegi) ... */
+
+/* =========================================================
+   🌟 NEW: Attractive Header & Dropdown Styles
+========================================================= */
+
+.task-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.task-header h2 {
+  margin: 0;
+  color: var(--brand-dark);
+  font-family: var(--font-heading);
+  font-weight: 700;
+}
+
+/* Container to hold the dropdown */
+.custom-dropdown-container {
+  position: relative;
+  width: 260px;
+  font-family: var(--font-main);
+  z-index: 100; /* Higher than table header (which is 5) */
+}
+
+/* The Main Button */
+.custom-dropdown-btn {
+  background: linear-gradient(135deg, #114232 0%, #25d366 100%); /* Brand Dark to Brand Accent */
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 30px; /* Fully rounded pill shape */
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4); /* Green glow shadow */
+  transition: all 0.3s ease;
+  user-select: none;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* Button Hover */
+.custom-dropdown-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(37, 211, 102, 0.6);
+}
+
+/* Active State (When Open) */
+.custom-dropdown-btn.active {
+  border-radius: 20px 20px 0 0; /* Flatten bottom corners */
+  background: linear-gradient(135deg, #0e3629 0%, #1fb355 100%);
+}
+
+.arrow-icon {
+  font-size: 0.8rem;
+  transition: transform 0.3s ease;
+}
+
+.custom-dropdown-btn.active .arrow-icon {
+  transform: rotate(180deg);
+}
+
+/* The Menu List */
+.custom-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background: #fff;
+  border-radius: 0 0 20px 20px; /* Rounded bottom only */
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  animation: slideDown 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  border: 1px solid rgba(0,0,0,0.05);
+}
+
+/* List Items */
+.custom-dropdown-menu li {
+  padding: 12px 20px;
+  cursor: pointer;
+  color: #333;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border-left: 4px solid transparent;
+}
+
+.custom-dropdown-menu li:hover {
+  background-color: var(--brand-light);
+  color: var(--brand-dark);
+  border-left: 4px solid var(--brand-accent);
+  padding-left: 25px; /* Cool shift effect */
+}
+
+/* Selected Item Style */
+.custom-dropdown-menu li.selected {
+  background-color: #f0fdf4;
+  color: var(--brand-dark);
+  font-weight: 700;
+}
+
+.desc-col {
+  min-width: 200px;  /* Kam se kam itni choudai rahegi */
+  max-width: 300px;  /* Isse jyada chouda nahi hoga */
+  white-space: normal; /* Text ko next line me break karega */
+  word-wrap: break-word; /* Lambe words ko tod kar next line me layega */
+  text-align: left; /* Description padhne me left align acha lagta hai */
+  line-height: 1.4;
+  vertical-align: top; /* Text upar se start hoga */
+}
+
+/* Mobile ke liye thoda adjust karein */
+@media (max-width: 768px) {
+  .desc-col {
+    min-width: 150px;
+    max-width: 200px;
+    font-size: 0.8rem;
+  }
+}
+
+/* Animation for opening */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mobile Fix */
+@media (max-width: 768px) {
+  .task-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .custom-dropdown-container {
+    width: 100%;
+  }
+}
 /* =========================================================
    🎞️ Animations
 ========================================================= */
@@ -373,4 +524,169 @@ tfoot td {
     right: 10px;
     width: 90%;
   }
+}
+
+/* =========================================================
+   📱 Mobile Card View Transformation
+   (Paste this at the VERY BOTTOM of your CSS file)
+========================================================= */
+@media (max-width: 768px) {
+  
+  /* 1. Table structure ko khatam karke Block banayein */
+  table, thead, tbody, th, td, tr {
+    display: block;
+    width: 100%;
+  }
+
+  /* 2. Header chhupa dein (Mobile me zarurat nahi) */
+  thead tr {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+  }
+
+  /* 3. Table Container padding fix */
+  .table-container {
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  /* 4. Har Row ko ek Card banayein */
+  tbody tr {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    margin-bottom: 20px; /* Card ke beech gap */
+    padding: 15px;
+    border: 1px solid var(--gray-border);
+  }
+
+  /* 5. Cells ki styling adjust karein */
+  tbody td {
+    position: relative;
+    padding-left: 50% !important; /* Label ke liye jagah */
+    text-align: right !important; /* Value right side me */
+    padding-top: 10px;
+    padding-bottom: 10px;
+    border: none;
+    border-bottom: 1px dashed #eee;
+    display: flex;
+    justify-content: space-between; /* Label left, Value right */
+    align-items: center;
+  }
+
+  tbody td:last-child {
+    border-bottom: none;
+  }
+
+  /* 6. Label dikhane ka magic (data-label use karke) */
+  tbody td::before {
+    content: attr(data-label); /* JS wala data-label yahan dikhega */
+    position: absolute;
+    left: 10px;
+    width: 45%;
+    padding-right: 10px;
+    white-space: nowrap;
+    text-align: left;
+    font-weight: 700;
+    color: var(--brand-dark);
+    font-size: 0.9rem;
+  }
+
+  /* 7. Sticky/Fixed Columns ko disable karein mobile ke liye */
+  .fixed-col, .time-col {
+    position: static !important;
+    background-color: transparent !important;
+    width: 100% !important;
+    border-right: none !important;
+  }
+
+  /* 8. Description Column fix */
+  .desc-col {
+    max-width: 100% !important;
+    min-width: auto !important;
+    text-align: right !important;
+    display: block !important; /* Flex hata kar block */
+    padding-left: 10px !important;
+    margin-top: 10px;
+  }
+  
+  .desc-col::before {
+    position: static !important; /* Description label upar aayega */
+    display: block;
+    margin-bottom: 5px;
+  }
+
+  /* 9. Dropdown Full Width */
+  .custom-dropdown-container {
+    width: 100%;
+  }
+  
+  .task-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .task-header h2 {
+    text-align: center;
+    margin-bottom: 15px;
+  }
+
+  /* 10. Footer Summary Mobile Fix */
+/* =========================================================
+   10. Footer Summary Mobile Fix (REPLACEMENT)
+========================================================= */
+@media (max-width: 768px) {
+  
+  tfoot {
+    display: block;
+    width: 100%;
+  }
+
+  tfoot tr {
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    padding: 15px;
+    border: 1px solid var(--brand-light);
+  }
+  
+  tfoot td {
+    display: flex !important;
+    justify-content: space-between !important;
+    width: 100% !important; /* Full width fix */
+    padding: 10px 0 !important;
+    border-bottom: 1px dashed #eee;
+    text-align: right !important;
+    font-size: 0.9rem;
+  }
+
+  /* Pehle row (Summary row) ke cells ke liye labels */
+  tfoot tr:first-child td:nth-child(1) { display: none !important; } /* "Total (This Page)" text hide karein kyunki hum custom labels denge */
+  
+  tfoot tr:first-child td:nth-child(2)::before { content: "Total Boxes:"; }
+  tfoot tr:first-child td:nth-child(3)::before { content: "Box Weight:"; }
+  tfoot tr:first-child td:nth-child(4)::before { content: "Frame Weight:"; }
+
+  /* Dusri row (Working Hours) fix */
+  tfoot tr:last-child td {
+    border-bottom: none;
+    justify-content: center !important; /* Isse text center me aayega */
+    background: var(--brand-light);
+    border-radius: 8px;
+    margin-top: 5px;
+    color: var(--brand-dark);
+    font-size: 1rem;
+  }
+
+  /* Is row me "Total:" label ko hatane ke liye (kyunki text me pehle se hi hai) */
+  tfoot tr:last-child td::before {
+    content: "" !important;
+  }
+}
 }

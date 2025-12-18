@@ -1,5 +1,4 @@
 // src/OperatorDashboard.jsx
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -218,8 +217,6 @@ const baseStyles = {
     display: 'grid',
    
   gridTemplateColumns: 'repeat(2, 1fr)',  // 🔥 Always 2 cards per row
-  gap: '25px',
-  marginBottom: '30px',
     gap: '25px',
     marginBottom: '30px',
   },
@@ -269,6 +266,72 @@ const baseStyles = {
   logoutButtonHover: {
     backgroundColor: '#c82333',
   },
+  // --- NEW WELCOME SECTION STYLES ---
+  welcomeSection: {
+    marginBottom: '25px',
+    padding: '0 5px',
+  },
+  welcomeText: {
+    fontSize: '2rem',
+    fontWeight: '800',
+    background: 'linear-gradient(to right, #452983, #7853C2, #FF6B6B)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    letterSpacing: '0.5px',
+    margin: 0,
+  },
+  welcomeSubText: {
+    fontSize: '1rem',
+    color: '#666',
+    marginTop: '5px',
+    fontWeight: '500',
+  },
+};
+
+// --- NEW POPUP STYLES ---
+const popupStyles = {
+  overlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backdropFilter: 'blur(5px)',
+    zIndex: 9999,
+  },
+  container: {
+    position: 'fixed',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    backgroundColor: 'white',
+    padding: '30px 40px',
+    borderRadius: '20px',
+    textAlign: 'center',
+    boxShadow: '0 20px 50px rgba(0,0,0,0.3)',
+    minWidth: '300px',
+    maxWidth: '90%',
+    border: '1px solid rgba(255,255,255,0.5)',
+  },
+  icon: {
+    fontSize: '4rem',
+    marginBottom: '10px',
+    display: 'block',
+  },
+  title: {
+    fontSize: '2rem',
+    fontWeight: '800',
+    background: 'linear-gradient(45deg, #452983, #FF6B6B)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    margin: '10px 0',
+  },
+  subtitle: {
+    fontSize: '1.1rem',
+    color: '#666',
+    fontWeight: '500',
+  }
 };
 
 // Define CSS with media queries to be injected
@@ -358,6 +421,24 @@ const responsiveCss = `
         margin-top: 30px !important; /* Ensure separation from nav items */
     }
   }
+
+  /* --- NEW KEYFRAMES FOR ANIMATION --- */
+  @keyframes slideInFade {
+    0% { opacity: 0; transform: translate(-50%, -60%); }
+    100% { opacity: 1; transform: translate(-50%, -50%); }
+  }
+  @keyframes fadeOut {
+    0% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+  
+  .welcome-popup {
+    animation: slideInFade 0.8s ease-out forwards;
+  }
+  
+  .welcome-popup.hiding {
+    animation: fadeOut 0.8s ease-in forwards;
+  }
 `;
 
 function OperatorDashboard() {
@@ -377,6 +458,10 @@ function OperatorDashboard() {
   const [reportsGenerated, setReportsGenerated] = useState(15);
   const [reviewTasks, setReviewTasks] = useState(0);
   const [submitTasks, setSubmitTasks] = useState(0);
+
+  // --- NEW STATES FOR WELCOME POPUP ---
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [isHiding, setIsHiding] = useState(false);
 
 
   useEffect(() => {
@@ -448,10 +533,40 @@ function OperatorDashboard() {
     };
   }, [isSidebarOpen]); // Added isSidebarOpen to dependencies
 
+  // --- NEW WELCOME POPUP LOGIC ---
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return { text: "Good Morning", icon: "🌅" };
+    if (hour < 17) return { text: "Good Afternoon", icon: "☀️" };
+    return { text: "Good Evening", icon: "🌙" };
+  };
+  const greeting = getGreeting();
+
+  useEffect(() => {
+    const hasSeenPopup = sessionStorage.getItem('welcome_shown_operator');
+    if (!hasSeenPopup) {
+      setShowWelcome(true);
+      sessionStorage.setItem('welcome_shown_operator', 'true');
+    }
+  }, []);
+
+  useEffect(() => {
+    if (showWelcome) {
+      const timer = setTimeout(() => {
+        setIsHiding(true);
+        setTimeout(() => setShowWelcome(false), 800);
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [showWelcome]);
+
+
   const handleLogout = () => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('userName');
     localStorage.removeItem('userRole');
+    sessionStorage.removeItem('welcome_shown_operator');
     navigate('/');
   };
 
@@ -488,6 +603,21 @@ const handleSubmitTaskClick = () => {
 
   return (
     <div style={baseStyles.dashboardContainer} className={dashboardContainerClasses}>
+      
+      {/* --- NEW WELCOME POPUP JSX --- */}
+      {showWelcome && (
+        <div style={popupStyles.overlay}>
+          <div
+            style={popupStyles.container}
+            className={`welcome-popup ${isHiding ? 'hiding' : ''}`}
+          >
+            <span style={popupStyles.icon}>{greeting.icon}</span>
+            <h2 style={popupStyles.title}>{greeting.text}, {userName}!</h2>
+            <p style={popupStyles.subtitle}>Welcome to your dashboard.</p>
+          </div>
+        </div>
+      )}
+
       {/* Sidebar */}
       <div style={baseStyles.sidebar} className={sidebarClasses}>
         {/* Profile info in sidebar header (mobile only) */}
@@ -563,6 +693,16 @@ const handleSubmitTaskClick = () => {
               </div>
             )}
           </div>
+        </div>
+
+        {/* --- NEW STATIC WELCOME SECTION JSX --- */}
+        <div style={baseStyles.welcomeSection}>
+          <h2 style={baseStyles.welcomeText}>
+            {greeting.icon} {greeting.text}, {userName}!
+          </h2>
+          <p style={baseStyles.welcomeSubText}>
+            Hope you have a productive day ahead.
+          </p>
         </div>
 
         {/* Dashboard Cards Grid - These stay in the main content */}

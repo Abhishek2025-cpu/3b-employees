@@ -45,7 +45,7 @@ const baseStyles = {
     height: '100%',
     zIndex: 1000,
     transition: 'transform 0.3s ease-in-out',
-    transform: 'translateX(-100%)', 
+    transform: 'translateX(-100%)',
   },
   sidebarHeader: {
     display: 'flex',
@@ -212,7 +212,7 @@ const baseStyles = {
   cardIcon: {
     fontSize: '3.5rem',
     marginBottom: '15px',
-    color: '#7853C2', 
+    color: '#7853C2',
   },
   cardTitle: {
     fontSize: '1.3rem',
@@ -242,6 +242,71 @@ const baseStyles = {
   logoutButtonHover: {
     backgroundColor: '#c82333',
   },
+  welcomeSection: {
+    marginBottom: '25px',
+    padding: '0 5px',
+  },
+  welcomeText: {
+    fontSize: '2rem',
+    fontWeight: '800',
+    background: 'linear-gradient(to right, #452983, #7853C2, #FF6B6B)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    letterSpacing: '0.5px',
+    margin: 0,
+  },
+  welcomeSubText: {
+    fontSize: '1rem',
+    color: '#666',
+    marginTop: '5px',
+    fontWeight: '500',
+  },
+};
+
+
+const popupStyles = {
+  overlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)', // पीछे का बैकग्राउंड धुंधला/काला
+    backdropFilter: 'blur(5px)', // ग्लास इफेक्ट (Glassmorphism)
+    zIndex: 9999, // सबसे ऊपर दिखेगा
+  },
+  container: {
+    position: 'fixed',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    backgroundColor: 'white',
+    padding: '30px 40px',
+    borderRadius: '20px',
+    textAlign: 'center',
+    boxShadow: '0 20px 50px rgba(0,0,0,0.3)',
+    minWidth: '300px',
+    maxWidth: '90%',
+    border: '1px solid rgba(255,255,255,0.5)',
+  },
+  icon: {
+    fontSize: '4rem',
+    marginBottom: '10px',
+    display: 'block',
+  },
+  title: {
+    fontSize: '2rem',
+    fontWeight: '800',
+    background: 'linear-gradient(45deg, #452983, #FF6B6B)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    margin: '10px 0',
+  },
+  subtitle: {
+    fontSize: '1.1rem',
+    color: '#666',
+    fontWeight: '500',
+  }
 };
 
 const responsiveCss = `
@@ -275,6 +340,22 @@ const responsiveCss = `
     .sidebar-header { display: flex !important; }
     .sidebar .logout-button { margin-top: 30px !important; }
   }
+      @keyframes slideInFade {
+    0% { opacity: 0; transform: translate(-50%, -60%); }
+    100% { opacity: 1; transform: translate(-50%, -50%); }
+  }
+  @keyframes fadeOut {
+    0% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+  
+  .welcome-popup {
+    animation: slideInFade 0.8s ease-out forwards;
+  }
+  
+  .welcome-popup.hiding {
+    animation: fadeOut 0.8s ease-in forwards;
+  }
 `;
 
 const Helper = () => {
@@ -295,44 +376,46 @@ const Helper = () => {
   const [reviewTasks, setReviewTasks] = useState(0);
   const [submitTasks, setSubmitTasks] = useState(0);
 
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [isHiding, setIsHiding] = useState(false);
 
   useEffect(() => {
-  const employeeId = localStorage.getItem('_id'); 
+    const employeeId = localStorage.getItem('_id');
 
-  // ✅ Assigned Tasks
-  fetch(`https://threebapi-1067354145699.asia-south1.run.app/api/items/items/employee/${employeeId}`)
-    .then((res) => res.json())
-    .then((data) => {
-      console.log("Assigned Tasks API:", data);
+    // ✅ Assigned Tasks
+    fetch(`https://threebapi-1067354145699.asia-south1.run.app/api/items/items/employee/${employeeId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        console.log("Assigned Tasks API:", data);
 
-      const assigned = Array.isArray(data?.data) ? data.data.length : 0;
-      setAssignedTasks(assigned);
-    })
-    .catch((err) => console.error("Assigned Tasks Error:", err));
+        const assigned = Array.isArray(data?.data) ? data.data.length : 0;
+        setAssignedTasks(assigned);
+      })
+      .catch((err) => console.error("Assigned Tasks Error:", err));
 
-  // ✅ Ongoing Tasks
-  fetch(`https://threebapi-1067354145699.asia-south1.run.app/api/workers/employee-task/${employeeId}`)
-    .then((res) => res.json())
-    .then((data) => {
-      console.log("Ongoing Tasks API:", data);
+    // ✅ Ongoing Tasks
+    fetch(`https://threebapi-1067354145699.asia-south1.run.app/api/workers/employee-task/${employeeId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        console.log("Ongoing Tasks API:", data);
 
-      const ongoing = Array.isArray(data?.data) ? data.data.length : 0;
-      setOngoingTasks(ongoing);
-    })
-    .catch((err) => console.error("Ongoing Tasks Error:", err));
+        const ongoing = Array.isArray(data?.data) ? data.data.length : 0;
+        setOngoingTasks(ongoing);
+      })
+      .catch((err) => console.error("Ongoing Tasks Error:", err));
 
-  // ✅ Transfer Tasks
-  fetch(`https://threebapi-1067354145699.asia-south1.run.app/api/task-transfers/transfers`)
-    .then((res) => res.json())
-    .then((data) => {
-      console.log("Transfer Tasks API:", data);
+    // ✅ Transfer Tasks
+    fetch(`https://threebapi-1067354145699.asia-south1.run.app/api/task-transfers/transfers`)
+      .then((res) => res.json())
+      .then((data) => {
+        console.log("Transfer Tasks API:", data);
 
-      const transfers = Array.isArray(data?.data) ? data.data.length : 0;
-      setTransferTasks(transfers);
-    })
-    .catch((err) => console.error("Transfer Tasks Error:", err));
+        const transfers = Array.isArray(data?.data) ? data.data.length : 0;
+        setTransferTasks(transfers);
+      })
+      .catch((err) => console.error("Transfer Tasks Error:", err));
 
-}, []);
+  }, []);
 
 
   useEffect(() => {
@@ -349,7 +432,7 @@ const Helper = () => {
     };
     window.addEventListener('resize', handleResize);
 
-    
+
 
     const storedUserName = localStorage.getItem('name');
     const storedUserRole = localStorage.getItem('role');
@@ -369,6 +452,9 @@ const Helper = () => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('userName');
     localStorage.removeItem('userRole');
+
+    sessionStorage.removeItem('welcome_shown');
+
     navigate('/');
   };
 
@@ -386,25 +472,70 @@ const Helper = () => {
   };
 
   const handleOngoingTaskClick = () => {
-  navigate('/viewtask'); // navigate to new page
- };
+    navigate('/viewtask'); // navigate to new page
+  };
 
- const handleTransferTaskClick = () => {
-  navigate('/transfertask'); // navigate to the Transfer Tasks page
-};
+  const handleTransferTaskClick = () => {
+    navigate('/transfertask'); // navigate to the Transfer Tasks page
+  };
 
-const handleReviewTaskClick = () => {
-  navigate("/review-tasks");
-};
+  const handleReviewTaskClick = () => {
+    navigate("/review-tasks");
+  };
 
-const handleSubmitTaskClick = () => {
-  navigate("/submit-tasks");
-};
+  const handleSubmitTaskClick = () => {
+    navigate("/submit-tasks");
+  };
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return { text: "Good Morning", icon: "🌅" };
+    if (hour < 17) return { text: "Good Afternoon", icon: "☀️" };
+    return { text: "Good Evening", icon: "🌙" };
+  };
+  const greeting = getGreeting();
+
+  useEffect(() => {
+    const hasSeenPopup = sessionStorage.getItem('welcome_shown');
+    if (!hasSeenPopup) {
+      setShowWelcome(true);
+      sessionStorage.setItem('welcome_shown', 'true');
+    }
+  }, []);
+
+  useEffect(() => {
+    if (showWelcome) {
+      const timer = setTimeout(() => {
+        setIsHiding(true);
+        setTimeout(() => setShowWelcome(false), 800);
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [showWelcome]);
+
 
 
 
   return (
+
+
+
     <div style={baseStyles.dashboardContainer} className={dashboardContainerClasses}>
+
+      {showWelcome && (
+        <div style={popupStyles.overlay}>
+          <div
+            style={popupStyles.container}
+            className={`welcome-popup ${isHiding ? 'hiding' : ''}`}
+          >
+            <span style={popupStyles.icon}>{greeting.icon}</span>
+            <h2 style={popupStyles.title}>{greeting.text}, {userName}!</h2>
+            <p style={popupStyles.subtitle}>Welcome to your dashboard.</p>
+          </div>
+        </div>
+      )}
+
       {/* Sidebar */}
       <div style={baseStyles.sidebar} className={sidebarClasses}>
         {/* Profile info in sidebar header (mobile only) */}
@@ -458,7 +589,7 @@ const handleSubmitTaskClick = () => {
             ) : ( // Desktop: Dashboard Title + Optional Search Bar
               <>
                 <h1 style={baseStyles.desktopHeaderTitle} className="desktop-header-title">Helper Dashboard</h1>
-              
+
               </>
             )}
           </div>
@@ -481,29 +612,37 @@ const handleSubmitTaskClick = () => {
 
         {/* Dashboard Cards Grid - These stay in the main content */}
 
+        <div style={baseStyles.welcomeSection}>
+          <h2 style={baseStyles.welcomeText}>
+            {greeting.icon} {greeting.text}, {userName}!
+          </h2>
+          <p style={baseStyles.welcomeSubText}>
+            Hope you have a productive day ahead.
+          </p>
+        </div>
 
-      <div style={baseStyles.cardsGrid}>
+        <div style={baseStyles.cardsGrid}>
 
 
-  <div style={{ ...baseStyles.card, ...baseStyles.cardHover }} onClick={handleAssignedTaskClick}>
-    <FontAwesomeIcon icon={faClipboardList} style={baseStyles.cardIcon} />
-    <h3 style={baseStyles.cardTitle}>Assigned Task</h3>
-    <p style={baseStyles.cardCount}>{assignedTasks}</p>
-  </div>
+          <div style={{ ...baseStyles.card, ...baseStyles.cardHover }} onClick={handleAssignedTaskClick}>
+            <FontAwesomeIcon icon={faClipboardList} style={baseStyles.cardIcon} />
+            <h3 style={baseStyles.cardTitle}>Assigned Task</h3>
+            <p style={baseStyles.cardCount}>{assignedTasks}</p>
+          </div>
 
-  <div style={{ ...baseStyles.card, ...baseStyles.cardHover }} onClick={handleOngoingTaskClick}>
-    <FontAwesomeIcon icon={faHourglassHalf} style={baseStyles.cardIcon} />
-    <h3 style={baseStyles.cardTitle}>Ongoing Task</h3>
-    <p style={baseStyles.cardCount}>{ongoingTasks}</p>
-  </div>
+          <div style={{ ...baseStyles.card, ...baseStyles.cardHover }} onClick={handleOngoingTaskClick}>
+            <FontAwesomeIcon icon={faHourglassHalf} style={baseStyles.cardIcon} />
+            <h3 style={baseStyles.cardTitle}>Ongoing Task</h3>
+            <p style={baseStyles.cardCount}>{ongoingTasks}</p>
+          </div>
 
-  <div style={{ ...baseStyles.card, ...baseStyles.cardHover }} onClick={handleTransferTaskClick}>
-    <FontAwesomeIcon icon={faRightLeft} style={baseStyles.cardIcon} />
-    <h3 style={baseStyles.cardTitle}>Transfer Tasks</h3>
-    <p style={baseStyles.cardCount}>{TransferTasks}</p>
-  </div>
+          <div style={{ ...baseStyles.card, ...baseStyles.cardHover }} onClick={handleTransferTaskClick}>
+            <FontAwesomeIcon icon={faRightLeft} style={baseStyles.cardIcon} />
+            <h3 style={baseStyles.cardTitle}>Transfer Tasks</h3>
+            <p style={baseStyles.cardCount}>{TransferTasks}</p>
+          </div>
 
-</div>
+        </div>
 
 
         {/* Additional main content goes here */}

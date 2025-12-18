@@ -9,11 +9,8 @@ const BASE_URL = "https://threebapi-1067354145699.asia-south1.run.app/api"; //te
  */
 const assignMachineWithOperator = async (payload) => {
   try {
-    const response = await axios.post(`${BASE_URL}/workers/add-task`, payload, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    //  Yaha change kiya hai: headers object hata diya
+    const response = await axios.post(`${BASE_URL}/workers/add-task`, payload);
 
     // Normalize the API response format
     if (response.status === 201 || response.status === 200) {

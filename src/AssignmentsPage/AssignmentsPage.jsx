@@ -114,58 +114,58 @@ function AssignmentsPage() {
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState('success');
 
-const fetchAssignments = async () => {
-  const storedId = localStorage.getItem('_id');
-  const storedName = localStorage.getItem('name');
+  const fetchAssignments = async () => {
+    const storedId = localStorage.getItem('_id');
+    const storedName = localStorage.getItem('name');
 
-  if (!storedId) {
-    setLoading(false);
-    return;
-  }
-
-  setEmployeeId(storedId);
-  setEmployeeName(storedName || '');
-
-  try {
-    const response = await getAssignmentsByEmployee(storedId);
-
-    console.log("Assignments API response:", response);
-
-    // response itself is the array
-    const items = Array.isArray(response) ? response : [];
-
-    if (items.length > 0) {
-      const firstItem = items[0];
-
-      // Extract values
-      const itemNo =
-        firstItem.itemNo?.trim() ||
-        firstItem.product?.name?.trim() ||
-        "Unknown";
-
-      const machineNumber =
-        firstItem.machineNumber?.toString().trim() || "N/A";
-
-      // SAVE TO LOCAL STORAGE
-      localStorage.setItem("currentItemNo", itemNo);
-      localStorage.setItem("currentMachineNo", machineNumber);
-
-      console.log("Saved Item No:", itemNo);
-      console.log("Saved Machine No:", machineNumber);
-
-    } else {
-      console.warn("No items found to store itemNo or machineNumber.");
+    if (!storedId) {
+      setLoading(false);
+      return;
     }
 
-    setAssignments(items);
+    setEmployeeId(storedId);
+    setEmployeeName(storedName || '');
 
-  } catch (error) {
-    console.error("Error fetching assignments:", error);
-    setAssignments([]);
-  } finally {
-    setLoading(false);
-  }
-};
+    try {
+      const response = await getAssignmentsByEmployee(storedId);
+
+      console.log("Assignments API response:", response);
+
+      // response itself is the array
+      const items = Array.isArray(response) ? response : [];
+
+      if (items.length > 0) {
+        const firstItem = items[0];
+
+        // Extract values
+        const itemNo =
+          firstItem.itemNo?.trim() ||
+          firstItem.product?.name?.trim() ||
+          "Unknown";
+
+        const machineNumber =
+          firstItem.machineNumber?.toString().trim() || "N/A";
+
+        // SAVE TO LOCAL STORAGE
+        localStorage.setItem("currentItemNo", itemNo);
+        localStorage.setItem("currentMachineNo", machineNumber);
+
+        console.log("Saved Item No:", itemNo);
+        console.log("Saved Machine No:", machineNumber);
+
+      } else {
+        console.warn("No items found to store itemNo or machineNumber.");
+      }
+
+      setAssignments(items);
+
+    } catch (error) {
+      console.error("Error fetching assignments:", error);
+      setAssignments([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
 
@@ -179,22 +179,45 @@ const fetchAssignments = async () => {
     setShowModal(true);
   };
 
-  const handleOpenEditModal = (assignment) => {
-    console.log("🧾 Raw assignment for Operator Edit:", assignment);
+  // AssignmentsPage.js ke andar ye function update karein
 
+  const handleOpenEditModal = (assignment) => {
+    console.log("🛠 Checking Assignment Data on Click:", assignment);
+
+    // 1. Value nikalna (Strictly check karein)
+    // Pehle 'itemNo' check karein, agar wo nahi hai tab 'product.name' lein
+    const currentItemName =
+      (assignment.itemNo && assignment.itemNo !== 'N/A') ? assignment.itemNo :
+        (assignment.product?.name) ? assignment.product.name :
+          '';
+
+    // Machine Number logic
+    const currentMachineNumber =
+      (assignment.machineNumber && assignment.machineNumber !== 'N/A') ? assignment.machineNumber :
+        (assignment.machine?.name) ? assignment.machine.name :
+          '';
+
+    // IDs nikalna
+    const currentItemId = assignment.itemId || assignment.mainItemId || assignment.product?._id || assignment._id || '';
+    const currentMachineId = assignment.machineId || assignment.machine?._id || '';
+
+    console.log("👉 Extracted Values:", { currentItemName, currentMachineNumber });
+
+    // 2. LOCAL STORAGE UPDATE (Zaruri hai)
+    localStorage.setItem("currentItemNo", currentItemName);
+    localStorage.setItem("currentMachineNo", currentMachineNumber);
+    localStorage.setItem("currentItemId", currentItemId);
+    localStorage.setItem("currentMachineId", currentMachineId);
+
+    // 3. Modal ke liye data taiyar karna
     const transformedData = {
       _id: assignment._id,
-      itemName: assignment.product?.name || assignment.itemNo || '',
-      mainItemId:
-        assignment.itemId ||
-        assignment.mainItemId ||
-        assignment.product?._id ||
-        assignment._id || '',
-      machineNumber: assignment.machine?.name || assignment.machineNumber || '',
-      machineId:
-        assignment.machineId ||
-        assignment.machine?._id ||
-        '',
+      itemName: currentItemName,       // Yahi value modal me jayegi
+      machineNumber: currentMachineNumber, // Yahi value modal me jayegi
+
+      mainItemId: currentItemId,
+      machineId: currentMachineId,
+
       shift: assignment.shift || '',
       company: assignment.company || '',
       length: assignment.length || '',
@@ -205,53 +228,51 @@ const fetchAssignments = async () => {
       operatorName: assignment.operators?.[0]?.name || '',
       description: assignment.product?.description || '',
       date: new Date().toISOString().slice(0, 10),
-      time: '9-10', // Default or fetch actual time if available
+      time: '9-10',
       frameLength: '',
       numberOfBox: '',
       boxWeight: '',
       frameWeight: '',
     };
 
-    console.log("✅ Transformed data for Operator modal:", transformedData);
-
     setEditingAssignment(transformedData);
     setShowModal(true);
   };
 
-const handleOpenMixtureEditModal = (assignment) => {
-  console.log("🧾 Raw assignment for Mixture Form:", assignment);
+  const handleOpenMixtureEditModal = (assignment) => {
+    console.log("🧾 Raw assignment for Mixture Form:", assignment);
 
-  // Determine itemId safely
-  const itemId =
-    assignment?.itemId ||                  // Direct itemId
-    assignment?.mainItemId ||              // Fallback if mainItemId exists
-    assignment?.product?._id ||            // If assignment.product exists
-    assignment?._id ||                     // Last fallback
-    '';                                    // Empty string if none found
+    // Determine itemId safely
+    const itemId =
+      assignment?.itemId ||                  // Direct itemId
+      assignment?.mainItemId ||              // Fallback if mainItemId exists
+      assignment?.product?._id ||            // If assignment.product exists
+      assignment?._id ||                     // Last fallback
+      '';                                    // Empty string if none found
 
-  const mixtureId =
-    assignment?.mixtures?.[0]?._id || ''; // First mixture id if available
+    const mixtureId =
+      assignment?.mixtures?.[0]?._id || ''; // First mixture id if available
 
-  const initialFormDataForMixture = {
-    productName: assignment?.product?.name || 'N/A',
-    mixtureName: assignment?.mixtures?.[0]?.name || 'N/A',
-    machineNo: assignment?.mixtureMachine || 'N/A',
-    itemId,        // Correctly mapped itemId
-    mixtureId,     // Correctly mapped mixtureId
-    date: new Date().toISOString().slice(0, 10),
-    shift: assignment?.shift || 'Day',
-    time: '9:00-10:00',
+    const initialFormDataForMixture = {
+      productName: assignment?.product?.name || 'N/A',
+      mixtureName: assignment?.mixtures?.[0]?.name || 'N/A',
+      machineNo: assignment?.mixtureMachine || 'N/A',
+      itemId,        // Correctly mapped itemId
+      mixtureId,     // Correctly mapped mixtureId
+      date: new Date().toISOString().slice(0, 10),
+      shift: assignment?.shift || 'Day',
+      time: '9:00-10:00',
+    };
+
+    console.log("✅ Initial data for MixtureForm:", initialFormDataForMixture);
+
+    // Save to localStorage so MixtureForm can access it
+    localStorage.setItem('initialMixtureForm', JSON.stringify(initialFormDataForMixture));
+    localStorage.setItem('currentItemId', itemId); // Also store separately if needed
+
+    // Navigate to the MixtureForm page
+    navigate('/mixture-form');
   };
-
-  console.log("✅ Initial data for MixtureForm:", initialFormDataForMixture);
-
-  // Save to localStorage so MixtureForm can access it
-  localStorage.setItem('initialMixtureForm', JSON.stringify(initialFormDataForMixture));
-  localStorage.setItem('currentItemId', itemId); // Also store separately if needed
-
-  // Navigate to the MixtureForm page
-  navigate('/mixture-form');
-};
 
 
 
@@ -336,12 +357,12 @@ const handleOpenMixtureEditModal = (assignment) => {
                 <p style={baseStyles.cardRow}><strong>Length:</strong> {assignment.length || 'N/A'}</p>
                 <p style={baseStyles.cardRow}><strong>No. of Sticks:</strong> {assignment.noOfSticks || 'N/A'}</p>
 
-  {assignment.product && (
-  <div style={baseStyles.cardRow}>
-    <strong>Product Description:</strong>
-    {assignment.product?.description ?? 'N/A'}
-  </div>
-)}
+                {assignment.product && (
+                  <div style={baseStyles.cardRow}>
+                    <strong>Product Description:</strong>
+                    {assignment.product?.description ?? 'N/A'}
+                  </div>
+                )}
 
 
 
@@ -377,7 +398,7 @@ const handleOpenMixtureEditModal = (assignment) => {
                     const role = localStorage.getItem("role");
                     console.log("User Role from LocalStorage:", role);
 
-                    if (role === "Operator" || role ==='Helper') {
+                    if (role === "Operator" || role === 'Helper') {
                       console.log("Calling handleOpenEditModal() for Operator");
                       handleOpenEditModal(assignment);
                     }
