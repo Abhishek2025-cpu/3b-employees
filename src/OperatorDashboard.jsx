@@ -1,62 +1,53 @@
-// src/OperatorDashboard.jsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faClipboardCheck, faPaperPlane } from "@fortawesome/free-solid-svg-icons";
 
-
 import {
   faBars,
-  faBell, // Notification icon
-  faUserCircle, // Default profile icon for header
+  faBell,
   faSignOutAlt,
   faTimes,
-  faUserPlus, // Sidebar: Manage Work
-  faCogs, // Sidebar: Manage Application
-  faBullhorn, // Sidebar: Send Alert
-  faFileAlt, // Sidebar: Send Report
-  faSearch, // Re-adding search for desktop header
-  faClipboardList, // Card: Assigned Task
-  faHourglassHalf, // Card: Ongoing Task
-  faCheckCircle, // Card: Completed Task
-  faChartBar, // Card: Reports
+  faUserPlus,
+  faCogs,
+  faBullhorn,
+  faFileAlt,
+  faSearch,
+  faClipboardList,
+  faHourglassHalf,
   faRightLeft
 } from '@fortawesome/free-solid-svg-icons';
-import adminLogo from './assets/3b.png'; // Assuming you have this logo
-import userProfilePlaceholder from './assets/user-profile.jpg'; // Placeholder for user profile image (add this to src/assets)
+import userProfilePlaceholder from './assets/user-profile.jpg'; 
 
-// Define base styles for all elements
 const baseStyles = {
   dashboardContainer: {
     display: 'flex',
     minHeight: '100vh',
-    backgroundColor: '#f0f2f5',
-    fontFamily: "'Roboto', sans-serif",
+    backgroundColor: '#f8f9fd',
+    fontFamily: "'Poppins', sans-serif",
   },
-
   sidebar: {
-    width: '280px',
+    width: '260px',
     backgroundColor: '#452983',
     color: 'white',
-    padding: '20px',
-    boxShadow: '2px 0 5px rgba(0,0,0,0.1)',
     display: 'flex',
     flexDirection: 'column',
-    position: 'fixed', // Default fixed for mobile drawer behavior
-    height: '100%',
+    position: 'fixed',
+    left: 0,
+    top: 0,
+    bottom: 0,
     zIndex: 1000,
-    transition: 'transform 0.3s ease-in-out',
-    transform: 'translateX(-100%)', // Hidden by default (mobile)
+    transition: 'transform 0.3s ease',
+    padding: '20px 15px',
+    overflowY: 'auto',
   },
-  sidebarHeader: { // For mobile sidebar profile
+  sidebarHeader: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     marginBottom: '30px',
     paddingBottom: '20px',
-    borderBottom: '1px solid rgba(255,255,255,0.2)',
-    position: 'relative',
-    paddingTop: '10px',
+    borderBottom: '1px solid rgba(255,255,255,0.1)',
   },
   sidebarProfileImage: {
     width: '80px',
@@ -64,686 +55,302 @@ const baseStyles = {
     borderRadius: '50%',
     objectFit: 'cover',
     marginBottom: '10px',
-    border: '3px solid white',
+    border: '3px solid rgba(255,255,255,0.2)',
   },
   sidebarUserName: {
-    fontSize: '1.2rem',
-    fontWeight: 'bold',
-    color: 'white',
-    marginBottom: '5px',
+    fontSize: '1.1rem',
+    fontWeight: '600',
   },
   sidebarUserRole: {
-    fontSize: '0.9rem',
-    color: 'rgba(255,255,255,0.7)',
-  },
-  closeButton: {
-    background: 'none',
-    border: 'none',
-    color: 'white',
-    fontSize: '1.5rem',
-    cursor: 'pointer',
-    position: 'absolute',
-    top: '10px',
-    right: '10px',
+    fontSize: '0.8rem',
+    color: 'rgba(255,255,255,0.6)',
   },
   sidebarNav: {
-    flexGrow: 1, // Allows nav items to push logout to bottom
+    flexGrow: 1,
   },
   sidebarNavItem: {
     display: 'flex',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    padding: '15px 20px',
-    marginBottom: '15px',
-    borderRadius: '12px',
+    padding: '12px 15px',
+    marginBottom: '8px',
+    borderRadius: '10px',
     cursor: 'pointer',
-    transition: 'background-color 0.2s, transform 0.2s',
-    boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
-  },
-  sidebarNavItemHover: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    transform: 'translateY(-2px)',
-  },
-  sidebarNavIcon: {
-    marginRight: '20px',
-    fontSize: '1.5rem',
-    color: '#a991d8',
-  },
-  sidebarNavText: {
-    fontSize: '1.1rem',
-    fontWeight: '500',
+    color: 'rgba(255,255,255,0.8)',
+    transition: 'all 0.2s',
   },
   mainContent: {
     flexGrow: 1,
-    padding: '20px',
+    padding: '25px',
+    transition: 'margin-left 0.3s ease',
     width: '100%',
     boxSizing: 'border-box',
-    marginLeft: '0', // Mobile default
-    transition: 'margin-left 0.3s ease-in-out',
   },
   header: {
     backgroundColor: 'white',
-    padding: '15px 25px',
-    borderRadius: '10px',
-    boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
-    marginBottom: '25px',
+    padding: '15px 20px',
+    borderRadius: '15px',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    height: '60px',
-  },
-  headerLeft: {
-    display: 'flex',
-    alignItems: 'center',
-    flexGrow: 1, // Allows search bar to take space
-  },
-  menuButton: {
-    background: 'none',
-    border: 'none',
-    color: '#452983',
-    fontSize: '1.8rem',
-    cursor: 'pointer',
-    marginRight: '20px',
-  },
-  desktopHeaderTitle: {
-    fontSize: '1.8rem',
-    fontWeight: 'bold',
-    color: '#452983',
-    marginRight: '20px',
+    minHeight: '70px',
+    marginBottom: '30px',
+    flexWrap: 'wrap',
+    gap: '15px',
   },
   searchWrapper: {
     position: 'relative',
-    flexGrow: 1,
-    maxWidth: '400px', // Limit search bar width
+    maxWidth: '300px',
+    width: '100%',
   },
   searchInput: {
     width: '100%',
-    padding: '10px 15px 10px 40px', // Left padding for icon
-    border: '1px solid #ddd',
-    borderRadius: '25px',
-    fontSize: '1rem',
-  },
-  searchIcon: {
-    position: 'absolute',
-    left: '15px',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    color: '#aaa',
-  },
-  headerRight: {
-    display: 'flex',
-    alignItems: 'center',
-    marginLeft: 'auto', // Push to right
-  },
-  headerNotification: {
-    fontSize: '1.8rem',
-    color: '#7853C2',
-    cursor: 'pointer',
-    position: 'relative',
-    marginRight: '20px',
-  },
-  notificationBadge: {
-    position: 'absolute',
-    top: '-5px',
-    right: '-5px',
-    backgroundColor: '#dc3545',
-    color: 'white',
-    borderRadius: '50%',
-    width: '20px',
-    height: '20px',
-    fontSize: '0.75rem',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    fontWeight: 'bold',
-  },
-  headerProfile: {
-    display: 'flex',
-    alignItems: 'center',
-  },
-  headerProfileImage: {
-    width: '40px',
-    height: '40px',
-    borderRadius: '50%',
-    objectFit: 'cover',
-    marginRight: '10px',
-  },
-  headerUserName: {
-    fontSize: '1.1rem',
-    fontWeight: '500',
-    color: '#333',
+    padding: '10px 15px 10px 40px',
+    border: '1px solid #f0f0f0',
+    backgroundColor: '#f9f9f9',
+    borderRadius: '10px',
+    outline: 'none',
+    fontSize: '0.9rem',
   },
   cardsGrid: {
     display: 'grid',
-   
-  gridTemplateColumns: 'repeat(2, 1fr)',  // 🔥 Always 2 cards per row
-    gap: '25px',
-    marginBottom: '30px',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+    gap: '20px',
   },
   card: {
     backgroundColor: 'white',
-    borderRadius: '12px',
+    borderRadius: '16px',
     padding: '25px',
-    boxShadow: '0 4px 10px rgba(0,0,0,0.08)',
     textAlign: 'center',
-    transition: 'transform 0.2s, box-shadow 0.2s',
-  },
-  cardHover: {
-    transform: 'translateY(-5px)',
-    boxShadow: '0 6px 15px rgba(0,0,0,0.12)',
+    boxShadow: '0 4px 15px rgba(0,0,0,0.02)',
+    border: '1px solid #f0f0f0',
+    cursor: 'pointer',
+    transition: 'transform 0.2s',
   },
   cardIcon: {
-    fontSize: '3.5rem',
-    marginBottom: '15px',
-    color: '#7853C2',
-  },
-  cardTitle: {
-    fontSize: '1.3rem',
-    fontWeight: '600',
-    color: '#333',
+    fontSize: '2.5rem',
+    color: '#452983',
     marginBottom: '10px',
   },
   cardCount: {
-    fontSize: '2.5rem',
+    fontSize: '2rem',
     fontWeight: 'bold',
     color: '#452983',
+    margin: '5px 0 0 0',
   },
   logoutButton: {
-    backgroundColor: '#dc3545',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    border: '1px solid rgba(255,255,255,0.2)',
     color: 'white',
-    border: 'none',
-    padding: '12px 20px',
-    borderRadius: '8px',
-    fontSize: '1rem',
+    padding: '12px',
+    borderRadius: '10px',
     cursor: 'pointer',
+    fontWeight: '600',
+    marginTop: 'auto',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: "25px",
-    // Pushes to the bottom of the flex container
-    transition: 'background-color 0.2s',
-  },
-  logoutButtonHover: {
-    backgroundColor: '#c82333',
-  },
-  // --- NEW WELCOME SECTION STYLES ---
-  welcomeSection: {
-    marginBottom: '25px',
-    padding: '0 5px',
-  },
-  welcomeText: {
-    fontSize: '2rem',
-    fontWeight: '800',
-    background: 'linear-gradient(to right, #452983, #7853C2, #FF6B6B)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-    letterSpacing: '0.5px',
-    margin: 0,
-  },
-  welcomeSubText: {
-    fontSize: '1rem',
-    color: '#666',
-    marginTop: '5px',
-    fontWeight: '500',
-  },
-};
-
-// --- NEW POPUP STYLES ---
-const popupStyles = {
-  overlay: {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    backdropFilter: 'blur(5px)',
-    zIndex: 9999,
-  },
-  container: {
-    position: 'fixed',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    backgroundColor: 'white',
-    padding: '30px 40px',
-    borderRadius: '20px',
-    textAlign: 'center',
-    boxShadow: '0 20px 50px rgba(0,0,0,0.3)',
-    minWidth: '300px',
-    maxWidth: '90%',
-    border: '1px solid rgba(255,255,255,0.5)',
-  },
-  icon: {
-    fontSize: '4rem',
-    marginBottom: '10px',
-    display: 'block',
-  },
-  title: {
-    fontSize: '2rem',
-    fontWeight: '800',
-    background: 'linear-gradient(45deg, #452983, #FF6B6B)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-    margin: '10px 0',
-  },
-  subtitle: {
-    fontSize: '1.1rem',
-    color: '#666',
-    fontWeight: '500',
+    gap: '8px',
   }
 };
 
-// Define CSS with media queries to be injected
 const responsiveCss = `
-  body {
-    margin: 0;
-    padding: 0;
-    overflow-x: hidden; /* Prevent horizontal scroll when sidebar is open */
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+  * {
+    box-sizing: border-box;
   }
 
-  /* Sidebar specific classes */
-  .sidebar-open {
-    transform: translateX(0) !important;
+  /* Desktop View */
+  @media (min-width: 1025px) {
+    .sidebar { transform: translateX(0) !important; }
+    .main-content { margin-left: 260px !important; }
+    .mobile-only { display: none !important; }
+    .cards-grid { grid-template-columns: repeat(3, 1fr) !important; }
   }
 
-  /* Main content classes for desktop */
-  .main-content-shifted {
-    margin-left: 280px !important; /* Adjusted for wider sidebar */
+  /* Tablet View */
+  @media (min-width: 769px) and (max-width: 1024px) {
+    .sidebar { transform: translateX(0) !important; }
+    .main-content { margin-left: 260px !important; padding: 20px !important; }
+    .mobile-only { display: none !important; }
+    .cards-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 15px !important; }
+    .header { flex-wrap: wrap !important; }
+    .search-wrapper { order: 3; width: 100% !important; max-width: 100% !important; margin-top: 10px !important; }
   }
 
-  /* Hide scrollbar when sidebar is open on mobile */
-  .dashboard-container.sidebar-open-mobile {
-    overflow: hidden;
+  /* Mobile View */
+  @media (max-width: 768px) {
+    .sidebar { transform: translateX(-100%); width: 280px !important; }
+    .sidebar.open { transform: translateX(0); }
+    .main-content { margin-left: 0 !important; padding: 15px !important; }
+    .desktop-only { display: none !important; }
+    .cards-grid { grid-template-columns: 1fr 1fr !important; gap: 12px !important; }
+    .header { padding: 12px 15px !important; min-height: auto !important; }
+    .dashboard-card { padding: 18px !important; }
+    .card-icon { font-size: 2rem !important; }
+    .card-count { font-size: 1.6rem !important; }
+    .greeting-title { font-size: 1.4rem !important; }
+    .greeting-subtitle { font-size: 0.85rem !important; }
   }
 
-  /* Media Queries for Responsiveness */
-  @media (min-width: 768px) {
-    /* Sidebar on Desktop */
-    .sidebar {
-      transform: translateX(0) !important; /* Always visible on desktop */
-      position: relative !important; /* Change from fixed to relative */
-      box-shadow: none !important; /* Remove shadow when relative */
-    }
-    .sidebar-header {
-        display: none !important; /* Hide mobile profile in sidebar on desktop */
-    }
-    .sidebar .close-button {
-      display: none !important; /* Hide close button on desktop */
-    }
-    .sidebar .logout-button {
-        margin-top: auto !important; /* Ensure it stays at the bottom */
-    }
-
-    /* Main Content on Desktop */
-    .main-content {
-      margin-left: 0 !important; /* Adjust margin for sidebar when it's relative */
-    }
-
-    /* Header elements on Desktop */
-    .menu-button {
-      display: none !important; /* Hide mobile menu button on desktop */
-    }
-    .desktop-header-title {
-        display: block !important; /* Show desktop title */
-    }
-    .search-wrapper {
-        display: block !important; /* Show search bar */
-    }
-    .header-profile {
-        display: flex !important; /* Show desktop profile */
-    }
+  /* Small Mobile */
+  @media (max-width: 480px) {
+    .cards-grid { grid-template-columns: 1fr !important; gap: 10px !important; }
+    .main-content { padding: 12px !important; }
+    .dashboard-card { padding: 20px !important; }
+    .card-icon { font-size: 2.2rem !important; }
+    .card-count { font-size: 1.8rem !important; }
   }
 
-  @media (max-width: 767px) {
-    /* Mobile specific overrides */
-    .sidebar {
-        box-shadow: 2px 0 5px rgba(0,0,0,0.1) !important; /* Re-add shadow for mobile drawer */
-    }
-    .main-content-shifted {
-      margin-left: 0 !important; /* No margin shift on mobile */
-    }
-    .header .desktop-header-title,
-    .header .search-wrapper,
-    .header .header-profile {
-      display: none !important; /* Hide desktop elements on mobile */
-    }
-    .header .menu-button {
-        display: block !important; /* Show mobile menu button */
-    }
-    .header .header-notification {
-        margin-left: auto !important; /* Push notification to right */
-    }
-    .sidebar-header {
-        display: flex !important; /* Show mobile profile in sidebar */
-    }
-    .sidebar .logout-button {
-        margin-top: 30px !important; /* Ensure separation from nav items */
-    }
-  }
-
-  /* --- NEW KEYFRAMES FOR ANIMATION --- */
-  @keyframes slideInFade {
-    0% { opacity: 0; transform: translate(-50%, -60%); }
-    100% { opacity: 1; transform: translate(-50%, -50%); }
-  }
-  @keyframes fadeOut {
-    0% { opacity: 1; }
-    100% { opacity: 0; }
-  }
+  .nav-item:hover { background: rgba(255,255,255,0.15); color: white; }
+  .dashboard-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.08); }
   
-  .welcome-popup {
-    animation: slideInFade 0.8s ease-out forwards;
+  .overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.4); z-index: 999; display: none;
   }
-  
-  .welcome-popup.hiding {
-    animation: fadeOut 0.8s ease-in forwards;
+  .overlay.show { display: block; }
+
+  @media (hover: none) {
+    .dashboard-card:hover { transform: none; }
   }
 `;
 
 function OperatorDashboard() {
   const navigate = useNavigate();
   const [userName, setUserName] = useState('Operator');
-  const [userRole, setUserRole] = useState('Role');
-  const [userProfilePic, setUserProfilePic] = useState(userProfilePlaceholder);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 767);
-  const [notificationCount, setNotificationCount] = useState(3);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
-  // --- THESE LINES MUST BE PRESENT AND UNCOMMENTED ---
-  const [assignedTasks, setAssignedTasks] = useState(12);
-  const [ongoingTasks, setOngoingTasks] = useState(5);
-  const [completedTasks, setCompletedTasks] = useState(87);
-  const [TransferTasks, setTransferTasks] = useState(4);
-  const [reportsGenerated, setReportsGenerated] = useState(15);
-  const [reviewTasks, setReviewTasks] = useState(0);
-  const [submitTasks, setSubmitTasks] = useState(0);
-
-  // --- NEW STATES FOR WELCOME POPUP ---
-  const [showWelcome, setShowWelcome] = useState(false);
-  const [isHiding, setIsHiding] = useState(false);
-
+  const [assignedTasks, setAssignedTasks] = useState(0);
+  const [ongoingTasks, setOngoingTasks] = useState(0);
+  const [transferTasks, setTransferTasks] = useState(0);
 
   useEffect(() => {
-  const employeeId = "68ef4b205892a32a6dc5c77b";
-
-  // ✅ Assigned Tasks
-  fetch(`https://threebapi-1067354145699.asia-south1.run.app/api/items/items/employee/${employeeId}`)
-    .then((res) => res.json())
-    .then((data) => {
-      console.log("Assigned Tasks API:", data);
-
-      const assigned = Array.isArray(data?.data) ? data.data.length : 0;
-      setAssignedTasks(assigned);
-    })
-    .catch((err) => console.error("Assigned Tasks Error:", err));
-
-  // ✅ Ongoing Tasks
-  fetch(`https://threebapi-1067354145699.asia-south1.run.app/api/workers/employee-task/${employeeId}`)
-    .then((res) => res.json())
-    .then((data) => {
-      console.log("Ongoing Tasks API:", data);
-
-      const ongoing = Array.isArray(data?.data) ? data.data.length : 0;
-      setOngoingTasks(ongoing);
-    })
-    .catch((err) => console.error("Ongoing Tasks Error:", err));
-
-  // ✅ Transfer Tasks
-  fetch(`https://threebapi-1067354145699.asia-south1.run.app/api/task-transfers/transfers`)
-    .then((res) => res.json())
-    .then((data) => {
-      console.log("Transfer Tasks API:", data);
-
-      const transfers = Array.isArray(data?.data) ? data.data.length : 0;
-      setTransferTasks(transfers);
-    })
-    .catch((err) => console.error("Transfer Tasks Error:", err));
-
-}, []);
-
+    const employeeId = "68ef4b205892a32a6dc5c77b";
+    
+    fetch(`https://threebapi-1067354145699.asia-south1.run.app/api/items/items/employee/${employeeId}`)
+      .then(res => res.json()).then(data => setAssignedTasks(data?.data?.length || 0));
+      
+    fetch(`https://threebapi-1067354145699.asia-south1.run.app/api/workers/employee-task/${employeeId}`)
+      .then(res => res.json()).then(data => setOngoingTasks(data?.data?.length || 0));
+      
+    fetch(`https://threebapi-1067354145699.asia-south1.run.app/api/task-transfers/transfers`)
+      .then(res => res.json()).then(data => setTransferTasks(data?.data?.length || 0));
+  }, []);
 
   useEffect(() => {
     const styleTag = document.createElement("style");
     styleTag.innerHTML = responsiveCss;
     document.head.appendChild(styleTag);
-
-    const handleResize = () => {
-      const mobileView = window.innerWidth <= 767;
-      setIsMobile(mobileView);
-      if (!mobileView && isSidebarOpen) {
-        setIsSidebarOpen(false); // Close sidebar if resizing from mobile to desktop
-      }
-    };
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener('resize', handleResize);
-
-    
-
-    const storedUserName = localStorage.getItem('userName');
-    const storedUserRole = localStorage.getItem('userRole');
-    if (storedUserName) setUserName(storedUserName);
-    if (storedUserRole) setUserRole(storedUserRole);
-    // Fetch actual profile image if available
-    // const storedProfilePic = localStorage.getItem('userProfilePic');
-    // if (storedProfilePic) setUserProfilePic(storedProfilePic);
-
     return () => {
       document.head.removeChild(styleTag);
       window.removeEventListener('resize', handleResize);
     };
-  }, [isSidebarOpen]); // Added isSidebarOpen to dependencies
-
-  // --- NEW WELCOME POPUP LOGIC ---
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return { text: "Good Morning", icon: "🌅" };
-    if (hour < 17) return { text: "Good Afternoon", icon: "☀️" };
-    return { text: "Good Evening", icon: "🌙" };
-  };
-  const greeting = getGreeting();
-
-  useEffect(() => {
-    const hasSeenPopup = sessionStorage.getItem('welcome_shown_operator');
-    if (!hasSeenPopup) {
-      setShowWelcome(true);
-      sessionStorage.setItem('welcome_shown_operator', 'true');
-    }
   }, []);
 
-  useEffect(() => {
-    if (showWelcome) {
-      const timer = setTimeout(() => {
-        setIsHiding(true);
-        setTimeout(() => setShowWelcome(false), 800);
-      }, 2000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [showWelcome]);
-
-
-  const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userName');
-    localStorage.removeItem('userRole');
-    sessionStorage.removeItem('welcome_shown_operator');
-    navigate('/');
-  };
-
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
-
-  // Conditionally apply class names
-  const sidebarClasses = `sidebar ${isSidebarOpen ? 'sidebar-open' : ''}`;
-  const mainContentClasses = `main-content ${!isMobile ? 'main-content-shifted' : ''}`;
-  const dashboardContainerClasses = `dashboard-container ${isMobile && isSidebarOpen ? 'sidebar-open-mobile' : ''}`;
-
-  const handleAssignedTaskClick = () => {
-    navigate('/assignments'); // navigate to assignments page
-  };
-
-  const handleOngoingTaskClick = () => {
-  navigate('/viewtask'); // navigate to new page
- };
-
- const handleTransferTaskClick = () => {
-  navigate('/transfertask'); // navigate to the Transfer Tasks page
-};
-
-const handleReviewTaskClick = () => {
-  navigate("/review-tasks");
-};
-
-const handleSubmitTaskClick = () => {
-  navigate("/submit-tasks");
-};
-
-
+  const handleLogout = () => { navigate('/'); };
 
   return (
-    <div style={baseStyles.dashboardContainer} className={dashboardContainerClasses}>
-      
-      {/* --- NEW WELCOME POPUP JSX --- */}
-      {showWelcome && (
-        <div style={popupStyles.overlay}>
-          <div
-            style={popupStyles.container}
-            className={`welcome-popup ${isHiding ? 'hiding' : ''}`}
-          >
-            <span style={popupStyles.icon}>{greeting.icon}</span>
-            <h2 style={popupStyles.title}>{greeting.text}, {userName}!</h2>
-            <p style={popupStyles.subtitle}>Welcome to your dashboard.</p>
-          </div>
-        </div>
-      )}
+    <div style={baseStyles.dashboardContainer}>
+      <div className={`overlay ${isSidebarOpen ? 'show' : ''}`} onClick={() => setIsSidebarOpen(false)}></div>
 
-      {/* Sidebar */}
-      <div style={baseStyles.sidebar} className={sidebarClasses}>
-        {/* Profile info in sidebar header (mobile only) */}
-        {isMobile && (
-          <div style={baseStyles.sidebarHeader}>
-            <button onClick={toggleSidebar} style={baseStyles.closeButton} className="close-button">
-              <FontAwesomeIcon icon={faTimes} />
-            </button>
-            <img src={userProfilePic} alt="Profile" style={baseStyles.sidebarProfileImage} />
-            <span style={baseStyles.sidebarUserName}>{userName}</span>
-            <span style={baseStyles.sidebarUserRole}>{userRole}</span>
-          </div>
-        )}
+      <div style={baseStyles.sidebar} className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
+        <div style={baseStyles.sidebarHeader}>
+          <img src={userProfilePlaceholder} alt="Profile" style={baseStyles.sidebarProfileImage} />
+          <span style={baseStyles.sidebarUserName}>{userName}</span>
+          <span style={baseStyles.sidebarUserRole}>Operator</span>
+        </div>
 
         <nav style={baseStyles.sidebarNav}>
-          {/* Main navigation items for the sidebar */}
-          <div style={{ ...baseStyles.sidebarNavItem, ...baseStyles.sidebarNavItemHover }}>
-            <FontAwesomeIcon icon={faUserPlus} style={baseStyles.sidebarNavIcon} />
-            <span style={baseStyles.sidebarNavText}>Manage Work</span>
+          <div style={baseStyles.sidebarNavItem} className="nav-item">
+            <FontAwesomeIcon icon={faUserPlus} style={{marginRight:'10px'}} /> Manage Work
           </div>
-          <div style={{ ...baseStyles.sidebarNavItem, ...baseStyles.sidebarNavItemHover }}>
-            <FontAwesomeIcon icon={faCogs} style={baseStyles.sidebarNavIcon} />
-            <span style={baseStyles.sidebarNavText}>Manage Application</span>
+          <div style={baseStyles.sidebarNavItem} className="nav-item">
+            <FontAwesomeIcon icon={faCogs} style={{marginRight:'10px'}} /> Application
           </div>
-          <div style={{ ...baseStyles.sidebarNavItem, ...baseStyles.sidebarNavItemHover }}>
-            <FontAwesomeIcon icon={faBullhorn} style={baseStyles.sidebarNavIcon} />
-            <span style={baseStyles.sidebarNavText}>Send Alert</span>
+          <div style={baseStyles.sidebarNavItem} className="nav-item">
+            <FontAwesomeIcon icon={faBullhorn} style={{marginRight:'10px'}} /> Send Alert
           </div>
-          <div style={{ ...baseStyles.sidebarNavItem, ...baseStyles.sidebarNavItemHover }}>
-            <FontAwesomeIcon icon={faFileAlt} style={baseStyles.sidebarNavIcon} />
-            <span style={baseStyles.sidebarNavText}>Send Report</span>
+          <div style={baseStyles.sidebarNavItem} className="nav-item">
+            <FontAwesomeIcon icon={faFileAlt} style={{marginRight:'10px'}} /> Reports
           </div>
         </nav>
 
-        {/* Logout button always at the bottom of the sidebar */}
-        <button onClick={handleLogout} style={{ ...baseStyles.logoutButton, ...baseStyles.logoutButtonHover }} className="logout-button">
-          <FontAwesomeIcon icon={faSignOutAlt} style={baseStyles.sidebarNavIcon} />
-          Logout
+        <button onClick={handleLogout} style={baseStyles.logoutButton}>
+          <FontAwesomeIcon icon={faSignOutAlt} /> Logout
         </button>
       </div>
 
-      {/* Main Content Area */}
-      <div style={baseStyles.mainContent} className={mainContentClasses}>
-        {/* Header */}
-        <div style={baseStyles.header}>
-          <div style={baseStyles.headerLeft}>
-            {isMobile ? ( // Mobile: Menu button
-              <button onClick={toggleSidebar} style={baseStyles.menuButton} className="menu-button">
-                <FontAwesomeIcon icon={faBars} />
-              </button>
-            ) : ( // Desktop: Dashboard Title + Optional Search Bar
-              <>
-                <h1 style={baseStyles.desktopHeaderTitle} className="desktop-header-title">Operator Dashboard</h1>
-                <div style={baseStyles.searchWrapper} className="search-wrapper">
-                  <FontAwesomeIcon icon={faSearch} style={baseStyles.searchIcon} />
-                  <input type="text" placeholder="Search for something" style={baseStyles.searchInput} />
-                </div>
-              </>
-            )}
+      <div style={baseStyles.mainContent} className="main-content">
+        <header style={baseStyles.header} className="header">
+          <div style={{display:'flex', alignItems:'center', flex: '1 1 auto'}}>
+            <button 
+              onClick={() => setIsSidebarOpen(true)} 
+              style={{border:'none', background:'#f0ecf9', color:'#452983', padding:'10px 12px', borderRadius:'8px', marginRight:'15px', cursor:'pointer', fontSize:'1rem'}} 
+              className="mobile-only"
+            >
+              <FontAwesomeIcon icon={faBars} />
+            </button>
+            <h2 style={{margin:0, color:'#452983', fontWeight:'700', fontSize: 'clamp(1.2rem, 4vw, 1.5rem)'}}>Overview</h2>
           </div>
 
-          <div style={baseStyles.headerRight}>
-            <div style={baseStyles.headerNotification} className="header-notification">
-              <FontAwesomeIcon icon={faBell} />
-              {notificationCount > 0 && (
-                <span style={baseStyles.notificationBadge}>{notificationCount}</span>
-              )}
+          <div style={{...baseStyles.searchWrapper, flex: '1 1 auto'}} className="desktop-only search-wrapper">
+            <FontAwesomeIcon icon={faSearch} style={{position:'absolute', left:'15px', top:'50%', transform:'translateY(-50%)', color:'#aaa'}} />
+            <input type="text" placeholder="Search tasks..." style={baseStyles.searchInput} />
+          </div>
+
+          <div style={{display:'flex', alignItems:'center', gap:'15px', flex: '0 0 auto'}}>
+            <div style={{position:'relative', cursor:'pointer'}}>
+              <FontAwesomeIcon icon={faBell} style={{fontSize:'1.2rem', color:'#452983'}} />
+              <span style={{position:'absolute', top:'-8px', right:'-8px', background:'red', color:'white', fontSize:'0.6rem', padding:'2px 5px', borderRadius:'50%', minWidth:'18px', textAlign:'center'}}>3</span>
             </div>
-            {!isMobile && ( // Desktop: Profile image and name
-              <div style={baseStyles.headerProfile} className="header-profile">
-                <img src={userProfilePic} alt="Profile" style={baseStyles.headerProfileImage} />
-                <span style={baseStyles.headerUserName}>Hello, {userName}</span>
-              </div>
-            )}
+            <div style={{display:'flex', alignItems:'center', gap:'10px'}} className="desktop-only">
+              <img src={userProfilePlaceholder} style={{width:'35px', height:'35px', borderRadius:'8px', objectFit:'cover'}} alt="user" />
+              <span style={{fontWeight:'600', fontSize:'0.9rem', whiteSpace:'nowrap'}}>{userName}</span>
+            </div>
+          </div>
+        </header>
+
+        <div style={{marginBottom:'25px'}}>
+          <h1 style={{margin:0, fontSize: 'clamp(1.4rem, 5vw, 1.8rem)'}} className="greeting-title">🌟 Hello, {userName}</h1>
+          <p style={{color:'#666', margin:'5px 0', fontSize: 'clamp(0.85rem, 2.5vw, 1rem)'}} className="greeting-subtitle">Here's what's happening today.</p>
+        </div>
+
+        <div style={baseStyles.cardsGrid} className="cards-grid">
+          <div style={baseStyles.card} className="dashboard-card" onClick={() => navigate('/review-tasks')}>
+            <FontAwesomeIcon icon={faClipboardCheck} style={baseStyles.cardIcon} className="card-icon" />
+            <div style={{fontWeight:'600', color:'#666', fontSize: 'clamp(0.85rem, 2vw, 0.95rem)'}}>Review Tasks</div>
+            <p style={baseStyles.cardCount} className="card-count">0</p>
+          </div>
+
+          <div style={baseStyles.card} className="dashboard-card" onClick={() => navigate('/submit-tasks')}>
+            <FontAwesomeIcon icon={faPaperPlane} style={baseStyles.cardIcon} className="card-icon" />
+            <div style={{fontWeight:'600', color:'#666', fontSize: 'clamp(0.85rem, 2vw, 0.95rem)'}}>Submit Tasks</div>
+            <p style={baseStyles.cardCount} className="card-count">0</p>
+          </div>
+
+          <div style={baseStyles.card} className="dashboard-card" onClick={() => navigate('/assignments')}>
+            <FontAwesomeIcon icon={faClipboardList} style={baseStyles.cardIcon} className="card-icon" />
+            <div style={{fontWeight:'600', color:'#666', fontSize: 'clamp(0.85rem, 2vw, 0.95rem)'}}>Assigned Task</div>
+            <p style={baseStyles.cardCount} className="card-count">{assignedTasks}</p>
+          </div>
+
+          <div style={baseStyles.card} className="dashboard-card" onClick={() => navigate('/viewtask')}>
+            <FontAwesomeIcon icon={faHourglassHalf} style={baseStyles.cardIcon} className="card-icon" />
+            <div style={{fontWeight:'600', color:'#666', fontSize: 'clamp(0.85rem, 2vw, 0.95rem)'}}>Ongoing Task</div>
+            <p style={baseStyles.cardCount} className="card-count">{ongoingTasks}</p>
+          </div>
+
+          <div style={baseStyles.card} className="dashboard-card" onClick={() => navigate('/transfertask')}>
+            <FontAwesomeIcon icon={faRightLeft} style={baseStyles.cardIcon} className="card-icon" />
+            <div style={{fontWeight:'600', color:'#666', fontSize: 'clamp(0.85rem, 2vw, 0.95rem)'}}>Transfer Tasks</div>
+            <p style={baseStyles.cardCount} className="card-count">{transferTasks}</p>
           </div>
         </div>
-
-        {/* --- NEW STATIC WELCOME SECTION JSX --- */}
-        <div style={baseStyles.welcomeSection}>
-          <h2 style={baseStyles.welcomeText}>
-            {greeting.icon} {greeting.text}, {userName}!
-          </h2>
-          <p style={baseStyles.welcomeSubText}>
-            Hope you have a productive day ahead.
-          </p>
-        </div>
-
-        {/* Dashboard Cards Grid - These stay in the main content */}
-
-
-      <div style={baseStyles.cardsGrid}>
-  
-  <div style={{ ...baseStyles.card, ...baseStyles.cardHover }} onClick={handleReviewTaskClick}>
-    <FontAwesomeIcon icon={faClipboardCheck} style={baseStyles.cardIcon} />
-    <h3 style={baseStyles.cardTitle}>Review Tasks</h3>
-    <p style={baseStyles.cardCount}>{reviewTasks}</p>
-  </div>
-
-  <div style={{ ...baseStyles.card, ...baseStyles.cardHover }} onClick={handleSubmitTaskClick}>
-    <FontAwesomeIcon icon={faPaperPlane} style={baseStyles.cardIcon} />
-    <h3 style={baseStyles.cardTitle}>Submit Tasks</h3>
-    <p style={baseStyles.cardCount}>{submitTasks}</p>
-  </div>
-
-  <div style={{ ...baseStyles.card, ...baseStyles.cardHover }} onClick={handleAssignedTaskClick}>
-    <FontAwesomeIcon icon={faClipboardList} style={baseStyles.cardIcon} />
-    <h3 style={baseStyles.cardTitle}>Assigned Task</h3>
-    <p style={baseStyles.cardCount}>{assignedTasks}</p>
-  </div>
-
-  <div style={{ ...baseStyles.card, ...baseStyles.cardHover }} onClick={handleOngoingTaskClick}>
-    <FontAwesomeIcon icon={faHourglassHalf} style={baseStyles.cardIcon} />
-    <h3 style={baseStyles.cardTitle}>Ongoing Task</h3>
-    <p style={baseStyles.cardCount}>{ongoingTasks}</p>
-  </div>
-
-  <div style={{ ...baseStyles.card, ...baseStyles.cardHover }} onClick={handleTransferTaskClick}>
-    <FontAwesomeIcon icon={faRightLeft} style={baseStyles.cardIcon} />
-    <h3 style={baseStyles.cardTitle}>Transfer Tasks</h3>
-    <p style={baseStyles.cardCount}>{TransferTasks}</p>
-  </div>
-
-</div>
-
-
-        {/* Additional main content goes here */}
       </div>
     </div>
   );

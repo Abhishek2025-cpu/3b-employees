@@ -1,15 +1,40 @@
 /* =========================================================
-   🌿 Base Styling & Theme Tokens
+   🌿 CSS Variables & Theme Tokens (Enhanced)
 ========================================================= */
 :root {
-  --brand-dark: #114232;
+  --brand-dark: #0d3326;
+  --brand-medium: #114232;
   --brand-light: #e6f4ec;
-  --brand-accent: #25d366;
-  --gray-bg: #f5f5f5;
-  --gray-border: #ddd;
-  --shadow-light: 0 2px 6px rgba(0, 0, 0, 0.05);
-  --font-main: 'Segoe UI', sans-serif;
-  --font-heading: 'Roboto Slab', serif;
+  --brand-accent: #22c55e;
+  --brand-accent-dark: #16a34a;
+  --gray-bg: #f8fafc;
+  --gray-border: #e2e8f0;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.15);
+  --font-main: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  --font-heading: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Courier New', monospace;
+  --transition-base: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-smooth: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  --border-radius-sm: 8px;
+  --border-radius-md: 12px;
+  --border-radius-lg: 16px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --text-dark: #1a202c;
+  --text-medium: #2d3748;
+  --text-light: #4a5568;
+  --text-lighter: #718096;
+  --text-on-dark: #ffffff;
+  --text-on-light: #1a202c;
+}
+
+* {
+  box-sizing: border-box;
 }
 
 body {
@@ -17,452 +42,263 @@ body {
   background-color: var(--gray-bg);
   margin: 0;
   padding: 0;
+  line-height: 1.65;
+  color: var(--text-medium);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* =========================================================
-   📊 Table Container
+   📄 Page Layout (Enhanced)
 ========================================================= */
-.table-container {
-  overflow-x: auto;
-  margin-top: 20px;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: var(--shadow-light);
-  padding: 10px;
-}
-
-/* =========================================================
-   ⏳ Loader
-========================================================= */
-.loader {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background-color: rgba(255, 255, 255, 0.8);
-  z-index: 1000;
-  justify-content: center;
-  align-items: center;
-}
-.loader .spinner-border {
-  width: 3rem;
-  height: 3rem;
-}
-
-/* =========================================================
-   📋 Table Structure
-========================================================= */
-table {
-  width: 100%;
-  min-width: 900px;
-  border-collapse: separate;
-  border-spacing: 0;
-}
-thead th {
-  background-color: var(--brand-dark);
-  color: #fff;
-  position: sticky;
-  top: 0;
-  text-align: center;
-  font-family: var(--font-heading);
-  padding: 10px;
-  z-index: 5;
-}
-tbody td, thead th {
-  vertical-align: middle;
-  text-align: center;
-  padding: 10px;
-  font-size: 0.95rem;
-}
-tbody tr:nth-child(even) {
-  background-color: #f8f9fa;
-}
-
-/* =========================================================
-   📌 Fixed Columns
-========================================================= */
-.fixed-col {
-  position: sticky;
-  left: 0;
-  background-color: var(--brand-light) !important;
-  z-index: 3;
-  width: 80px;
-  font-weight: 600;
-  color: #000000;
-}
-
-.time-col {
-  position: sticky;
-  left: 80px;
-  background-color: var(--brand-light) !important;
-  color: var(--brand-dark);
-  font-weight: 700;
-  font-family: var(--font-heading);
-  border-right: 1px solid #ccc;
-  width: 100px;
-  z-index: 3;
-}
-
-/* =========================================================
-   🏷️ Badge System
-========================================================= */
-.badge {
-  display: inline-block;
-  border-radius: 12px;
-  padding: 4px 10px;
-  font-weight: 600;
-  font-size: 0.85rem;
-  margin: 2px;
-  white-space: nowrap;
-  color: #111827 !important;
-  background-color: #f9fafb;
-  border: 1px solid transparent;
-}
-
-/* Variants */
-.badge-time {
-  background-color: var(--brand-light) !important;
-  color: var(--brand-dark) !important;
-  border-color: #b7e4c7;
-}
-
-.badge-frame {
-  background-color: #dbeafe !important;
-  color: #1e3a8a !important;
-  border-color: #93c5fd;
-}
-
-.badge-box {
-  background-color: #fef9c3 !important;
-  color: #854d0e !important;
-  border-color: #fde68a;
-}
-
-.badge-weight {
-  background-color: #d1fae5 !important;
-  color: #065f46 !important;
-  border-color: #6ee7b7;
-}
-
-.badge-frame-weight {
-  background-color: #fde68a !important;
-  color: #7a4f01 !important;
-  border-color: #fcd34d;
-}
-
-/* =========================================================
-   🧾 Cell-specific Spans
-========================================================= */
-td.time-col span,
-td.box-col span,
-.box-weight,
-.frame-weight {
-  border-radius: 10px;
-  padding: 4px 10px;
-  display: inline-block;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-td.time-col span {
-  background-color: var(--brand-light);
-  color: var(--brand-dark);
-}
-
-td.box-col span {
-  background-color: #fff3cd;
-  color: #7a4f01;
-}
-
-.box-weight {
-  background-color: #d0ebff;
-  color: #084298;
-}
-
-.frame-weight {
-  background-color: #ffe5b4;
-  color: #7a4f01;
-}
-
-/* =========================================================
-   🧮 Summary Row
-========================================================= */
-.summary-row {
-  background-color: #f0fdf4;
-  font-weight: bold;
-  color: var(--brand-dark);
-}
-
-/* =========================================================
-   🔽 Dropdown
-========================================================= */
-.dropdown-toggle {
-  width: 100%;
-  background: none;
-  border: none;
-  text-align: center;
-  color: #084298;
-  font-weight: 500;
-}
-
-.dropdown-menu {
-  max-height: 200px;
-  overflow-y: auto;
-}
-
-/* =========================================================
-   🪪 Info Card
-========================================================= */
-.info-card {
-  background-color: #fff;
-  border-left: 5px solid var(--brand-dark);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  padding: 10px 20px;
-  margin-bottom: 20px;
-  border-radius: 8px;
-  display: none;
-}
-.info-card h6 {
-  margin: 0;
-  font-family: var(--font-heading);
-}
-
-/* =========================================================
-   📱 Bottom Bar
-========================================================= */
-.bottom-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  background-color: #f8f9fa;
-  border-top: 1px solid var(--gray-border);
-  padding: 10px 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  z-index: 1050;
-}
-.bottom-bar .checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 1rem;
-  font-weight: 500;
-}
-.bottom-bar .share-btn {
-  background-color: var(--brand-accent);
-  color: #fff;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 30px;
-  font-size: 1rem;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
+.view-task-page {
+  min-height: 100vh;
+  padding: var(--spacing-xl);
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f0fdf4 100%);
   position: relative;
 }
 
-/* =========================================================
-   📤 Popup Export Menu
-========================================================= */
-.popup {
+.view-task-page::before {
+  content: '';
   position: absolute;
-  bottom: 50px;
-  right: 0;
-  background-color: #fff;
-  border: 1px solid var(--gray-border);
-  border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  padding: 15px;
-  width: 200px;
-  display: none;
-  z-index: 1060;
-  animation: slide-in 0.3s ease-out;
+  inset: 0;
+  background-image: 
+    radial-gradient(circle at 20% 30%, rgba(34, 197, 94, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(14, 165, 233, 0.05) 0%, transparent 50%);
+  pointer-events: none;
 }
-.popup h5 {
-  margin: 0 0 10px;
-  font-size: 1rem;
-  font-weight: 600;
-  text-align: center;
+
+.content-wrapper {
+  max-width: 1400px;
+  margin: 0 auto;
+  animation: fadeIn 0.6s ease-out;
+  position: relative;
+  z-index: 1;
 }
-.popup button {
-  width: 100%;
-  margin-top: 10px;
-  padding: 8px;
-  border: none;
-  border-radius: 5px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-.popup .pdf-btn {
-  background-color: #dc3545;
-  color: #fff;
-}
-.popup .excel-btn {
-  background-color: #007bff;
-  color: #fff;
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* =========================================================
-   🧾 Header & Footer
+   ⏳ Loader (Enhanced)
 ========================================================= */
-#fetchedHeaderRow th {
-  background-color: var(--brand-light);
-  color: #000;
-  font-size: 1rem;
-  font-weight: 600;
-  padding: 10px;
-  text-align: left;
-  border-bottom: 2px solid var(--gray-border);
-}
-#fetchedHeaderRow th div {
+.loader {
+  position: fixed;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.97);
+  backdrop-filter: blur(10px);
   display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-tfoot td {
-  text-align: center;
-  vertical-align: middle;
-  font-weight: bold;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
 }
 
+.loader .spinner-border {
+  width: 4.5rem;
+  height: 4.5rem;
+  border: 5px solid rgba(34, 197, 94, 0.15);
+  border-top-color: var(--brand-accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
 
-/* ... (Aapki purani CSS yaha rahegi) ... */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 
 /* =========================================================
-   🌟 NEW: Attractive Header & Dropdown Styles
+   📋 Header Section (Enhanced Typography)
 ========================================================= */
-
 .task-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: var(--spacing-xl);
+  gap: var(--spacing-lg);
   flex-wrap: wrap;
-  gap: 15px;
 }
 
-.task-header h2 {
+.page-title {
   margin: 0;
   color: var(--brand-dark);
   font-family: var(--font-heading);
+  font-size: 2.25rem;
   font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  position: relative;
+  padding-bottom: 12px;
 }
 
-/* Container to hold the dropdown */
+.page-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 80px;
+  height: 5px;
+  background: linear-gradient(90deg, var(--brand-accent) 0%, var(--brand-accent-dark) 100%);
+  border-radius: 3px;
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
+}
+
+/* =========================================================
+   🎨 Custom Dropdown (Enhanced Contrast)
+========================================================= */
 .custom-dropdown-container {
   position: relative;
-  width: 260px;
+  min-width: 280px;
   font-family: var(--font-main);
-  z-index: 100; /* Higher than table header (which is 5) */
+  z-index: 100;
 }
 
-/* The Main Button */
 .custom-dropdown-btn {
-  background: linear-gradient(135deg, #114232 0%, #25d366 100%); /* Brand Dark to Brand Accent */
-  color: #fff;
-  padding: 12px 20px;
-  border-radius: 30px; /* Fully rounded pill shape */
+  background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand-medium) 100%);
+  color: var(--text-on-dark);
+  padding: 15px 26px;
+  border-radius: 12px;
   cursor: pointer;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4); /* Green glow shadow */
-  transition: all 0.3s ease;
+  box-shadow: 0 4px 16px rgba(13, 51, 38, 0.25);
+  transition: all var(--transition-base);
   user-select: none;
   font-weight: 600;
-  letter-spacing: 0.5px;
+  font-size: 0.95rem;
+  letter-spacing: 0.01em;
+  border: none;
 }
 
-/* Button Hover */
 .custom-dropdown-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(37, 211, 102, 0.6);
+  box-shadow: 0 6px 24px rgba(13, 51, 38, 0.35);
+  background: linear-gradient(135deg, #0a2820 0%, #0d3326 100%);
 }
 
-/* Active State (When Open) */
 .custom-dropdown-btn.active {
-  border-radius: 20px 20px 0 0; /* Flatten bottom corners */
-  background: linear-gradient(135deg, #0e3629 0%, #1fb355 100%);
+  border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
+  background: linear-gradient(135deg, #0a2820 0%, #0d3326 100%);
+  box-shadow: 0 6px 20px rgba(13, 51, 38, 0.3);
+}
+
+.btn-text {
+  flex: 1;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-on-dark);
 }
 
 .arrow-icon {
-  font-size: 0.8rem;
-  transition: transform 0.3s ease;
+  font-size: 0.75rem;
+  margin-left: 12px;
+  transition: transform var(--transition-base);
+  color: var(--text-on-dark);
+  opacity: 0.9;
 }
 
 .custom-dropdown-btn.active .arrow-icon {
   transform: rotate(180deg);
 }
 
-/* The Menu List */
 .custom-dropdown-menu {
   position: absolute;
   top: 100%;
   left: 0;
   width: 100%;
-  background: #fff;
-  border-radius: 0 0 20px 20px; /* Rounded bottom only */
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  background: #ffffff;
+  border-radius: 0 0 var(--border-radius-md) var(--border-radius-md);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   list-style: none;
   padding: 0;
   margin: 0;
-  overflow: hidden;
+  max-height: 320px;
+  overflow-y: auto;
   animation: slideDown 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  border: 1px solid rgba(0,0,0,0.05);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-top: none;
 }
 
-/* List Items */
+.custom-dropdown-menu::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-dropdown-menu::-webkit-scrollbar-track {
+  background: #f8fafc;
+  border-radius: 0 0 var(--border-radius-md) 0;
+}
+
+.custom-dropdown-menu::-webkit-scrollbar-thumb {
+  background: var(--brand-accent);
+  border-radius: 3px;
+}
+
+.custom-dropdown-menu::-webkit-scrollbar-thumb:hover {
+  background: var(--brand-accent-dark);
+}
+
 .custom-dropdown-menu li {
-  padding: 12px 20px;
+  padding: 14px 26px;
   cursor: pointer;
-  color: #333;
+  color: var(--text-medium);
   font-weight: 500;
+  font-size: 0.92rem;
   transition: all 0.2s ease;
-  border-left: 4px solid transparent;
+  border-left: 3px solid transparent;
 }
 
 .custom-dropdown-menu li:hover {
-  background-color: var(--brand-light);
-  color: var(--brand-dark);
-  border-left: 4px solid var(--brand-accent);
-  padding-left: 25px; /* Cool shift effect */
-}
-
-/* Selected Item Style */
-.custom-dropdown-menu li.selected {
   background-color: #f0fdf4;
   color: var(--brand-dark);
+  border-left-color: var(--brand-accent);
+  padding-left: 30px;
+}
+
+.custom-dropdown-menu li.selected {
+  background-color: #dcfce7;
+  color: var(--brand-dark);
   font-weight: 700;
+  border-left-color: var(--brand-dark);
 }
 
-.desc-col {
-  min-width: 200px;  /* Kam se kam itni choudai rahegi */
-  max-width: 300px;  /* Isse jyada chouda nahi hoga */
-  white-space: normal; /* Text ko next line me break karega */
-  word-wrap: break-word; /* Lambe words ko tod kar next line me layega */
-  text-align: left; /* Description padhne me left align acha lagta hai */
-  line-height: 1.4;
-  vertical-align: top; /* Text upar se start hoga */
+.custom-dropdown-menu li.no-data {
+  color: var(--text-lighter);
+  cursor: default;
+  text-align: center;
+  font-style: italic;
+  font-size: 0.9rem;
 }
 
-/* Mobile ke liye thoda adjust karein */
-@media (max-width: 768px) {
-  .desc-col {
-    min-width: 150px;
-    max-width: 200px;
-    font-size: 0.8rem;
-  }
+.custom-dropdown-menu li.no-data:hover {
+  background-color: transparent;
+  border-left-color: transparent;
+  padding-left: 26px;
 }
 
-/* Animation for opening */
 @keyframes slideDown {
   from {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(-12px);
   }
   to {
     opacity: 1;
@@ -470,223 +306,613 @@ tfoot td {
   }
 }
 
-/* Mobile Fix */
-@media (max-width: 768px) {
-  .task-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  .custom-dropdown-container {
-    width: 100%;
-  }
-}
 /* =========================================================
-   🎞️ Animations
+   📊 Table Container (Enhanced)
 ========================================================= */
-@keyframes slide-in {
-  from {
-    transform: translateY(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
+.table-container {
+  background: #ffffff;
+  border-radius: var(--border-radius-lg);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 10px 30px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.04);
 }
 
-/* =========================================================
-   📱 Responsive Design
-========================================================= */
-@media (max-width: 768px) {
-  table {
-    min-width: 100%;
-  }
-  thead th, tbody td {
-    font-size: 0.8rem;
-    padding: 8px;
-  }
-  .fixed-col { width: 60px; }
-  .time-col { left: 60px; width: 80px; }
-  .badge, td span {
-    font-size: 0.75rem;
-    padding: 3px 8px;
-  }
-  .bottom-bar {
-    flex-direction: column;
-    gap: 10px;
-    padding: 12px;
-  }
-  .bottom-bar .share-btn {
-    width: 100%;
-    justify-content: center;
-  }
-  .popup {
-    right: 10px;
-    width: 90%;
-  }
+.table-wrapper {
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
+.table-wrapper::-webkit-scrollbar {
+  height: 10px;
+}
+
+.table-wrapper::-webkit-scrollbar-track {
+  background: #f8fafc;
+  border-radius: 5px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 5px;
+  border: 2px solid #f8fafc;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
 }
 
 /* =========================================================
-   📱 Mobile Card View Transformation
-   (Paste this at the VERY BOTTOM of your CSS file)
+   📋 Table Structure (Enhanced Typography & Contrast)
+========================================================= */
+.responsive-table {
+  width: 100%;
+  min-width: 900px;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.responsive-table thead th {
+  background: linear-gradient(180deg, var(--brand-dark) 0%, var(--brand-medium) 100%);
+  color: var(--text-on-dark);
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 0.875rem;
+  text-align: center;
+  padding: 20px 14px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.responsive-table thead th:first-child {
+  border-radius: var(--border-radius-md) 0 0 0;
+}
+
+.responsive-table thead th:last-child {
+  border-radius: 0 var(--border-radius-md) 0 0;
+}
+
+.responsive-table tbody td {
+  padding: 18px 14px;
+  text-align: center;
+  vertical-align: middle;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-medium);
+  border-bottom: 1px solid #f1f5f9;
+  line-height: 1.6;
+}
+
+.responsive-table tbody tr {
+  transition: all 0.2s ease;
+}
+
+.responsive-table tbody tr:hover {
+  background-color: #f8fafc;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.responsive-table tbody tr:nth-child(even) {
+  background-color: #fafbfc;
+}
+
+.responsive-table tbody tr:nth-child(even):hover {
+  background-color: #f1f5f9;
+}
+
+/* =========================================================
+   🏷️ Badge System (Enhanced Contrast & Readability)
+========================================================= */
+.badge {
+  display: inline-block;
+  border-radius: var(--border-radius-sm);
+  padding: 7px 14px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  margin: 2px;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+}
+
+.badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.badge-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+}
+
+.badge-time {
+  background-color: #dcfce7;
+  color: #166534;
+  border: 1px solid #86efac;
+  font-weight: 700;
+}
+
+.badge-frame {
+  background-color: #dbeafe;
+  color: #1e3a8a;
+  border: 1px solid #93c5fd;
+  font-weight: 600;
+}
+
+.badge-box {
+  background-color: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+  font-weight: 700;
+}
+
+.badge-weight {
+  background-color: #d1fae5;
+  color: #065f46;
+  border: 1px solid #6ee7b7;
+  font-weight: 700;
+}
+
+.badge-frame-weight {
+  background-color: #fed7aa;
+  color: #7c2d12;
+  border: 1px solid #fdba74;
+  font-weight: 700;
+}
+
+/* =========================================================
+   📝 Description Column (Enhanced Readability)
+========================================================= */
+.desc-col {
+  min-width: 200px;
+  max-width: 320px;
+  text-align: left;
+  white-space: normal;
+  word-wrap: break-word;
+  line-height: 1.65;
+  padding-left: 18px !important;
+  color: var(--text-light);
+  font-size: 0.92rem;
+  font-weight: 500;
+}
+
+/* =========================================================
+   🧮 Table Footer & Summary (Enhanced Contrast)
+========================================================= */
+.table-footer {
+  background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 100%);
+}
+
+.summary-row td {
+  font-weight: 700;
+  color: var(--brand-dark);
+  padding: 18px 14px;
+  border-top: 2px solid #d1fae5;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 0.95rem;
+}
+
+.summary-row .footer-label {
+  text-align: left;
+  padding-left: 24px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.working-hours-row td {
+  padding: 24px;
+  background: linear-gradient(135deg, #dcfce7 0%, #f0fdf4 100%);
+  border-top: 3px solid var(--brand-dark);
+}
+
+.working-hours-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--spacing-md);
+  font-size: 1.1rem;
+}
+
+.hours-label {
+  color: var(--brand-dark);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.hours-value {
+  color: var(--brand-accent-dark);
+  font-weight: 800;
+  font-size: 1.4rem;
+  font-family: var(--font-mono);
+  letter-spacing: 0.02em;
+}
+
+/* =========================================================
+   🔢 Pagination (Enhanced Contrast & Interactivity)
+========================================================= */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--spacing-xl);
+  padding: var(--spacing-xl);
+  background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
+  border-top: 1px solid #e5e7eb;
+}
+
+.pagination-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 26px;
+  border: 2px solid var(--brand-dark);
+  background: #ffffff;
+  color: var(--brand-dark);
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  letter-spacing: 0.02em;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: var(--brand-dark);
+  color: var(--text-on-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(13, 51, 38, 0.25);
+}
+
+.pagination-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.pagination-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  border-color: #cbd5e0;
+  color: var(--text-lighter);
+}
+
+.pagination-btn .btn-icon {
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.pagination-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.current-page {
+  font-size: 1.4rem;
+  color: var(--brand-accent-dark);
+  font-family: var(--font-mono);
+  font-weight: 800;
+}
+
+.separator {
+  color: #cbd5e0;
+  font-weight: 600;
+}
+
+.total-pages {
+  color: var(--text-light);
+  font-weight: 700;
+}
+
+/* =========================================================
+   📱 Responsive Design - Tablet (481px - 768px)
 ========================================================= */
 @media (max-width: 768px) {
-  
-  /* 1. Table structure ko khatam karke Block banayein */
-  table, thead, tbody, th, td, tr {
-    display: block;
-    width: 100%;
+  .view-task-page {
+    padding: var(--spacing-lg);
   }
 
-  /* 2. Header chhupa dein (Mobile me zarurat nahi) */
-  thead tr {
-    position: absolute;
-    top: -9999px;
-    left: -9999px;
+  .page-title {
+    font-size: 1.75rem;
   }
 
-  /* 3. Table Container padding fix */
-  .table-container {
-    padding: 0;
-    background: transparent;
-    box-shadow: none;
-  }
-
-  /* 4. Har Row ko ek Card banayein */
-  tbody tr {
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-    margin-bottom: 20px; /* Card ke beech gap */
-    padding: 15px;
-    border: 1px solid var(--gray-border);
-  }
-
-  /* 5. Cells ki styling adjust karein */
-  tbody td {
-    position: relative;
-    padding-left: 50% !important; /* Label ke liye jagah */
-    text-align: right !important; /* Value right side me */
-    padding-top: 10px;
-    padding-bottom: 10px;
-    border: none;
-    border-bottom: 1px dashed #eee;
-    display: flex;
-    justify-content: space-between; /* Label left, Value right */
-    align-items: center;
-  }
-
-  tbody td:last-child {
-    border-bottom: none;
-  }
-
-  /* 6. Label dikhane ka magic (data-label use karke) */
-  tbody td::before {
-    content: attr(data-label); /* JS wala data-label yahan dikhega */
-    position: absolute;
-    left: 10px;
-    width: 45%;
-    padding-right: 10px;
-    white-space: nowrap;
-    text-align: left;
-    font-weight: 700;
-    color: var(--brand-dark);
-    font-size: 0.9rem;
-  }
-
-  /* 7. Sticky/Fixed Columns ko disable karein mobile ke liye */
-  .fixed-col, .time-col {
-    position: static !important;
-    background-color: transparent !important;
-    width: 100% !important;
-    border-right: none !important;
-  }
-
-  /* 8. Description Column fix */
-  .desc-col {
-    max-width: 100% !important;
-    min-width: auto !important;
-    text-align: right !important;
-    display: block !important; /* Flex hata kar block */
-    padding-left: 10px !important;
-    margin-top: 10px;
-  }
-  
-  .desc-col::before {
-    position: static !important; /* Description label upar aayega */
-    display: block;
-    margin-bottom: 5px;
-  }
-
-  /* 9. Dropdown Full Width */
-  .custom-dropdown-container {
-    width: 100%;
-  }
-  
   .task-header {
     flex-direction: column;
     align-items: stretch;
+    gap: var(--spacing-md);
   }
 
-  .task-header h2 {
-    text-align: center;
-    margin-bottom: 15px;
+  .custom-dropdown-container {
+    width: 100%;
+    min-width: unset;
   }
 
-  /* 10. Footer Summary Mobile Fix */
+  .table-container {
+    border-radius: var(--border-radius-md);
+  }
+
+  .responsive-table {
+    min-width: 100%;
+  }
+
+  .responsive-table thead th,
+  .responsive-table tbody td {
+    padding: 14px 10px;
+    font-size: 0.88rem;
+  }
+
+  .badge {
+    font-size: 0.78rem;
+    padding: 5px 10px;
+  }
+
+  .desc-col {
+    min-width: 150px;
+    max-width: 200px;
+    font-size: 0.85rem;
+  }
+
+  .pagination {
+    gap: var(--spacing-lg);
+    padding: var(--spacing-lg);
+  }
+
+  .pagination-btn {
+    padding: 12px 20px;
+    font-size: 0.88rem;
+  }
+
+  .pagination-info {
+    font-size: 1rem;
+  }
+
+  .current-page {
+    font-size: 1.2rem;
+  }
+}
+
 /* =========================================================
-   10. Footer Summary Mobile Fix (REPLACEMENT)
+   📱 Mobile View - Card Layout (≤480px)
 ========================================================= */
-@media (max-width: 768px) {
-  
-  tfoot {
+@media (max-width: 480px) {
+  .view-task-page {
+    padding: var(--spacing-md);
+    background: var(--gray-bg);
+  }
+
+  .content-wrapper {
+    padding: 0;
+  }
+
+  .page-title {
+    font-size: 1.5rem;
+    text-align: center;
+  }
+
+  .page-title::after {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .task-header {
+    margin-bottom: var(--spacing-xl);
+  }
+
+  /* Transform Table to Card Layout */
+  .table-container {
+    background: transparent;
+    box-shadow: none;
+    border-radius: 0;
+    border: none;
+  }
+
+  .table-wrapper {
+    overflow-x: visible;
+  }
+
+  .responsive-table,
+  .responsive-table thead,
+  .responsive-table tbody,
+  .responsive-table tfoot,
+  .responsive-table tr,
+  .responsive-table th,
+  .responsive-table td {
     display: block;
     width: 100%;
   }
 
-  tfoot tr {
+  .responsive-table thead {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+    visibility: hidden;
+  }
+
+  .responsive-table tbody tr {
+    background: #ffffff;
+    border-radius: var(--border-radius-md);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    margin-bottom: var(--spacing-md);
+    padding: var(--spacing-md);
+    border: 1px solid #e5e7eb;
+    display: block;
+  }
+
+  .responsive-table tbody tr:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+    transition: all var(--transition-smooth);
+  }
+
+  .responsive-table tbody td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px dashed #e5e7eb;
+    text-align: right;
+    min-height: 44px;
+  }
+
+  .responsive-table tbody td:last-child {
+    border-bottom: none;
+  }
+
+  .responsive-table tbody td::before {
+    content: attr(data-label);
+    font-weight: 700;
+    color: var(--brand-dark);
+    text-align: left;
+    flex: 0 0 42%;
+    padding-right: var(--spacing-sm);
+    font-size: 0.88rem;
+    letter-spacing: 0.01em;
+  }
+
+  .responsive-table tbody td > * {
+    flex: 1;
+    text-align: right;
+  }
+
+  /* Description styling in mobile */
+  .desc-col {
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 100%;
+    max-width: 100%;
+    text-align: left;
+  }
+
+  .desc-col::before {
+    margin-bottom: 6px;
+  }
+
+  /* Badge adjustments for mobile */
+  .badge-group {
+    justify-content: flex-end;
+    flex: 1;
+  }
+
+  .badge {
+    font-size: 0.72rem;
+    padding: 5px 10px;
+  }
+
+  /* Footer in mobile card style */
+  .table-footer {
+    display: block;
+    background: transparent;
+  }
+
+  .summary-row {
     display: flex;
     flex-direction: column;
-    background: #fff;
-    margin-top: 20px;
-    margin-bottom: 20px;
-    border-radius: 12px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-    padding: 15px;
-    border: 1px solid var(--brand-light);
-  }
-  
-  tfoot td {
-    display: flex !important;
-    justify-content: space-between !important;
-    width: 100% !important; /* Full width fix */
-    padding: 10px 0 !important;
-    border-bottom: 1px dashed #eee;
-    text-align: right !important;
-    font-size: 0.9rem;
+    background: #ffffff;
+    border-radius: var(--border-radius-md);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    border: 1px solid #d1fae5;
   }
 
-  /* Pehle row (Summary row) ke cells ke liye labels */
-  tfoot tr:first-child td:nth-child(1) { display: none !important; } /* "Total (This Page)" text hide karein kyunki hum custom labels denge */
-  
-  tfoot tr:first-child td:nth-child(2)::before { content: "Total Boxes:"; }
-  tfoot tr:first-child td:nth-child(3)::before { content: "Box Weight:"; }
-  tfoot tr:first-child td:nth-child(4)::before { content: "Frame Weight:"; }
+  .summary-row td {
+    display: flex;
+    justify-content: space-between;
+    padding: 11px 0;
+    border: none;
+    border-bottom: 1px dashed #e5e7eb;
+  }
 
-  /* Dusri row (Working Hours) fix */
-  tfoot tr:last-child td {
+  .summary-row td:last-child {
     border-bottom: none;
-    justify-content: center !important; /* Isse text center me aayega */
-    background: var(--brand-light);
-    border-radius: 8px;
-    margin-top: 5px;
+  }
+
+  .summary-row .footer-label {
+    display: none;
+  }
+
+  .summary-row td::before {
+    content: attr(data-label);
+    font-weight: 700;
     color: var(--brand-dark);
+    font-size: 0.88rem;
+    letter-spacing: 0.01em;
+  }
+
+  .summary-row td:nth-child(2)::before { content: "Total Boxes:"; }
+  .summary-row td:nth-child(3)::before { content: "Box Weight:"; }
+  .summary-row td:nth-child(4)::before { content: "Frame Weight:"; }
+
+  .working-hours-row {
+    display: block;
+  }
+
+  .working-hours-row td {
+    background: linear-gradient(135deg, #dcfce7 0%, #f0fdf4 100%);
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-lg);
+    text-align: center;
+    border: 2px solid var(--brand-dark);
+  }
+
+  .working-hours-content {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .hours-label {
+    font-size: 0.95rem;
+  }
+
+  .hours-value {
+    font-size: 1.6rem;
+  }
+
+  /* Pagination mobile adjustments */
+  .pagination {
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+  }
+
+  .pagination-btn {
+    flex: 1;
+    min-width: 120px;
+    justify-content: center;
+  }
+
+  .pagination-btn .btn-label {
+    display: none;
+  }
+
+  .pagination-btn .btn-icon {
     font-size: 1rem;
   }
 
-  /* Is row me "Total:" label ko hatane ke liye (kyunki text me pehle se hi hai) */
-  tfoot tr:last-child td::before {
-    content: "" !important;
+  .pagination-info {
+    width: 100%;
+    justify-content: center;
+    padding: var(--spacing-sm) 0;
   }
-}
+
+  /* Dropdown mobile adjustments */
+  .custom-dropdown-btn {
+    padding: 13px 22px;
+  }
+
+  .custom-dropdown-menu {
+    max-height: 260px;
+  }
+
+  .custom-dropdown-menu li {
+    padding: 13px 22px;
+  }
 }
