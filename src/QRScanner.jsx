@@ -7,7 +7,7 @@ const QrCodeScanner = ({ onScanResult }) => {
   const styles = {
     button: {
       padding: '12px 25px',
-      backgroundColor: '#6f42c1',
+      backgroundColor: '#635acc',
       color: '#fff',
       border: 'none',
       borderRadius: '6px',
