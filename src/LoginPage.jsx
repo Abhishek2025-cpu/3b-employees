@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPhone, faKey, faCopyright } from '@fortawesome/free-solid-svg-icons';
+import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+
 
 import adminLogo from './assets/3b.png';
 import vectorNew from './assets/Vectornew.png';
@@ -38,6 +40,8 @@ function LoginPage() {
 
   const [mobile, setMobile] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
   const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: '' });
 
@@ -163,16 +167,31 @@ function LoginPage() {
             />
           </div>
 
-          <div style={styles.inputWrapper}>
-            <FontAwesomeIcon icon={faKey} style={styles.iconLeft} />
-            <input
-              type="password"
-              placeholder="Enter Password"
-              style={styles.input}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
+        <div style={styles.inputWrapper}>
+  <FontAwesomeIcon icon={faKey} style={styles.iconLeft} />
+
+  <input
+    type={showPassword ? "text" : "password"}
+    placeholder="Enter Password"
+    style={styles.input}
+    value={password}
+    onChange={(e) => setPassword(e.target.value)}
+  />
+
+  <FontAwesomeIcon
+    icon={showPassword ? faEyeSlash : faEye}
+    onClick={() => setShowPassword(!showPassword)}
+    style={{
+      position: 'absolute',
+      top: '50%',
+      right: '12px',
+      transform: 'translateY(-50%)',
+      cursor: 'pointer',
+      color: '#7853C2'
+    }}
+  />
+</div>
+
 
           <button
             type="submit"
