@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPhone, faKey, faCopyright } from '@fortawesome/free-solid-svg-icons';
-import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
-
+import { faPhone, faKey, faCopyright, faEye, faEyeSlash, faUser } from '@fortawesome/free-solid-svg-icons';
 
 import adminLogo from './assets/3b.png';
 import vectorNew from './assets/Vectornew.png';
@@ -13,9 +10,9 @@ const styles = {
   body: { margin: 0, padding: 0, fontFamily: "'Roboto', sans-serif", background: '#f8f9fa', display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', overflow: 'hidden' },
   loginContainer: { background: '#f5f5f5', borderRadius: '20px', padding: '35px 25px', boxShadow: '0px 8px 16px rgba(0, 0, 0, 0.3)', width: '100%', maxWidth: '350px', boxSizing: 'border-box', textAlign: 'center', zIndex: 1 },
   logo: { width: '120px', height: '120px', marginBottom: '15px', borderRadius: '50%', objectFit: 'cover', display: 'block', marginLeft: 'auto', marginRight: 'auto' },
-  h1: { fontSize: '1.5rem', color: '#452983', fontFamily: "'Poppins', sans-serif", fontWeight:"600", margin: '0 0 20px 0' },
+  h1: { fontSize: '1.5rem', color: '#452983', fontFamily: "'Poppins', sans-serif", fontWeight: "600", margin: '0 0 20px 0' },
   inputWrapper: { position: 'relative', marginBottom: '15px', width: '100%' },
-  input: { width: '100%', padding: '10px 40px', border: '1px solid #7853C2', borderRadius: '8px', boxSizing: 'border-box', fontSize: '1rem' },
+  input: { width: '100%', padding: '10px 40px', border: '1px solid #7853C2', borderRadius: '8px', boxSizing: 'border-box', fontSize: '1rem', outline: 'none' },
   iconLeft: { position: 'absolute', top: '50%', transform: 'translateY(-50%)', left: '12px', color: '#7853C2' },
   loginButton: { width: '100%', padding: '12px', backgroundColor: '#7853C2', color: 'white', border: 'none', borderRadius: '8px', fontSize: '1rem', cursor: 'pointer', marginTop: '10px', display: 'flex', justifyContent: 'center', alignItems: 'center' },
   loginButtonDisabled: { backgroundColor: '#a991d8', cursor: 'not-allowed' },
@@ -40,8 +37,8 @@ function LoginPage() {
 
   const [mobile, setMobile] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState('Helper');
   const [showPassword, setShowPassword] = useState(false);
-
   const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: '' });
 
@@ -69,25 +66,15 @@ function LoginPage() {
       return showToast('Password is required.', 'error');
     }
 
-    // ---------------------------------------------------------
-    // STATIC ADMIN ENTRY BYPASS
-    // ---------------------------------------------------------
     if (mobile === '8888888888' && password === 'manager123') {
-        showToast("Login successful! (Admin Bypass)", 'success');
-
-        // Set static credentials in local storage so the dashboard doesn't kick user out
-        localStorage.setItem("_id", "static_admin_id");
-        localStorage.setItem("name", "Super Admin");
-        localStorage.setItem("role", "Admin");
-        localStorage.setItem("token", "static_bypass_token");
-
-        setTimeout(() => {
-            navigate('/admin-dashboard');
-        }, 600);
-        
-        return; // Stop here, do not execute API call
+      showToast("Login successful!", 'success');
+      localStorage.setItem("_id", "static_admin_id");
+      localStorage.setItem("name", "Super Admin");
+      localStorage.setItem("role", "Admin");
+      localStorage.setItem("token", "static_bypass_token");
+      setTimeout(() => navigate('/admin-dashboard'), 600);
+      return;
     }
-    // ---------------------------------------------------------
 
     setIsLoading(true);
 
@@ -97,19 +84,19 @@ function LoginPage() {
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ mobile, password })
+          body: JSON.stringify({ mobile, password, role })
         }
       );
 
       const result = await response.json();
 
       if (!result.success) {
+        setIsLoading(false);
         return showToast(result.message || 'Login failed.', 'error');
       }
 
       showToast("Login successful!", 'success');
 
-      // STORE INTO LOCAL STORAGE
       localStorage.setItem("_id", result.employee?._id);
       localStorage.setItem("name", result.employee?.name);
       localStorage.setItem("role", result.employee?.role);
@@ -117,33 +104,19 @@ function LoginPage() {
 
       setTimeout(() => {
         switch (result.employee?.role) {
-          case "Admin":
-            navigate('/admin-dashboard');
-            break;
-          case "Manager":
-            navigate('/manager-dashboard');
-            break;
-          case "Operator":
-            navigate('/operator-dashboard');
-            break;
-          case "Mixture":
-            navigate('/mixture-db');
-            break;
-          case "Helper":
-            navigate('/helper');
-            break;
-
-          default:
-            navigate('/');
+          case "Admin": navigate('/admin-dashboard'); break;
+          case "Manager": navigate('/manager-dashboard'); break;
+          case "Operator": navigate('/operator-dashboard'); break;
+          case "Mixture": navigate('/mixture-db'); break;
+          case "Helper": navigate('/helper'); break;
+          default: navigate('/');
         }
       }, 600);
-
     } catch (error) {
       showToast('Network error. Please try again.', 'error');
       console.error(error);
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   };
 
   return (
@@ -167,31 +140,36 @@ function LoginPage() {
             />
           </div>
 
-        <div style={styles.inputWrapper}>
-  <FontAwesomeIcon icon={faKey} style={styles.iconLeft} />
+          <div style={styles.inputWrapper}>
+            <FontAwesomeIcon icon={faKey} style={styles.iconLeft} />
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="Enter Password"
+              style={styles.input}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <FontAwesomeIcon
+              icon={showPassword ? faEyeSlash : faEye}
+              onClick={() => setShowPassword(!showPassword)}
+              style={{ position: 'absolute', top: '50%', right: '12px', transform: 'translateY(-50%)', cursor: 'pointer', color: '#7853C2' }}
+            />
+          </div>
 
-  <input
-    type={showPassword ? "text" : "password"}
-    placeholder="Enter Password"
-    style={styles.input}
-    value={password}
-    onChange={(e) => setPassword(e.target.value)}
-  />
-
-  <FontAwesomeIcon
-    icon={showPassword ? faEyeSlash : faEye}
-    onClick={() => setShowPassword(!showPassword)}
-    style={{
-      position: 'absolute',
-      top: '50%',
-      right: '12px',
-      transform: 'translateY(-50%)',
-      cursor: 'pointer',
-      color: '#7853C2'
-    }}
-  />
-</div>
-
+          <div style={styles.inputWrapper}>
+            <FontAwesomeIcon icon={faUser} style={styles.iconLeft} />
+            <select
+              style={{ ...styles.input, appearance: 'none', background: 'white' }}
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+            >
+              <option value="Admin">Admin</option>
+              <option value="Manager">Manager</option>
+              <option value="Operator">Operator</option>
+              <option value="Mixture">Mixture</option>
+              <option value="Helper">Helper</option>
+            </select>
+          </div>
 
           <button
             type="submit"
@@ -205,10 +183,7 @@ function LoginPage() {
 
       {toast.show && (
         <div style={styles.toastContainer}>
-          <div style={{
-            ...styles.toast,
-            ...(toast.type === 'success' ? styles.toastSuccess : styles.toastError)
-          }}>
+          <div style={{ ...styles.toast, ...(toast.type === 'success' ? styles.toastSuccess : styles.toastError) }}>
             {toast.message}
           </div>
         </div>
