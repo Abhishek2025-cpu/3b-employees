@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPhone, faKey, faCopyright, faEye, faEyeSlash, faUser } from '@fortawesome/free-solid-svg-icons';
+import { faPhone, faKey, faCopyright, faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 
 import adminLogo from './assets/3b.png';
 import vectorNew from './assets/Vectornew.png';
@@ -37,7 +37,6 @@ function LoginPage() {
 
   const [mobile, setMobile] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('Helper');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: '' });
@@ -66,6 +65,7 @@ function LoginPage() {
       return showToast('Password is required.', 'error');
     }
 
+    // Static Bypass check
     if (mobile === '8888888888' && password === 'manager123') {
       showToast("Login successful!", 'success');
       localStorage.setItem("_id", "static_admin_id");
@@ -84,7 +84,7 @@ function LoginPage() {
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ mobile, password, role })
+          body: JSON.stringify({ mobile, password }) // Role removed from payload
         }
       );
 
@@ -102,6 +102,7 @@ function LoginPage() {
       localStorage.setItem("role", result.employee?.role);
       localStorage.setItem("token", result.token);
 
+      // Backend returns the role, so navigation still works
       setTimeout(() => {
         switch (result.employee?.role) {
           case "Admin": navigate('/admin-dashboard'); break;
@@ -154,21 +155,6 @@ function LoginPage() {
               onClick={() => setShowPassword(!showPassword)}
               style={{ position: 'absolute', top: '50%', right: '12px', transform: 'translateY(-50%)', cursor: 'pointer', color: '#7853C2' }}
             />
-          </div>
-
-          <div style={styles.inputWrapper}>
-            <FontAwesomeIcon icon={faUser} style={styles.iconLeft} />
-            <select
-              style={{ ...styles.input, appearance: 'none', background: 'white' }}
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-            >
-              <option value="Admin">Admin</option>
-              <option value="Manager">Manager</option>
-              <option value="Operator">Operator</option>
-              <option value="Mixture">Mixture</option>
-              <option value="Helper">Helper</option>
-            </select>
           </div>
 
           <button

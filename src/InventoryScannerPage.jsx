@@ -3,245 +3,192 @@ import QrCodeScanner from "./QRScanner";
 import toast, { Toaster } from "react-hot-toast";
 
 const InventoryScannerPage = () => {
-  // Initial state with dummy data (Same as yours)
-  const [product, setProduct] = useState({
-    itemNo: "ITEM00123",
-    length: "6 meters",
-    noOfSticks: "50",
-    boxes: new Array(8).fill({}),
-    productImageUrl:
-      "https://images.unsplash.com/photo-1581092160562-40aa08e78837?q=80&w=1470&auto=format&fit=crop",
-    operators: [{ name: "John" }],
-  });
-
+  // --- States ---
+  const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [scannedBoxSerial, setScannedBoxSerial] = useState("12");
-
+  
+  // Selection Mode: 'client' or 'company'
+  const [mode, setMode] = useState("client"); 
   const [company, setCompany] = useState("3B Profiles");
-  const [type, setType] = useState("Stock OUT");
-  const [qty, setQty] = useState("150");
-  const [boxes, setBoxes] = useState("3");
+  const [selectedOrderIndex, setSelectedOrderIndex] = useState(0); 
+  const [qty, setQty] = useState("");
+  const [direction, setDirection] = useState("Stock OUT");
 
-  // --- Functionality (NO CHANGES MADE) ---
+  // --- Scan Functionality ---
   const handleScan = async (scanned) => {
     if (loading) return;
     setLoading(true);
     try {
       let id = scanned;
-      if (scanned.includes("/inventory/")) {
-        id = scanned.split("/inventory/")[1];
+      if (scanned.includes("/")) {
+        const parts = scanned.split("/");
+        id = parts[parts.length - 1];
       }
+
       const response = await fetch(
-        `https://threebapi-1067354145699.asia-south1.run.app/api/items/${id}`
+        `https://threebapi-1067354145699.asia-south1.run.app/api/products/scan/${id}`
       );
-      const item = await response.json();
-      if (!item || !item._id) {
+      const data = await response.json();
+
+      if (data.success && data.product) {
+        setProduct(data.product);
+        
+        // Form setup
+        if (data.product.orders && data.product.orders.length > 0) {
+          setSelectedOrderIndex(0);
+          setQty(data.product.orders[0].quantity.toString());
+          setMode("client");
+        } else {
+          setQty("0");
+          setMode("company");
+        }
+        
+        toast.success("Product Loaded Successfully");
+      } else {
         toast.error("Product not found");
-        return;
       }
-      setProduct(item);
-      const matchedBox = item.boxes?.find((b) =>
-        scanned.includes(b.boxSerialNo)
-      );
-      if (matchedBox) {
-        setScannedBoxSerial(matchedBox.boxSerialNo);
-        setBoxes("1");
-        setQty(item.noOfSticks.toString());
-      }
-      toast.success("Item Loaded");
     } catch (err) {
-      toast.error("Error fetching item");
+      console.error(err);
+      toast.error("Error fetching product data");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleMove = async () => {
-    if (!company || !type || !qty || !boxes) {
-      alert("Please fill all fields");
-      return;
-    }
-    alert("Movement Recorded Successfully");
+  const handleClientChange = (index) => {
+    setSelectedOrderIndex(index);
+    const orderQty = product.orders[index].quantity;
+    setQty(orderQty.toString());
   };
 
-  // --- Updated Responsive Styles ---
+  const handleMove = async () => {
+    if (!product) return toast.error("Please scan a product first");
+    if (!qty) return toast.error("Please enter quantity");
+
+    setLoading(true);
+    try {
+      // Get role from local storage
+      const userRole = localStorage.getItem("role") || "Staff";
+
+      // Helper function to extract ID safely
+      const mapImageId = (img) => {
+        const id = img._id || img.id;
+        return id ? { _id: id } : null;
+      };
+
+      const payload = {
+        productName: product.name,
+        productQty: product.quantity, 
+        mrpPerBox: product.mrpPerBox,
+        // Mapping images safely - filtering out nulls
+        productImages: (product.images || []).map(mapImageId).filter(Boolean),
+        colorImages: product.colorImageMap ? 
+                     Object.values(product.colorImageMap).map(mapImageId).filter(Boolean) : [],
+        filledBy: userRole,
+        toCompany: mode === "company" ? company : null,
+        toClient: mode === "client" ? product.orders[selectedOrderIndex]?.customerName : null,
+        qtyByClient: Number(qty),
+        direction: direction === "Stock OUT" ? "Out" : "In"
+      };
+
+      console.log("Sending Payload:", payload); // Debugging ke liye
+
+      const response = await fetch("https://threebapi-1067354145699.asia-south1.run.app/api/products/movement", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        toast.success("Movement Saved!");
+        setQty("");
+      } else {
+        toast.error(data.message || "Failed to save");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Network Error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // --- Styles ---
   const styles = {
-    container: {
-      backgroundColor: "#f4f7fa",
-      minHeight: "100vh",
-      padding: "15px", // Smaller padding for mobile
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-      boxSizing: "border-box",
-    },
-    card: {
-      backgroundColor: "#fff",
-      borderRadius: "18px",
-      border: "1px solid #e0e6ed",
-      boxShadow: "0 4px 15px rgba(0,0,0,0.05)",
-      width: "100%",
-      maxWidth: "450px", // Max width for desktop
-      padding: "20px",
-      marginBottom: "20px",
-      position: "relative",
-      boxSizing: "border-box",
-    },
-    itemNo: {
-      color: "#635acc",
-      fontSize: "clamp(18px, 5vw, 22px)", // Responsive font size
-      fontWeight: "bold",
-      margin: "0 0 10px 0",
-      width: "70%", // Avoid overlapping with badge
-    },
-    badge: {
-      position: "absolute",
-      top: "20px",
-      right: "20px",
-      backgroundColor: "#389e52",
-      color: "white",
-      padding: "5px 12px",
-      borderRadius: "8px",
-      fontSize: "13px",
-      fontWeight: "bold",
-    },
-    divider: {
-      height: "1px",
-      backgroundColor: "#eee",
-      margin: "5px 0 15px 0",
-    },
-    infoGrid: {
-      display: "flex",
-      flexWrap: "wrap", // Wrap on small screens
-      justifyContent: "space-between",
-      alignItems: "center",
-      gap: "10px",
-    },
-    details: {
-      flex: "1 1 200px", // Grow and shrink, base size 200px
-      fontSize: "14px",
-      color: "#444",
-      lineHeight: "2",
-    },
-    productImg: {
-      width: "100px", // Fixed width but small for responsiveness
-      height: "100px",
-      borderRadius: "12px",
-      objectFit: "cover",
-      border: "1px solid #ddd",
-    },
-    sectionTitle: {
-      textAlign: "center",
-      fontSize: "18px",
-      fontWeight: "600",
-      color: "#333",
-      margin: "0 0 15px 0",
-    },
-    formGroup: {
-      display: "flex",
-      flexDirection: "row",
-      alignItems: "center",
-      marginBottom: "12px",
-      gap: "10px",
-    },
-    label: {
-      flex: "0.4",
-      fontSize: "14px",
-      color: "#555",
-      fontWeight: "500",
-    },
-    input: {
-      flex: "1",
-      padding: "10px 12px",
-      borderRadius: "8px",
-      border: "1px solid #dce0e6",
-      fontSize: "15px",
-      outline: "none",
-      width: "100%", // Ensures full width in containers
-      boxSizing: "border-box",
-    },
-    halfRow: {
-      display: "flex",
-      gap: "10px",
-      marginTop: "10px",
-      width: "100%",
-    },
-    btn: {
-      width: "100%",
-      padding: "15px",
-      backgroundColor: "#635acc",
-      color: "#fff",
-      border: "none",
-      borderRadius: "10px",
-      fontSize: "16px",
-      fontWeight: "bold",
-      cursor: "pointer",
-      marginTop: "20px",
-      boxShadow: "0 4px 10px rgba(99, 90, 204, 0.3)",
-    },
-    scannerSection: {
-      width: "100%",
-      maxWidth: "450px",
-      textAlign: "center",
-    },
-    scannerPlaceholder: {
-      border: "2px dashed #ccc",
-      borderRadius: "15px",
-      padding: "10px",
-      marginTop: "10px",
-      backgroundColor: "rgba(255,255,255,0.5)",
-      minHeight: "250px", // Space for camera
-      display: "flex",
-      flexDirection: "column",
-      justifyContent: "center",
-    },
+    container: { backgroundColor: "#f4f7fa", minHeight: "100vh", padding: "15px", display: "flex", flexDirection: "column", alignItems: "center", fontFamily: "'Segoe UI', sans-serif" },
+    card: { backgroundColor: "#fff", borderRadius: "18px", border: "1px solid #e0e6ed", boxShadow: "0 4px 15px rgba(0,0,0,0.05)", width: "100%", maxWidth: "450px", padding: "20px", marginBottom: "20px", position: "relative", boxSizing: "border-box" },
+    badge: { position: "absolute", top: "15px", right: "15px", backgroundColor: "#389e52", color: "white", padding: "6px 14px", borderRadius: "10px", fontSize: "14px", fontWeight: "bold" },
+    title: { color: "#635acc", fontSize: "22px", fontWeight: "bold", margin: "0 0 10px 0", paddingRight: "80px" },
+    divider: { height: "1px", backgroundColor: "#eee", margin: "5px 0 15px 0" },
+    infoGrid: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "10px" },
+    details: { fontSize: "14px", color: "#444", lineHeight: "1.8", flex: 1 },
+    colorImgContainer: { display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "8px" },
+    roundImg: { width: "38px", height: "38px", borderRadius: "50%", border: "2px solid #fff", boxShadow: "0 2px 5px rgba(0,0,0,0.1)", objectFit: "cover" },
+    productMainImg: { width: "100px", height: "100px", borderRadius: "12px", objectFit: "cover", border: "1px solid #ddd" },
+    formGroup: { display: "flex", flexDirection: "row", alignItems: "center", marginBottom: "12px", gap: "10px" },
+    label: { flex: "0.4", fontSize: "14px", color: "#555", fontWeight: "500" },
+    input: { flex: "1", padding: "10px", borderRadius: "8px", border: "1px solid #dce0e6", fontSize: "14px", outline: "none" },
+    btn: { width: "100%", padding: "15px", backgroundColor: "#635acc", color: "#fff", border: "none", borderRadius: "10px", fontSize: "16px", fontWeight: "bold", cursor: "pointer", marginTop: "10px" },
+    scannerPlaceholder: { border: "2px dashed #ccc", borderRadius: "15px", padding: "10px", backgroundColor: "#fff", minHeight: "250px", width: "100%", maxWidth: "450px" },
+    radioContainer: { display: 'flex', gap: '15px', marginBottom: '15px', justifyContent: 'center' },
+    radioLabel: { fontSize: '14px', display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }
   };
 
   return (
     <div style={styles.container}>
       <Toaster />
 
-      {/* 1. Item Card (Top) */}
-      <div style={styles.card}>
-        <h2 style={styles.itemNo}>{product.itemNo}</h2>
-        <div style={styles.badge}>Box #{scannedBoxSerial}</div>
-        <div style={styles.divider}></div>
-
-        <div style={styles.infoGrid}>
-          <div style={styles.details}>
-            <div>
-              <b>Length:</b> {product.length}
+      {/* 1. Item Card */}
+      {product ? (
+        <div style={styles.card}>
+          <div style={styles.badge}>Box: {product.quantity}</div>
+          <h2 style={styles.title}>{product.name}</h2>
+          <div style={styles.divider}></div>
+          <div style={styles.infoGrid}>
+            <div style={styles.details}>
+              <div><b>Description:</b> {product.description}</div>
+              <div><b>MRP Per Box:</b> ₹{product.mrpPerBox}</div>
+              <div><b>Total Pcs:</b> {product.totalPiecesPerBox}</div>
+              <div style={{marginTop: '10px'}}>
+                <b>Colors:</b>
+                <div style={styles.colorImgContainer}>
+                  {product.colorImageMap && Object.values(product.colorImageMap).map((img, index) => (
+                    <img key={index} src={img.url} alt="color" style={styles.roundImg} />
+                  ))}
+                </div>
+              </div>
             </div>
-            <div>
-              <b>Qty/Box:</b> {product.noOfSticks} sticks
-            </div>
-            <div>
-              <b>Total Boxes:</b> {product.boxes?.length}
-            </div>
-            <div>
-              <b>Operator:</b> {product.operators?.[0]?.name}
-            </div>
+            <img src={product.images?.[0]?.url} alt="Main" style={styles.productMainImg} />
           </div>
-          <img
-            src={product.productImageUrl}
-            alt="Profile"
-            style={styles.productImg}
-          />
         </div>
-      </div>
+      ) : (
+        <div style={styles.card}><p style={{ textAlign: "center", color: "#999" }}>Scan QR code to see details</p></div>
+      )}
 
-      {/* 2. Record Movement Card (Middle) */}
+      {/* 2. Record Movement Card */}
       <div style={styles.card}>
-        <h3 style={styles.sectionTitle}>Record Movement</h3>
+        <h3 style={{ margin: "0 0 15px 0", fontSize: "18px" }}>Record Movement</h3>
         <div style={styles.divider}></div>
+
+        {/* Exclusive Selection */}
+        <div style={styles.radioContainer}>
+           <label style={styles.radioLabel}>
+             <input type="radio" checked={mode === 'company'} onChange={() => setMode('company')} /> To Company
+           </label>
+           <label style={styles.radioLabel}>
+             <input type="radio" checked={mode === 'client'} onChange={() => setMode('client')} /> To Client
+           </label>
+        </div>
 
         <div style={styles.formGroup}>
           <label style={styles.label}>To Company:</label>
-          <select
-            style={styles.input}
-            value={company}
+          <select 
+            style={{...styles.input, backgroundColor: mode !== 'company' ? '#f5f5f5' : '#fff'}} 
+            value={company} 
             onChange={(e) => setCompany(e.target.value)}
+            disabled={mode !== 'company'}
           >
             <option value="3B Profiles">3B Profiles</option>
             <option value="BI Profiles">BI Profiles</option>
@@ -250,93 +197,46 @@ const InventoryScannerPage = () => {
 
         <div style={styles.formGroup}>
           <label style={styles.label}>To Client:</label>
-
-          <input
-            type="text"
-            style={styles.input}
-            value={company}
-            onChange={(e) => setCompany(e.target.value)}
-            placeholder="Enter client name"
-          />
+          <select
+            style={{...styles.input, backgroundColor: mode !== 'client' ? '#f5f5f5' : '#fff'}}
+            value={selectedOrderIndex}
+            onChange={(e) => handleClientChange(e.target.value)}
+            disabled={!product || mode !== 'client'}
+          >
+            {product?.orders?.length > 0 ? (
+              product.orders.map((order, idx) => <option key={idx} value={idx}>{order.customerName}</option>)
+            ) : (
+              <option>No Customers Found</option>
+            )}
+          </select>
         </div>
 
         <div style={styles.formGroup}>
           <label style={styles.label}>Direction:</label>
-          <select
-            style={styles.input}
-            value={type}
-            onChange={(e) => setType(e.target.value)}
-          >
+          <select style={styles.input} value={direction} onChange={(e) => setDirection(e.target.value)}>
             <option value="Stock OUT">Stock OUT</option>
             <option value="Stock IN">Stock IN</option>
           </select>
         </div>
 
-        <div style={styles.halfRow}>
-          <div style={{ flex: 1 }}>
-            <label
-              style={{
-                fontSize: "13px",
-                display: "block",
-                marginBottom: "5px",
-                color: "#555",
-              }}
-            >
-              Total Sticks:
-            </label>
-            <input
-              type="text"
-              style={styles.input}
-              value={qty}
-              onChange={(e) => setQty(e.target.value)}
-            />
-          </div>
-          <div style={{ flex: 1 }}>
-            <label
-              style={{
-                fontSize: "13px",
-                display: "block",
-                marginBottom: "5px",
-                color: "#555",
-              }}
-            >
-              Total Boxes:
-            </label>
-            <input
-              type="text"
-              style={styles.input}
-              value={boxes}
-              onChange={(e) => setBoxes(e.target.value)}
-            />
-          </div>
+        <div style={styles.formGroup}>
+          <label style={styles.label}>Quantity:</label>
+          <input type="number" style={styles.input} value={qty} onChange={(e) => setQty(e.target.value)} />
         </div>
 
-        <button style={styles.btn} onClick={handleMove}>
-          Confirm Movement
+        <button style={{...styles.btn, opacity: !product ? 0.6 : 1}} onClick={handleMove} disabled={!product || loading}>
+          {loading ? "Saving..." : "Confirm Movement"}
         </button>
       </div>
 
-      {/* 3. Scanner (Bottom) */}
-      <div style={styles.scannerSection}>
-        <p style={{ color: "#666", fontSize: "14px" }}>
-          Point camera at QR code
-        </p>
-        <div style={styles.scannerPlaceholder}>
-          <QrCodeScanner onScanResult={handleScan} />
-        </div>
-        {loading && (
-          <p style={{ marginTop: "10px", color: "#635acc", fontWeight: "600" }}>
-            Searching database...
-          </p>
-        )}
+      <div style={{ width: "100%", maxWidth: "450px", textAlign: "center" }}>
+        <div style={styles.scannerPlaceholder}><QrCodeScanner onScanResult={handleScan} /></div>
       </div>
     </div>
   );
 };
 
 export default InventoryScannerPage;
-
-
 
 /*import React, { useState } from "react";
 import QrCodeScanner from "./QRScanner";
