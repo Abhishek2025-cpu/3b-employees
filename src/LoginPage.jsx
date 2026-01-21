@@ -84,7 +84,7 @@ function LoginPage() {
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ mobile, password }) // Role removed from payload
+          body: JSON.stringify({ mobile, password })
         }
       );
 
@@ -97,14 +97,23 @@ function LoginPage() {
 
       showToast("Login successful!", 'success');
 
-      localStorage.setItem("_id", result.employee?._id);
-      localStorage.setItem("name", result.employee?.name);
-      localStorage.setItem("role", result.employee?.role);
-      localStorage.setItem("token", result.token);
+      // API Response se data nikalna
+      const employeeData = result.employee;
+      const userName = employeeData?.name || "User";
+      
+      // Preferred Role: activeRole se lo, agar nahi hai toh pehla role lo
+      const userRole = employeeData?.activeRole?.role || (employeeData?.roles?.[0]?.role);
 
-      // Backend returns the role, so navigation still works
+      // Local Storage mein save karna taaki Dashboard pe use ho sake
+      localStorage.setItem("_id", employeeData?._id);
+      localStorage.setItem("name", userName); // Dashboard par display karne ke liye
+      localStorage.setItem("role", userRole);
+      localStorage.setItem("token", result.token);
+      localStorage.setItem("eid", employeeData?.activeRole?.eid || ""); 
+
+      // Navigation Logic based on Role
       setTimeout(() => {
-        switch (result.employee?.role) {
+        switch (userRole) {
           case "Admin": navigate('/admin-dashboard'); break;
           case "Manager": navigate('/manager-dashboard'); break;
           case "Operator": navigate('/operator-dashboard'); break;
@@ -113,6 +122,7 @@ function LoginPage() {
           default: navigate('/');
         }
       }, 600);
+
     } catch (error) {
       showToast('Network error. Please try again.', 'error');
       console.error(error);

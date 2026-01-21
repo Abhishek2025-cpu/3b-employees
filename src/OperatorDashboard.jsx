@@ -157,11 +157,8 @@ const baseStyles = {
 const responsiveCss = `
   @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 
-  * {
-    box-sizing: border-box;
-  }
+  * { box-sizing: border-box; }
 
-  /* Desktop View */
   @media (min-width: 1025px) {
     .sidebar { transform: translateX(0) !important; }
     .main-content { margin-left: 260px !important; }
@@ -169,7 +166,6 @@ const responsiveCss = `
     .cards-grid { grid-template-columns: repeat(3, 1fr) !important; }
   }
 
-  /* Tablet View */
   @media (min-width: 769px) and (max-width: 1024px) {
     .sidebar { transform: translateX(0) !important; }
     .main-content { margin-left: 260px !important; padding: 20px !important; }
@@ -179,7 +175,6 @@ const responsiveCss = `
     .search-wrapper { order: 3; width: 100% !important; max-width: 100% !important; margin-top: 10px !important; }
   }
 
-  /* Mobile View */
   @media (max-width: 768px) {
     .sidebar { transform: translateX(-100%); width: 280px !important; }
     .sidebar.open { transform: translateX(0); }
@@ -194,7 +189,6 @@ const responsiveCss = `
     .greeting-subtitle { font-size: 0.85rem !important; }
   }
 
-  /* Small Mobile */
   @media (max-width: 480px) {
     .cards-grid { grid-template-columns: 1fr !important; gap: 10px !important; }
     .main-content { padding: 12px !important; }
@@ -219,7 +213,11 @@ const responsiveCss = `
 
 function OperatorDashboard() {
   const navigate = useNavigate();
-  const [userName, setUserName] = useState('Operator');
+  
+  // Dynamic Data from LocalStorage
+  const [userName, setUserName] = useState(localStorage.getItem("name") || 'Operator');
+  const [userRole, setUserRole] = useState(localStorage.getItem("role") || 'Operator');
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
@@ -228,16 +226,29 @@ function OperatorDashboard() {
   const [transferTasks, setTransferTasks] = useState(0);
 
   useEffect(() => {
-    const employeeId = "68ef4b205892a32a6dc5c77b";
+    // LocalStorage se ID nikalna
+    const employeeId = localStorage.getItem("_id");
     
-    fetch(`https://threebapi-1067354145699.asia-south1.run.app/api/items/items/employee/${employeeId}`)
-      .then(res => res.json()).then(data => setAssignedTasks(data?.data?.length || 0));
-      
-    fetch(`https://threebapi-1067354145699.asia-south1.run.app/api/workers/employee-task/${employeeId}`)
-      .then(res => res.json()).then(data => setOngoingTasks(data?.data?.length || 0));
-      
+    if (employeeId) {
+      // 1. Assigned Tasks
+      fetch(`https://threebapi-1067354145699.asia-south1.run.app/api/items/items/employee/${employeeId}`)
+        .then(res => res.json())
+        .then(data => setAssignedTasks(data?.data?.length || 0))
+        .catch(err => console.error("Error fetching assigned tasks:", err));
+        
+      // 2. Ongoing Tasks
+      fetch(`https://threebapi-1067354145699.asia-south1.run.app/api/workers/employee-task/${employeeId}`)
+        .then(res => res.json())
+        .then(data => setOngoingTasks(data?.data?.length || 0))
+        .catch(err => console.error("Error fetching ongoing tasks:", err));
+    }
+
+    // 3. Transfer Tasks (Ye general API hai, isme employeeId path mein nahi thi aapke code mein)
     fetch(`https://threebapi-1067354145699.asia-south1.run.app/api/task-transfers/transfers`)
-      .then(res => res.json()).then(data => setTransferTasks(data?.data?.length || 0));
+      .then(res => res.json())
+      .then(data => setTransferTasks(data?.data?.length || 0))
+      .catch(err => console.error("Error fetching transfers:", err));
+      
   }, []);
 
   useEffect(() => {
@@ -252,7 +263,10 @@ function OperatorDashboard() {
     };
   }, []);
 
-  const handleLogout = () => { navigate('/'); };
+  const handleLogout = () => { 
+    localStorage.clear(); 
+    navigate('/'); 
+  };
 
   return (
     <div style={baseStyles.dashboardContainer}>
@@ -262,7 +276,7 @@ function OperatorDashboard() {
         <div style={baseStyles.sidebarHeader}>
           <img src={userProfilePlaceholder} alt="Profile" style={baseStyles.sidebarProfileImage} />
           <span style={baseStyles.sidebarUserName}>{userName}</span>
-          <span style={baseStyles.sidebarUserRole}>Operator</span>
+          <span style={baseStyles.sidebarUserRole}>{userRole}</span>
         </div>
 
         <nav style={baseStyles.sidebarNav}>
