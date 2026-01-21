@@ -46,7 +46,7 @@ tbody tr:nth-child(even) {
 }
 
 tbody tr:nth-child(even) td {
-  background-color: #084298; /* Ensuring even rows have the blue background */
+  background-color: #6366F1; /* Ensuring even rows have the blue background */
   color: white;
 }
 
