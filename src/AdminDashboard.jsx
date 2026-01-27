@@ -102,24 +102,23 @@ const baseStyles = {
   sidebarNavText: { fontSize: '0.95rem', fontWeight: '500' },
 
   // Content Area
-  mainContent: { flexGrow: 1, padding: '24px', width: '100%', boxSizing: 'border-box', transition: 'margin-left 0.4s ease' },
+  mainContent: { flexGrow: 1, padding: '20px', width: '100%', boxSizing: 'border-box', transition: 'margin-left 0.4s ease' },
   
   header: { 
     backgroundColor: 'rgba(255,255,255,0.8)', 
     backdropFilter: 'blur(10px)',
-    padding: '0 24px', 
+    padding: '0 15px', 
     borderRadius: '16px', 
     boxShadow: '0 4px 20px rgba(0,0,0,0.03)', 
     marginBottom: '24px', 
     display: 'flex', 
     justifyContent: 'space-between', 
     alignItems: 'center', 
-    height: '70px',
-    sticky: 'top'
+    height: '70px'
   },
   searchInput: { 
     width: '100%', 
-    padding: '12px 15px 12px 45px', 
+    padding: '12px 15px 12px 40px', 
     border: '1px solid #e2e8f0', 
     borderRadius: '12px', 
     fontSize: '0.9rem', 
@@ -129,41 +128,44 @@ const baseStyles = {
   },
 
   // Cards
-  cardsGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginBottom: '32px' },
+  cardsGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginBottom: '32px' },
   card: { 
     backgroundColor: theme.cardBg, 
     borderRadius: '16px', 
-    padding: '24px', 
-    boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03)', 
+    padding: '20px', 
+    boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', 
     display: 'flex',
     alignItems: 'center',
-    gap: '20px',
-    transition: 'transform 0.3s ease, boxShadow 0.3s ease'
+    gap: '15px',
+    transition: 'transform 0.3s ease'
   },
   cardIconContainer: {
-    width: '60px',
-    height: '60px',
-    borderRadius: '14px',
+    width: '50px',
+    height: '50px',
+    borderRadius: '12px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontSize: '1.5rem'
+    fontSize: '1.2rem',
+    flexShrink: 0
   },
-  cardValue: { fontSize: '1.8rem', fontWeight: '800', color: theme.textMain, margin: '4px 0' },
-  cardLabel: { fontSize: '0.85rem', fontWeight: '600', color: theme.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px' },
+  cardValue: { fontSize: '1.4rem', fontWeight: '800', color: theme.textMain, margin: '2px 0' },
+  cardLabel: { fontSize: '0.75rem', fontWeight: '600', color: theme.textMuted, textTransform: 'uppercase' },
 
   // Graphs
   graphCard: { 
     backgroundColor: 'white', 
-    padding: '24px', 
+    padding: '20px', 
     borderRadius: '20px', 
     boxShadow: '0 10px 25px rgba(0,0,0,0.02)', 
-    height: '420px',
-    border: '1px solid #f1f5f9'
+    minHeight: '350px',
+    border: '1px solid #f1f5f9',
+    display: 'flex',
+    flexDirection: 'column'
   },
   graphTitle: { 
-    fontSize: '1.1rem', 
-    marginBottom: '20px', 
+    fontSize: '1rem', 
+    marginBottom: '15px', 
     color: theme.textMain, 
     fontWeight: '700',
     display: 'flex',
@@ -184,18 +186,15 @@ const baseStyles = {
     justifyContent: 'center', 
     marginBottom: "10px", 
     marginTop: 'auto', 
-    fontWeight: '600',
-    transition: 'all 0.3s' 
+    fontWeight: '600'
   },
 
   dateInput: {
-    padding: '10px 14px',
+    padding: '8px 12px',
     borderRadius: '10px',
     border: '1px solid #e2e8f0',
-    fontSize: '0.9rem',
-    color: theme.textMain,
-    outline: 'none',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+    fontSize: '0.85rem',
+    outline: 'none'
   }
 };
 
@@ -203,8 +202,6 @@ const CHART_COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981'];
 
 function AdminDashboard() {
   const navigate = useNavigate();
-  
-  // --- LOGIC (KEEP UNTOUCHED) ---
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 1024);
   const [orders, setOrders] = useState([]);
@@ -277,15 +274,16 @@ function AdminDashboard() {
 
   const formatCurrency = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(val);
 
-  // --- DYNAMIC STYLES ---
   const sidebarStyle = {
     ...baseStyles.sidebar,
     transform: isSidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
+    width: isMobile ? '260px' : '280px'
   };
 
   const mainContentStyle = {
     ...baseStyles.mainContent,
     marginLeft: (!isMobile && isSidebarOpen) ? '280px' : '0',
+    padding: isMobile ? '15px' : '24px'
   };
 
   return (
@@ -295,11 +293,11 @@ function AdminDashboard() {
       <div style={sidebarStyle}>
         <div style={baseStyles.sidebarHeader}>
           {isMobile && (
-            <button style={{...baseStyles.closeButton, position: 'absolute', right: 0, top: 0, background: 'none', border: 'none', color: 'white', fontSize: '1.2rem'}} onClick={() => setIsSidebarOpen(false)}>
+            <button style={{position: 'absolute', right: '10px', top: '10px', background: 'none', border: 'none', color: 'white', fontSize: '1.2rem'}} onClick={() => setIsSidebarOpen(false)}>
               <FontAwesomeIcon icon={faTimes} />
             </button>
           )}
-          <img src={adminLogo} alt="Logo" style={{ width: '45px', marginBottom: '15px', filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))' }} />
+          <img src={adminLogo} alt="Logo" style={{ width: '45px', marginBottom: '15px' }} />
           <img src={userProfilePlaceholder} alt="Admin" style={baseStyles.sidebarProfileImage} />
           <div style={baseStyles.sidebarUserName}>Administrator</div>
           <div style={baseStyles.sidebarUserRole}>System Manager</div>
@@ -312,25 +310,14 @@ function AdminDashboard() {
             { icon: faBullhorn, text: 'Send Alert', path: '/admin/alerts' },
             { icon: faFileAlt, text: 'Send Report', path: '/admin/reports' }
           ].map((item, idx) => (
-            <div 
-              key={idx} 
-              style={baseStyles.sidebarNavItem} 
-              onClick={() => navigate(item.path)}
-              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#fff'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.8)'; }}
-            >
+            <div key={idx} style={baseStyles.sidebarNavItem} onClick={() => navigate(item.path)}>
               <FontAwesomeIcon icon={item.icon} style={baseStyles.sidebarNavIcon} />
               <span style={baseStyles.sidebarNavText}>{item.text}</span>
             </div>
           ))}
         </div>
 
-        <button 
-          style={baseStyles.logoutButton} 
-          onClick={() => { localStorage.clear(); navigate('/login'); }}
-          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.25)'}
-          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.15)'}
-        >
+        <button style={baseStyles.logoutButton} onClick={() => { localStorage.clear(); navigate('/login'); }}>
           <FontAwesomeIcon icon={faSignOutAlt} style={{ marginRight: '10px' }} />
           Logout
         </button>
@@ -341,34 +328,27 @@ function AdminDashboard() {
         
         {/* HEADER */}
         <div style={baseStyles.header}>
-          <div style={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
-            <button style={{ background: 'none', border: 'none', color: theme.primary, fontSize: '1.4rem', cursor: 'pointer', marginRight: '20px' }} onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
+          <div style={{ display: 'flex', alignItems: 'center', flexGrow: 1, gap: '10px' }}>
+            <button style={{ background: 'none', border: 'none', color: theme.primary, fontSize: '1.2rem', cursor: 'pointer' }} onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
               <FontAwesomeIcon icon={faBars} />
             </button>
-            {!isMobile && <h2 style={{ fontSize: '1.4rem', fontWeight: '800', color: theme.textMain, marginRight: '30px' }}>Dashboard</h2>}
-            <div style={{ position: 'relative', flexGrow: 1, maxWidth: '400px' }}>
-              <FontAwesomeIcon icon={faSearch} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-              <input type="text" placeholder="Search orders..." style={baseStyles.searchInput} />
+            <div style={{ position: 'relative', flexGrow: 1, maxWidth: isMobile ? '100%' : '400px' }}>
+              <FontAwesomeIcon icon={faSearch} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+              <input type="text" placeholder="Search..." style={baseStyles.searchInput} />
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-            <div style={{ position: 'relative', cursor: 'pointer', color: theme.textMuted, fontSize: '1.3rem' }}>
-              <FontAwesomeIcon icon={faBell} />
-              <span style={{ position: 'absolute', top: '-4px', right: '-4px', backgroundColor: theme.danger, color: 'white', borderRadius: '50%', width: '18px', height: '18px', fontSize: '0.7rem', display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: 'bold', border: '2px solid white' }}>3</span>
+          {!isMobile && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginLeft: '20px' }}>
+              <FontAwesomeIcon icon={faBell} style={{ color: theme.textMuted, fontSize: '1.2rem' }} />
+              <img src={userProfilePlaceholder} alt="Profile" style={{ width: '35px', height: '35px', borderRadius: '8px' }} />
             </div>
-            {!isMobile && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', borderLeft: '1px solid #e2e8f0', paddingLeft: '20px' }}>
-                <img src={userProfilePlaceholder} alt="Profile" style={{ width: '38px', height: '38px', borderRadius: '10px', objectFit: 'cover' }} />
-                <span style={{ fontSize: '0.9rem', fontWeight: '600', color: theme.textMain }}>Admin User</span>
-              </div>
-            )}
-          </div>
+          )}
         </div>
 
         {/* FILTERS */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', flexWrap: 'wrap', gap: '15px' }}>
-            <h3 style={{ margin: 0, color: theme.textMain, fontSize: '1.1rem', fontWeight: '700' }}>Overview Statistics</h3>
-            <div style={{ display: 'flex', gap: '10px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '15px' }}>
+            <h3 style={{ margin: 0, color: theme.textMain, fontSize: '1rem', fontWeight: '700' }}>Overview</h3>
+            <div style={{ display: 'flex', gap: '8px' }}>
               <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} style={baseStyles.dateInput} />
               <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} style={baseStyles.dateInput} />
             </div>
@@ -382,11 +362,11 @@ function AdminDashboard() {
             { label: 'Completed', val: processedData.completedCount, icon: faCheckCircle, color: '#10b981', bg: 'rgba(16, 185, 129, 0.1)' },
             { label: 'Revenue', val: formatCurrency(processedData.totalRevenue), icon: faChartBar, color: '#8b5cf6', bg: 'rgba(139, 92, 246, 0.1)' },
           ].map((card, i) => (
-            <div key={i} style={baseStyles.card} onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.boxShadow = '0 10px 20px rgba(0,0,0,0.05)'; }} onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.03)'; }}>
+            <div key={i} style={baseStyles.card}>
               <div style={{...baseStyles.cardIconContainer, backgroundColor: card.bg, color: card.color}}>
                 <FontAwesomeIcon icon={card.icon} />
               </div>
-              <div>
+              <div style={{overflow: 'hidden'}}>
                 <div style={baseStyles.cardLabel}>{card.label}</div>
                 <div style={baseStyles.cardValue}>{loading ? '...' : card.val}</div>
               </div>
@@ -394,77 +374,89 @@ function AdminDashboard() {
           ))}
         </div>
 
-        {/* ANALYTICS */}
+        {/* ANALYTICS - RESPONSIVE GRIDS */}
         {!loading && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '25px' }}>
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(400px, 1fr))', 
+            gap: '20px' 
+          }}>
               
               {/* Revenue Trend */}
               <div style={baseStyles.graphCard}>
                 <div style={baseStyles.graphTitle}>Revenue Performance</div>
-                <ResponsiveContainer width="100%" height="90%">
-                  <AreaChart data={processedData.salesData}>
-                    <defs>
-                      <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={theme.primary} stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor={theme.primary} stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                    <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fontSize: 11, fill: '#94a3b8'}} dy={10} />
-                    <YAxis axisLine={false} tickLine={false} tick={{fontSize: 11, fill: '#94a3b8'}} />
-                    <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px rgba(0,0,0,0.1)' }} formatter={(value) => formatCurrency(value)} />
-                    <Area type="monotone" dataKey="sales" stroke={theme.primary} strokeWidth={3} fillOpacity={1} fill="url(#colorSales)" />
-                  </AreaChart>
-                </ResponsiveContainer>
+                <div style={{ flexGrow: 1, width: '100%', minHeight: '250px' }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={processedData.salesData}>
+                      <defs>
+                        <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={theme.primary} stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor={theme.primary} stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                      <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#94a3b8'}} />
+                      <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#94a3b8'}} />
+                      <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', fontSize: '12px' }} formatter={(value) => formatCurrency(value)} />
+                      <Area type="monotone" dataKey="sales" stroke={theme.primary} strokeWidth={3} fillOpacity={1} fill="url(#colorSales)" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
 
               {/* Status Distribution */}
               <div style={baseStyles.graphCard}>
                 <div style={baseStyles.graphTitle}>Order Status Mix</div>
-                <ResponsiveContainer width="100%" height="90%">
-                  <PieChart>
-                    <Pie data={processedData.statusData} cx="50%" cy="50%" innerRadius={70} outerRadius={90} paddingAngle={8} dataKey="value">
-                      {processedData.statusData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} cornerRadius={4} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                    <Legend verticalAlign="bottom" height={36} iconType="circle" />
-                  </PieChart>
-                </ResponsiveContainer>
+                <div style={{ flexGrow: 1, width: '100%', minHeight: '250px' }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie data={processedData.statusData} cx="50%" cy="50%" innerRadius={isMobile ? 50 : 60} outerRadius={isMobile ? 70 : 80} paddingAngle={5} dataKey="value">
+                        {processedData.statusData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                      <Legend verticalAlign="bottom" iconType="circle" wrapperStyle={{fontSize: '11px'}} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
 
               {/* Top Products */}
               <div style={baseStyles.graphCard}>
                 <div style={baseStyles.graphTitle}>Best Sellers</div>
-                <ResponsiveContainer width="100%" height="90%">
-                  <BarChart data={processedData.productData} layout="vertical" margin={{ left: 20 }}>
-                    <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f1f5f9" />
-                    <XAxis type="number" hide />
-                    <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{fontSize: 11, fill: '#64748b'}} width={100} />
-                    <Tooltip cursor={{fill: '#f8fafc'}} />
-                    <Bar dataKey="count" radius={[0, 8, 8, 0]} barSize={20}>
-                      {processedData.productData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
+                <div style={{ flexGrow: 1, width: '100%', minHeight: '250px' }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={processedData.productData} layout="vertical" margin={{ left: 0, right: 20 }}>
+                      <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f1f5f9" />
+                      <XAxis type="number" hide />
+                      <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#64748b'}} width={80} />
+                      <Tooltip cursor={{fill: '#f8fafc'}} />
+                      <Bar dataKey="count" radius={[0, 8, 8, 0]} barSize={15}>
+                        {processedData.productData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
 
               {/* Returns */}
               <div style={baseStyles.graphCard}>
-                <div style={baseStyles.graphTitle}>Customer Satisfaction (Returns)</div>
-                <ResponsiveContainer width="100%" height="90%">
-                  <PieChart>
-                    <Pie data={processedData.returnData} cx="50%" cy="50%" outerRadius={90} innerRadius={60} dataKey="value" label={({ percent }) => `${(percent * 100).toFixed(0)}%`}>
-                      <Cell fill={theme.danger} />
-                      <Cell fill={theme.success} />
-                    </Pie>
-                    <Tooltip />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
+                <div style={baseStyles.graphTitle}>Satisfaction (Returns)</div>
+                <div style={{ flexGrow: 1, width: '100%', minHeight: '250px' }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie data={processedData.returnData} cx="50%" cy="50%" outerRadius={isMobile ? 70 : 80} innerRadius={isMobile ? 45 : 55} dataKey="value" label={({ percent }) => `${(percent * 100).toFixed(0)}%`}>
+                        <Cell fill={theme.danger} />
+                        <Cell fill={theme.success} />
+                      </Pie>
+                      <Tooltip />
+                      <Legend wrapperStyle={{fontSize: '11px'}} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
 
           </div>
