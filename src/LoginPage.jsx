@@ -166,7 +166,6 @@ function LoginPage() {
     }
 
     // --- STATIC BYPASS LOGIC ---
-    // Admin Bypass
     if (mobile === "8888888888" && password === "manager123") {
       showToast("Login successful!", "success");
       localStorage.setItem("_id", "static_admin_id");
@@ -174,17 +173,6 @@ function LoginPage() {
       localStorage.setItem("role", "Admin");
       localStorage.setItem("token", "static_bypass_token");
       setTimeout(() => navigate("/admin-dashboard"), 600);
-      return;
-    }
-
-    // NEW: Driver Bypass (Dummy Login)
-    if (mobile === "7777777777" && password === "driver123") {
-      showToast("Driver Login successful!", "success");
-      localStorage.setItem("_id", "static_driver_id");
-      localStorage.setItem("name", "Dummy Driver");
-      localStorage.setItem("role", "Driver");
-      localStorage.setItem("token", "static_driver_token");
-      setTimeout(() => navigate("/driver-dashboard"), 600);
       return;
     }
 
@@ -207,20 +195,24 @@ function LoginPage() {
         return showToast(result.message || "Login failed.", "error");
       }
 
-      showToast("Login successful!", "success");
-
+      // --- EXTRACT DATA FROM API RESPONSE ---
       const employeeData = result.employee;
       const userName = employeeData?.name || "User";
-      const userRole =
-        employeeData?.activeRole?.role || employeeData?.roles?.[0]?.role;
+      // Fixing userRole detection based on your provided JSON snippet
+      const userRole = employeeData?.role || "User"; 
+      const profilePic = employeeData?.profilePic?.url || "";
 
+      // --- SAVE TO LOCALSTORAGE ---
       localStorage.setItem("_id", employeeData?._id);
       localStorage.setItem("name", userName);
       localStorage.setItem("role", userRole);
       localStorage.setItem("token", result.token);
-      localStorage.setItem("eid", employeeData?.activeRole?.eid || "");
+      localStorage.setItem("profilePic", profilePic);
+      localStorage.setItem("eid", employeeData?.eid || "");
 
-      // Updated Navigation Logic
+      showToast("Login successful!", "success");
+
+      // --- NAVIGATION LOGIC ---
       setTimeout(() => {
         switch (userRole) {
           case "Admin":
@@ -240,14 +232,15 @@ function LoginPage() {
             break;
           case "Driver":
             navigate("/driver-dashboard");
-            break; // Route for API driver
+            break;
           default:
             navigate("/");
         }
       }, 600);
+
     } catch (error) {
-      showToast("Network error. Please try again.", "error");
-      console.error(error);
+      showToast("Error during login. Check console.", "error");
+      console.error("Login Error:", error);
       setIsLoading(false);
     }
   };

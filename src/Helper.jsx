@@ -1,31 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faClipboardCheck, faPaperPlane } from "@fortawesome/free-solid-svg-icons";
-
-
 import {
   faBars,
-  faBell, // Notification icon
-  faUserCircle, // Default profile icon for header
+  faBell,
   faSignOutAlt,
   faTimes,
-  faUserPlus, // Sidebar: Manage Work
-  faCogs, // Sidebar: Manage Application
-  faBullhorn, // Sidebar: Send Alert
-  faFileAlt, // Sidebar: Send Report
-  faSearch, // Re-adding search for desktop header
-  faClipboardList, // Card: Assigned Task
-  faHourglassHalf, // Card: Ongoing Task
-  faCheckCircle, // Card: Completed Task
-  faChartBar, // Card: Reports
-  faRightLeft
+  faUserPlus,
+  faCogs,
+  faBullhorn,
+  faFileAlt,
+  faClipboardList,
+  faHourglassHalf,
+  faRightLeft,
+  faCopyright
 } from '@fortawesome/free-solid-svg-icons';
-import adminLogo from './assets/3b.png'; // Assuming you have this logo
-import userProfilePlaceholder from './assets/user-profile.jpg'; // Placeholder for user profile image (add this to src/assets)
 
+import userProfilePlaceholder from './assets/user-profile.jpg'; // Ensure this exists or use a URL
 
-// --- STYLES CONFIGURATION (Identical to Admin) ---
+// --- STYLES CONFIGURATION ---
 const baseStyles = {
   dashboardContainer: {
     display: 'flex',
@@ -184,6 +177,7 @@ const baseStyles = {
     borderRadius: '50%',
     objectFit: 'cover',
     marginRight: '10px',
+    border: '1px solid #ddd'
   },
   headerUserName: {
     fontSize: '1.1rem',
@@ -236,11 +230,9 @@ const baseStyles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 'auto',
     marginBottom: "25px",
     transition: 'background-color 0.2s',
-  },
-  logoutButtonHover: {
-    backgroundColor: '#c82333',
   },
   welcomeSection: {
     marginBottom: '25px',
@@ -263,7 +255,6 @@ const baseStyles = {
   },
 };
 
-
 const popupStyles = {
   overlay: {
     position: 'fixed',
@@ -271,9 +262,9 @@ const popupStyles = {
     left: 0,
     width: '100%',
     height: '100%',
-    backgroundColor: 'rgba(0, 0, 0, 0.6)', // पीछे का बैकग्राउंड धुंधला/काला
-    backdropFilter: 'blur(5px)', // ग्लास इफेक्ट (Glassmorphism)
-    zIndex: 9999, // सबसे ऊपर दिखेगा
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backdropFilter: 'blur(5px)',
+    zIndex: 9999,
   },
   container: {
     position: 'fixed',
@@ -323,7 +314,6 @@ const responsiveCss = `
     }
     .sidebar-header { display: none !important; }
     .sidebar .close-button { display: none !important; }
-    .sidebar .logout-button { margin-top: auto !important; }
     .main-content { margin-left: 0 !important; }
     .menu-button { display: none !important; }
     .desktop-header-title { display: block !important; }
@@ -338,9 +328,9 @@ const responsiveCss = `
     .header .header-notification { margin-left: auto !important; }
     .header .header-profile { display: none !important; }
     .sidebar-header { display: flex !important; }
-    .sidebar .logout-button { margin-top: 30px !important; }
   }
-      @keyframes slideInFade {
+  
+  @keyframes slideInFade {
     0% { opacity: 0; transform: translate(-50%, -60%); }
     100% { opacity: 1; transform: translate(-50%, -50%); }
   }
@@ -348,144 +338,108 @@ const responsiveCss = `
     0% { opacity: 1; }
     100% { opacity: 0; }
   }
-  
-  .welcome-popup {
-    animation: slideInFade 0.8s ease-out forwards;
-  }
-  
-  .welcome-popup.hiding {
-    animation: fadeOut 0.8s ease-in forwards;
-  }
+  .welcome-popup { animation: slideInFade 0.8s ease-out forwards; }
+  .welcome-popup.hiding { animation: fadeOut 0.8s ease-in forwards; }
 `;
 
 const Helper = () => {
   const navigate = useNavigate();
-  const [userName, setUserName] = useState('Operator');
-  const [userRole, setUserRole] = useState('Role');
+  
+  // User Data States
+  const [userName, setUserName] = useState('Helper');
+  const [userRole, setUserRole] = useState('Staff');
   const [userProfilePic, setUserProfilePic] = useState(userProfilePlaceholder);
+  
+  // UI States
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 767);
   const [notificationCount, setNotificationCount] = useState(3);
-
-  // --- THESE LINES MUST BE PRESENT AND UNCOMMENTED ---
-  const [assignedTasks, setAssignedTasks] = useState(12);
-  const [ongoingTasks, setOngoingTasks] = useState(5);
-  const [completedTasks, setCompletedTasks] = useState(87);
-  const [TransferTasks, setTransferTasks] = useState(4);
-  const [reportsGenerated, setReportsGenerated] = useState(15);
-  const [reviewTasks, setReviewTasks] = useState(0);
-  const [submitTasks, setSubmitTasks] = useState(0);
-
   const [showWelcome, setShowWelcome] = useState(false);
   const [isHiding, setIsHiding] = useState(false);
 
+  // Task States
+  const [assignedTasks, setAssignedTasks] = useState(0);
+  const [ongoingTasks, setOngoingTasks] = useState(0);
+  const [TransferTasks, setTransferTasks] = useState(0);
+
+  // 1. Load User Data & Setup Styles
   useEffect(() => {
-    const employeeId = localStorage.getItem('_id');
-
-    // ✅ Assigned Tasks
-    fetch(`https://threebapi-1067354145699.asia-south1.run.app/api/items/items/employee/${employeeId}`)
-      .then((res) => res.json())
-      .then((data) => {
-        console.log("Assigned Tasks API:", data);
-
-        const assigned = Array.isArray(data?.data) ? data.data.length : 0;
-        setAssignedTasks(assigned);
-      })
-      .catch((err) => console.error("Assigned Tasks Error:", err));
-
-    // ✅ Ongoing Tasks
-    fetch(`https://threebapi-1067354145699.asia-south1.run.app/api/workers/employee-task/${employeeId}`)
-      .then((res) => res.json())
-      .then((data) => {
-        console.log("Ongoing Tasks API:", data);
-
-        const ongoing = Array.isArray(data?.data) ? data.data.length : 0;
-        setOngoingTasks(ongoing);
-      })
-      .catch((err) => console.error("Ongoing Tasks Error:", err));
-
-    // ✅ Transfer Tasks
-    fetch(`https://threebapi-1067354145699.asia-south1.run.app/api/task-transfers/transfers`)
-      .then((res) => res.json())
-      .then((data) => {
-        console.log("Transfer Tasks API:", data);
-
-        const transfers = Array.isArray(data?.data) ? data.data.length : 0;
-        setTransferTasks(transfers);
-      })
-      .catch((err) => console.error("Transfer Tasks Error:", err));
-
-  }, []);
-
-
-  useEffect(() => {
+    // Inject CSS
     const styleTag = document.createElement("style");
     styleTag.innerHTML = responsiveCss;
     document.head.appendChild(styleTag);
 
+    // Retrieve from LocalStorage
+    const storedName = localStorage.getItem('name');
+    const storedRole = localStorage.getItem('role');
+    const storedPic = localStorage.getItem('profilePic');
+
+    if (storedName) setUserName(storedName);
+    if (storedRole) setUserRole(storedRole);
+    if (storedPic && storedPic !== "undefined" && storedPic !== "null") {
+      setUserProfilePic(storedPic);
+    }
+
+    // Welcome logic
+    const hasSeenPopup = sessionStorage.getItem('welcome_shown');
+    if (!hasSeenPopup) {
+      setShowWelcome(true);
+      sessionStorage.setItem('welcome_shown', 'true');
+    }
+
     const handleResize = () => {
-      const mobileView = window.innerWidth <= 767;
-      setIsMobile(mobileView);
-      if (!mobileView && isSidebarOpen) {
-        setIsSidebarOpen(false); // Close sidebar if resizing from mobile to desktop
-      }
+      setIsMobile(window.innerWidth <= 767);
     };
     window.addEventListener('resize', handleResize);
-
-
-
-    const storedUserName = localStorage.getItem('name');
-    const storedUserRole = localStorage.getItem('role');
-    if (storedUserName) setUserName(storedUserName);
-    if (storedUserRole) setUserRole(storedUserRole);
-    // Fetch actual profile image if available
-    // const storedProfilePic = localStorage.getItem('userProfilePic');
-    // if (storedProfilePic) setUserProfilePic(storedProfilePic);
 
     return () => {
       document.head.removeChild(styleTag);
       window.removeEventListener('resize', handleResize);
     };
-  }, [isSidebarOpen]); // Added isSidebarOpen to dependencies
+  }, []);
+
+  // 2. Fetch Task Data
+  useEffect(() => {
+    const employeeId = localStorage.getItem('_id');
+    if (!employeeId) return;
+
+    // Assigned Tasks
+    fetch(`https://threebapi-1067354145699.asia-south1.run.app/api/items/items/employee/${employeeId}`)
+      .then((res) => res.json())
+      .then((data) => setAssignedTasks(Array.isArray(data?.data) ? data.data.length : 0))
+      .catch((err) => console.error("Assigned Error:", err));
+
+    // Ongoing Tasks
+    fetch(`https://threebapi-1067354145699.asia-south1.run.app/api/workers/employee-task/${employeeId}`)
+      .then((res) => res.json())
+      .then((data) => setOngoingTasks(Array.isArray(data?.data) ? data.data.length : 0))
+      .catch((err) => console.error("Ongoing Error:", err));
+
+    // Transfer Tasks
+    fetch(`https://threebapi-1067354145699.asia-south1.run.app/api/task-transfers/transfers`)
+      .then((res) => res.json())
+      .then((data) => setTransferTasks(Array.isArray(data?.data) ? data.data.length : 0))
+      .catch((err) => console.error("Transfer Error:", err));
+  }, []);
+
+  // 3. Welcome Popup Auto-hide
+  useEffect(() => {
+    if (showWelcome) {
+      const timer = setTimeout(() => {
+        setIsHiding(true);
+        setTimeout(() => setShowWelcome(false), 800);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [showWelcome]);
 
   const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userName');
-    localStorage.removeItem('userRole');
-
-    sessionStorage.removeItem('welcome_shown');
-
+    localStorage.clear();
+    sessionStorage.clear();
     navigate('/');
   };
 
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
-
-  // Conditionally apply class names
-  const sidebarClasses = `sidebar ${isSidebarOpen ? 'sidebar-open' : ''}`;
-  const mainContentClasses = `main-content ${!isMobile ? 'main-content-shifted' : ''}`;
-  const dashboardContainerClasses = `dashboard-container ${isMobile && isSidebarOpen ? 'sidebar-open-mobile' : ''}`;
-
-  const handleAssignedTaskClick = () => {
-    navigate('/assignments'); // navigate to assignments page
-  };
-
-  const handleOngoingTaskClick = () => {
-    navigate('/viewtask'); // navigate to new page
-  };
-
-  const handleTransferTaskClick = () => {
-    navigate('/transfertask'); // navigate to the Transfer Tasks page
-  };
-
-  const handleReviewTaskClick = () => {
-    navigate("/review-tasks");
-  };
-
-  const handleSubmitTaskClick = () => {
-    navigate("/submit-tasks");
-  };
+  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -495,114 +449,85 @@ const Helper = () => {
   };
   const greeting = getGreeting();
 
-  useEffect(() => {
-    const hasSeenPopup = sessionStorage.getItem('welcome_shown');
-    if (!hasSeenPopup) {
-      setShowWelcome(true);
-      sessionStorage.setItem('welcome_shown', 'true');
-    }
-  }, []);
-
-  useEffect(() => {
-    if (showWelcome) {
-      const timer = setTimeout(() => {
-        setIsHiding(true);
-        setTimeout(() => setShowWelcome(false), 800);
-      }, 2000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [showWelcome]);
-
-
-
+  // Navigation handlers
+  const handleAssignedTaskClick = () => navigate('/assignments');
+  const handleOngoingTaskClick = () => navigate('/viewtask');
+  const handleTransferTaskClick = () => navigate('/transfertask');
 
   return (
-
-
-
-    <div style={baseStyles.dashboardContainer} className={dashboardContainerClasses}>
-
+    <div style={baseStyles.dashboardContainer} className={`dashboard-container ${isMobile && isSidebarOpen ? 'sidebar-open-mobile' : ''}`}>
+      
+      {/* Welcome Popup Overlay */}
       {showWelcome && (
         <div style={popupStyles.overlay}>
-          <div
-            style={popupStyles.container}
-            className={`welcome-popup ${isHiding ? 'hiding' : ''}`}
-          >
+          <div style={popupStyles.container} className={`welcome-popup ${isHiding ? 'hiding' : ''}`}>
             <span style={popupStyles.icon}>{greeting.icon}</span>
             <h2 style={popupStyles.title}>{greeting.text}, {userName}!</h2>
-            <p style={popupStyles.subtitle}>Welcome to your dashboard.</p>
+            <p style={popupStyles.subtitle}>Welcome back to your dashboard.</p>
           </div>
         </div>
       )}
 
       {/* Sidebar */}
-      <div style={baseStyles.sidebar} className={sidebarClasses}>
-        {/* Profile info in sidebar header (mobile only) */}
-        {isMobile && (
-          <div style={baseStyles.sidebarHeader}>
-            <button onClick={toggleSidebar} style={baseStyles.closeButton} className="close-button">
+      <div style={baseStyles.sidebar} className={`sidebar ${isSidebarOpen ? 'sidebar-open' : ''}`}>
+        <div style={baseStyles.sidebarHeader}>
+          {isMobile && (
+            <button onClick={toggleSidebar} style={baseStyles.closeButton}>
               <FontAwesomeIcon icon={faTimes} />
             </button>
-            <img src={userProfilePic} alt="Profile" style={baseStyles.sidebarProfileImage} />
-            <span style={baseStyles.sidebarUserName}>{userName}</span>
-            <span style={baseStyles.sidebarUserRole}>{userRole}</span>
-          </div>
-        )}
+          )}
+          <img src={userProfilePic} alt="Profile" style={baseStyles.sidebarProfileImage} />
+          <span style={baseStyles.sidebarUserName}>{userName}</span>
+          <span style={baseStyles.sidebarUserRole}>{userRole}</span>
+        </div>
 
         <nav style={baseStyles.sidebarNav}>
-          {/* Main navigation items for the sidebar */}
-          <div style={{ ...baseStyles.sidebarNavItem, ...baseStyles.sidebarNavItemHover }}>
+          <div style={baseStyles.sidebarNavItem}>
             <FontAwesomeIcon icon={faUserPlus} style={baseStyles.sidebarNavIcon} />
             <span style={baseStyles.sidebarNavText}>Manage Work</span>
           </div>
-          <div style={{ ...baseStyles.sidebarNavItem, ...baseStyles.sidebarNavItemHover }}>
+          <div style={baseStyles.sidebarNavItem}>
             <FontAwesomeIcon icon={faCogs} style={baseStyles.sidebarNavIcon} />
-            <span style={baseStyles.sidebarNavText}>Manage Application</span>
+            <span style={baseStyles.sidebarNavText}>Manage App</span>
           </div>
-          <div style={{ ...baseStyles.sidebarNavItem, ...baseStyles.sidebarNavItemHover }}>
+          <div style={baseStyles.sidebarNavItem}>
             <FontAwesomeIcon icon={faBullhorn} style={baseStyles.sidebarNavIcon} />
             <span style={baseStyles.sidebarNavText}>Send Alert</span>
           </div>
-          <div style={{ ...baseStyles.sidebarNavItem, ...baseStyles.sidebarNavItemHover }}>
+          <div style={baseStyles.sidebarNavItem}>
             <FontAwesomeIcon icon={faFileAlt} style={baseStyles.sidebarNavIcon} />
-            <span style={baseStyles.sidebarNavText}>Send Report</span>
+            <span style={baseStyles.sidebarNavText}>Reports</span>
           </div>
         </nav>
 
-        {/* Logout button always at the bottom of the sidebar */}
-        <button onClick={handleLogout} style={{ ...baseStyles.logoutButton, ...baseStyles.logoutButtonHover }} className="logout-button">
-          <FontAwesomeIcon icon={faSignOutAlt} style={baseStyles.sidebarNavIcon} />
+        <button onClick={handleLogout} style={baseStyles.logoutButton}>
+          <FontAwesomeIcon icon={faSignOutAlt} style={{marginRight: '10px'}} />
           Logout
         </button>
       </div>
 
-      {/* Main Content Area */}
-      <div style={baseStyles.mainContent} className={mainContentClasses}>
+      {/* Main Content */}
+      <div style={baseStyles.mainContent} className={`main-content ${!isMobile ? 'main-content-shifted' : ''}`}>
+        
         {/* Header */}
         <div style={baseStyles.header}>
           <div style={baseStyles.headerLeft}>
-            {isMobile ? ( // Mobile: Menu button
-              <button onClick={toggleSidebar} style={baseStyles.menuButton} className="menu-button">
+            {isMobile ? (
+              <button onClick={toggleSidebar} style={baseStyles.menuButton}>
                 <FontAwesomeIcon icon={faBars} />
               </button>
-            ) : ( // Desktop: Dashboard Title + Optional Search Bar
-              <>
-                <h1 style={baseStyles.desktopHeaderTitle} className="desktop-header-title">Helper Dashboard</h1>
-
-              </>
+            ) : (
+              <h1 style={baseStyles.desktopHeaderTitle}>Helper Dashboard</h1>
             )}
           </div>
 
           <div style={baseStyles.headerRight}>
-            <div style={baseStyles.headerNotification} className="header-notification">
+            <div style={baseStyles.headerNotification}>
               <FontAwesomeIcon icon={faBell} />
-              {notificationCount > 0 && (
-                <span style={baseStyles.notificationBadge}>{notificationCount}</span>
-              )}
+              {notificationCount > 0 && <span style={baseStyles.notificationBadge}>{notificationCount}</span>}
             </div>
-            {!isMobile && ( // Desktop: Profile image and name
-              <div style={baseStyles.headerProfile} className="header-profile">
+            {!isMobile && (
+              <div style={baseStyles.headerProfile}>
                 <img src={userProfilePic} alt="Profile" style={baseStyles.headerProfileImage} />
                 <span style={baseStyles.headerUserName}>Hello, {userName}</span>
               </div>
@@ -610,20 +535,16 @@ const Helper = () => {
           </div>
         </div>
 
-        {/* Dashboard Cards Grid - These stay in the main content */}
-
+        {/* Welcome Text */}
         <div style={baseStyles.welcomeSection}>
           <h2 style={baseStyles.welcomeText}>
             {greeting.icon} {greeting.text}, {userName}!
           </h2>
-          <p style={baseStyles.welcomeSubText}>
-            Hope you have a productive day ahead.
-          </p>
+          <p style={baseStyles.welcomeSubText}>Hope you have a productive day ahead.</p>
         </div>
 
+        {/* Cards Grid */}
         <div style={baseStyles.cardsGrid}>
-
-
           <div style={{ ...baseStyles.card, ...baseStyles.cardHover }} onClick={handleAssignedTaskClick}>
             <FontAwesomeIcon icon={faClipboardList} style={baseStyles.cardIcon} />
             <h3 style={baseStyles.cardTitle}>Assigned Task</h3>
@@ -641,14 +562,10 @@ const Helper = () => {
             <h3 style={baseStyles.cardTitle}>Transfer Tasks</h3>
             <p style={baseStyles.cardCount}>{TransferTasks}</p>
           </div>
-
         </div>
-
-
-        {/* Additional main content goes here */}
       </div>
     </div>
   );
-}
+};
 
 export default Helper;
