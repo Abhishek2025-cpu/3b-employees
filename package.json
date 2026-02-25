@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start": "serve -s dist -l 10000"
   },
   "dependencies": {
     "@fortawesome/free-solid-svg-icons": "^7.1.0",
@@ -23,7 +24,8 @@
     "react-router-dom": "^7.9.3",
     "react-select": "^5.10.2",
     "react-toastify": "^11.0.5",
-    "recharts": "^3.5.0"
+    "recharts": "^3.5.0",
+    "serve": "^14.2.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
