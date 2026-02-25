@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBars,
   faBell,
@@ -13,551 +13,389 @@ import {
   faClipboardList,
   faHourglassHalf,
   faRightLeft,
-  faCopyright
-} from '@fortawesome/free-solid-svg-icons';
+  faSearch,
+  faStar,
+} from "@fortawesome/free-solid-svg-icons";
 
-import userProfilePlaceholder from './assets/user-profile.jpg'; // Ensure this exists or use a URL
+import userProfilePlaceholder from "./assets/user-profile.jpg";
 
-// --- STYLES CONFIGURATION ---
+// --- UPDATED STYLES TO MATCH IMAGE ---
 const baseStyles = {
   dashboardContainer: {
-    display: 'flex',
-    minHeight: '100vh',
-    backgroundColor: '#f0f2f5',
-    fontFamily: "'Roboto', sans-serif",
+    display: "flex",
+    minHeight: "100vh",
+    backgroundColor: "#f8f9fa",
+    fontFamily: "'Inter', 'Segoe UI', sans-serif",
   },
   sidebar: {
-    width: '280px',
-    backgroundColor: '#452983',
-    color: 'white',
-    padding: '20px',
-    boxShadow: '2px 0 5px rgba(0,0,0,0.1)',
-    display: 'flex',
-    flexDirection: 'column',
-    position: 'fixed',
-    height: '100%',
+    width: "260px",
+    backgroundColor: "#452983",
+    color: "white",
+    padding: "30px 15px",
+    display: "flex",
+    flexDirection: "column",
+    position: "fixed",
+    height: "100vh",
     zIndex: 1000,
-    transition: 'transform 0.3s ease-in-out',
-    transform: 'translateX(-100%)',
+    transition: "transform 0.3s ease",
   },
   sidebarHeader: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    marginBottom: '30px',
-    paddingBottom: '20px',
-    borderBottom: '1px solid rgba(255,255,255,0.2)',
-    position: 'relative',
-    paddingTop: '10px',
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    marginBottom: "30px",
+    paddingBottom: "25px",
+    borderBottom: "1px solid rgba(255,255,255,0.1)",
   },
   sidebarProfileImage: {
-    width: '80px',
-    height: '80px',
-    borderRadius: '50%',
-    objectFit: 'cover',
-    marginBottom: '10px',
-    border: '3px solid white',
+    width: "70px",
+    height: "70px",
+    borderRadius: "50%",
+    backgroundColor: "white",
+    padding: "2px",
+    marginBottom: "15px",
   },
   sidebarUserName: {
-    fontSize: '1.2rem',
-    fontWeight: 'bold',
-    color: 'white',
-    marginBottom: '5px',
+    fontSize: "1.1rem",
+    fontWeight: "700",
+    marginBottom: "4px",
   },
   sidebarUserRole: {
-    fontSize: '0.9rem',
-    color: 'rgba(255,255,255,0.7)',
-  },
-  closeButton: {
-    background: 'none',
-    border: 'none',
-    color: 'white',
-    fontSize: '1.5rem',
-    cursor: 'pointer',
-    position: 'absolute',
-    top: '10px',
-    right: '10px',
+    fontSize: "0.8rem",
+    opacity: 0.8,
   },
   sidebarNav: {
     flexGrow: 1,
+    marginTop: "10px",
   },
   sidebarNavItem: {
-    display: 'flex',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    padding: '15px 20px',
-    marginBottom: '15px',
-    borderRadius: '12px',
-    cursor: 'pointer',
-    transition: 'background-color 0.2s, transform 0.2s',
-    boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
-  },
-  sidebarNavItemHover: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    transform: 'translateY(-2px)',
+    display: "flex",
+    alignItems: "center",
+    padding: "12px 15px",
+    marginBottom: "8px",
+    borderRadius: "8px",
+    cursor: "pointer",
+    transition: "0.2s",
+    color: "rgba(255,255,255,0.8)",
   },
   sidebarNavIcon: {
-    marginRight: '20px',
-    fontSize: '1.5rem',
-    color: '#a991d8',
+    marginRight: "15px",
+    width: "20px",
+    fontSize: "1.1rem",
   },
   sidebarNavText: {
-    fontSize: '1.1rem',
-    fontWeight: '500',
+    fontSize: "0.95rem",
+    fontWeight: "500",
   },
   mainContent: {
     flexGrow: 1,
-    padding: '20px',
-    width: '100%',
-    boxSizing: 'border-box',
-    marginLeft: '0',
-    transition: 'margin-left 0.3s ease-in-out',
+    padding: "30px",
+    width: "100%",
+    boxSizing: "border-box",
+    transition: "margin-left 0.3s ease",
   },
   header: {
-    backgroundColor: 'white',
-    padding: '15px 25px',
-    borderRadius: '10px',
-    boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
-    marginBottom: '25px',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    height: '60px',
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "white",
+    padding: "10px 25px",
+    borderRadius: "15px",
+    boxShadow: "0 2px 10px rgba(0,0,0,0.03)",
+    marginBottom: "30px",
   },
   headerLeft: {
-    display: 'flex',
-    alignItems: 'center',
+    display: "flex",
+    alignItems: "center",
+    gap: "15px",
   },
-  menuButton: {
-    background: 'none',
-    border: 'none',
-    color: '#452983',
-    fontSize: '1.8rem',
-    cursor: 'pointer',
-    marginRight: '20px',
-  },
-  desktopHeaderTitle: {
-    fontSize: '1.8rem',
-    fontWeight: 'bold',
-    color: '#452983',
-  },
-  headerRight: {
-    display: 'flex',
-    alignItems: 'center',
-  },
-  headerNotification: {
-    fontSize: '1.8rem',
-    color: '#7853C2',
-    cursor: 'pointer',
-    position: 'relative',
-    marginRight: '20px',
-  },
-  notificationBadge: {
-    position: 'absolute',
-    top: '-5px',
-    right: '-5px',
-    backgroundColor: '#dc3545',
-    color: 'white',
-    borderRadius: '50%',
-    width: '20px',
-    height: '20px',
-    fontSize: '0.75rem',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    fontWeight: 'bold',
-  },
-  headerProfile: {
-    display: 'flex',
-    alignItems: 'center',
-  },
-  headerProfileImage: {
-    width: '40px',
-    height: '40px',
-    borderRadius: '50%',
-    objectFit: 'cover',
-    marginRight: '10px',
-    border: '1px solid #ddd'
-  },
-  headerUserName: {
-    fontSize: '1.1rem',
-    fontWeight: '500',
-    color: '#333',
-  },
-  cardsGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-    gap: '25px',
-    marginBottom: '30px',
-  },
-  card: {
-    backgroundColor: 'white',
-    borderRadius: '12px',
-    padding: '25px',
-    boxShadow: '0 4px 10px rgba(0,0,0,0.08)',
-    textAlign: 'center',
-    transition: 'transform 0.2s, box-shadow 0.2s',
-    cursor: 'pointer',
-  },
-  cardHover: {
-    transform: 'translateY(-5px)',
-    boxShadow: '0 6px 15px rgba(0,0,0,0.12)',
-  },
-  cardIcon: {
-    fontSize: '3.5rem',
-    marginBottom: '15px',
-    color: '#7853C2',
-  },
-  cardTitle: {
-    fontSize: '1.3rem',
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: '10px',
-  },
-  cardCount: {
-    fontSize: '2.5rem',
-    fontWeight: 'bold',
-    color: '#452983',
-  },
-  logoutButton: {
-    backgroundColor: '#dc3545',
-    color: 'white',
-    border: 'none',
-    padding: '12px 20px',
-    borderRadius: '8px',
-    fontSize: '1rem',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 'auto',
-    marginBottom: "25px",
-    transition: 'background-color 0.2s',
-  },
-  welcomeSection: {
-    marginBottom: '25px',
-    padding: '0 5px',
-  },
-  welcomeText: {
-    fontSize: '2rem',
-    fontWeight: '800',
-    background: 'linear-gradient(to right, #452983, #7853C2, #FF6B6B)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-    letterSpacing: '0.5px',
+  headerTitle: {
+    fontSize: "1.4rem",
+    fontWeight: "800",
+    color: "#452983",
     margin: 0,
   },
-  welcomeSubText: {
-    fontSize: '1rem',
-    color: '#666',
-    marginTop: '5px',
-    fontWeight: '500',
+  searchBarContainer: {
+    position: "relative",
+    marginLeft: "100px",
   },
-};
-
-const popupStyles = {
-  overlay: {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    backdropFilter: 'blur(5px)',
-    zIndex: 9999,
+  searchInput: {
+    backgroundColor: "#f8f9fa",
+    border: "none",
+    borderRadius: "8px",
+    padding: "10px 15px 10px 40px",
+    width: "300px",
+    fontSize: "0.9rem",
+    outline: "none",
   },
-  container: {
-    position: 'fixed',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    backgroundColor: 'white',
-    padding: '30px 40px',
-    borderRadius: '20px',
-    textAlign: 'center',
-    boxShadow: '0 20px 50px rgba(0,0,0,0.3)',
-    minWidth: '300px',
-    maxWidth: '90%',
-    border: '1px solid rgba(255,255,255,0.5)',
+  searchIcon: {
+    position: "absolute",
+    left: "15px",
+    top: "50%",
+    transform: "translateY(-50%)",
+    color: "#999",
   },
-  icon: {
-    fontSize: '4rem',
-    marginBottom: '10px',
-    display: 'block',
+  headerRight: {
+    display: "flex",
+    alignItems: "center",
+    gap: "20px",
   },
-  title: {
-    fontSize: '2rem',
-    fontWeight: '800',
-    background: 'linear-gradient(45deg, #452983, #FF6B6B)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-    margin: '10px 0',
+  notificationBtn: {
+    position: "relative",
+    fontSize: "1.4rem",
+    color: "#452983",
+    cursor: "pointer",
   },
-  subtitle: {
-    fontSize: '1.1rem',
-    color: '#666',
-    fontWeight: '500',
+  badge: {
+    position: "absolute",
+    top: "-5px",
+    right: "-5px",
+    backgroundColor: "#d93025",
+    color: "white",
+    fontSize: "0.65rem",
+    borderRadius: "50%",
+    width: "18px",
+    height: "18px",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    fontWeight: "bold",
+    border: "2px solid white",
+  },
+  userBadge: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+  },
+  userBadgeImg: {
+    width: "32px",
+    height: "32px",
+    borderRadius: "50%",
+  },
+  userBadgeName: {
+    fontSize: "0.9rem",
+    fontWeight: "700",
+    color: "#333",
+  },
+  welcomeSection: {
+    marginBottom: "35px",
+  },
+  welcomeTitle: {
+    fontSize: "1.8rem",
+    fontWeight: "600",
+    color: "#1a1a1a",
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    marginBottom: "5px",
+  },
+  welcomeSubtitle: {
+    color: "#666",
+    fontSize: "1rem",
+  },
+  cardsGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+    gap: "20px",
+  },
+  card: {
+    backgroundColor: "white",
+    borderRadius: "15px",
+    padding: "35px 20px",
+    textAlign: "center",
+    boxShadow: "0 4px 15px rgba(0,0,0,0.02)",
+    border: "1px solid #f0f0f0",
+    cursor: "pointer",
+    transition: "0.3s",
+  },
+  cardIcon: {
+    fontSize: "2.8rem",
+    color: "#452983",
+    marginBottom: "15px",
+  },
+  cardTitle: {
+    fontSize: "1rem",
+    color: "#555",
+    fontWeight: "600",
+    marginBottom: "10px",
+  },
+  cardCount: {
+    fontSize: "2.5rem",
+    fontWeight: "800",
+    color: "#452983",
+    margin: 0,
+  },
+  logoutBtnContainer: {
+    marginTop: "auto",
+    padding: "10px",
+    backgroundColor: "rgba(255,255,255,0.1)",
+    borderRadius: "12px",
+  },
+  logoutBtn: {
+    width: "100%",
+    backgroundColor: "transparent",
+    color: "white",
+    border: "none",
+    padding: "12px",
+    fontSize: "1rem",
+    fontWeight: "600",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "10px",
   }
 };
 
 const responsiveCss = `
-  body { margin: 0; padding: 0; overflow-x: hidden; }
-  .sidebar-open { transform: translateX(0) !important; }
-  .main-content-shifted { margin-left: 280px !important; }
-  .dashboard-container.sidebar-open-mobile { overflow: hidden; }
-
-  @media (min-width: 768px) {
-    .sidebar {
-      transform: translateX(0) !important;
-      position: relative !important;
-      box-shadow: none !important;
-    }
-    .sidebar-header { display: none !important; }
-    .sidebar .close-button { display: none !important; }
-    .main-content { margin-left: 0 !important; }
-    .menu-button { display: none !important; }
-    .desktop-header-title { display: block !important; }
-    .header-profile { display: flex !important; }
+  .main-content-shifted { margin-left: 260px !important; }
+  @media (max-width: 1024px) {
+    .search-container { display: none !important; }
   }
-
   @media (max-width: 767px) {
-    .sidebar { box-shadow: 2px 0 5px rgba(0,0,0,0.1) !important; }
+    .sidebar { transform: translateX(-100%); }
+    .sidebar.open { transform: translateX(0); }
     .main-content-shifted { margin-left: 0 !important; }
-    .header .desktop-header-title { display: none !important; }
-    .header .menu-button { display: block !important; }
-    .header .header-notification { margin-left: auto !important; }
-    .header .header-profile { display: none !important; }
-    .sidebar-header { display: flex !important; }
+    .header-user-badge { display: none !important; }
   }
-  
-  @keyframes slideInFade {
-    0% { opacity: 0; transform: translate(-50%, -60%); }
-    100% { opacity: 1; transform: translate(-50%, -50%); }
-  }
-  @keyframes fadeOut {
-    0% { opacity: 1; }
-    100% { opacity: 0; }
-  }
-  .welcome-popup { animation: slideInFade 0.8s ease-out forwards; }
-  .welcome-popup.hiding { animation: fadeOut 0.8s ease-in forwards; }
+  .sidebar-item:hover { background-color: rgba(255,255,255,0.1); }
+  .dashboard-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.06) !important; }
 `;
 
 const Helper = () => {
   const navigate = useNavigate();
-  
-  // User Data States
-  const [userName, setUserName] = useState('Helper');
-  const [userRole, setUserRole] = useState('Staff');
+  const [userName, setUserName] = useState("Helper");
+  const [userRole, setUserRole] = useState("Staff");
   const [userProfilePic, setUserProfilePic] = useState(userProfilePlaceholder);
-  
-  // UI States
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 767);
-  const [notificationCount, setNotificationCount] = useState(3);
-  const [showWelcome, setShowWelcome] = useState(false);
-  const [isHiding, setIsHiding] = useState(false);
-
-  // Task States
   const [assignedTasks, setAssignedTasks] = useState(0);
   const [ongoingTasks, setOngoingTasks] = useState(0);
   const [TransferTasks, setTransferTasks] = useState(0);
 
-  // 1. Load User Data & Setup Styles
   useEffect(() => {
-    // Inject CSS
     const styleTag = document.createElement("style");
     styleTag.innerHTML = responsiveCss;
     document.head.appendChild(styleTag);
 
-    // Retrieve from LocalStorage
-    const storedName = localStorage.getItem('name');
-    const storedRole = localStorage.getItem('role');
-    const storedPic = localStorage.getItem('profilePic');
-
+    const storedName = localStorage.getItem("name");
+    const storedRole = localStorage.getItem("role");
+    const storedPic = localStorage.getItem("profilePic");
     if (storedName) setUserName(storedName);
     if (storedRole) setUserRole(storedRole);
-    if (storedPic && storedPic !== "undefined" && storedPic !== "null") {
-      setUserProfilePic(storedPic);
-    }
+    if (storedPic && storedPic !== "undefined") setUserProfilePic(storedPic);
 
-    // Welcome logic
-    const hasSeenPopup = sessionStorage.getItem('welcome_shown');
-    if (!hasSeenPopup) {
-      setShowWelcome(true);
-      sessionStorage.setItem('welcome_shown', 'true');
-    }
-
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 767);
-    };
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      document.head.removeChild(styleTag);
-      window.removeEventListener('resize', handleResize);
-    };
+    const handleResize = () => setIsMobile(window.innerWidth <= 767);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // 2. Fetch Task Data
   useEffect(() => {
-    const employeeId = localStorage.getItem('_id');
+    const employeeId = localStorage.getItem("_id");
     if (!employeeId) return;
 
-    // Assigned Tasks
     fetch(`https://threebapi-1067354145699.asia-south1.run.app/api/items/items/employee/${employeeId}`)
-      .then((res) => res.json())
-      .then((data) => setAssignedTasks(Array.isArray(data?.data) ? data.data.length : 0))
-      .catch((err) => console.error("Assigned Error:", err));
+      .then(res => res.json()).then(data => setAssignedTasks(data?.data?.length || 0));
 
-    // Ongoing Tasks
     fetch(`https://threebapi-1067354145699.asia-south1.run.app/api/workers/employee-task/${employeeId}`)
-      .then((res) => res.json())
-      .then((data) => setOngoingTasks(Array.isArray(data?.data) ? data.data.length : 0))
-      .catch((err) => console.error("Ongoing Error:", err));
+      .then(res => res.json()).then(data => setOngoingTasks(data?.data?.length || 0));
 
-    // Transfer Tasks
     fetch(`https://threebapi-1067354145699.asia-south1.run.app/api/task-transfers/transfers`)
-      .then((res) => res.json())
-      .then((data) => setTransferTasks(Array.isArray(data?.data) ? data.data.length : 0))
-      .catch((err) => console.error("Transfer Error:", err));
+      .then(res => res.json()).then(data => setTransferTasks(data?.data?.length || 0));
   }, []);
-
-  // 3. Welcome Popup Auto-hide
-  useEffect(() => {
-    if (showWelcome) {
-      const timer = setTimeout(() => {
-        setIsHiding(true);
-        setTimeout(() => setShowWelcome(false), 800);
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [showWelcome]);
 
   const handleLogout = () => {
     localStorage.clear();
-    sessionStorage.clear();
-    navigate('/');
+    navigate("/");
   };
-
-  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
-
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return { text: "Good Morning", icon: "🌅" };
-    if (hour < 17) return { text: "Good Afternoon", icon: "☀️" };
-    return { text: "Good Evening", icon: "🌙" };
-  };
-  const greeting = getGreeting();
-
-  // Navigation handlers
-  const handleAssignedTaskClick = () => navigate('/assignments');
-  const handleOngoingTaskClick = () => navigate('/viewtask');
-  const handleTransferTaskClick = () => navigate('/transfertask');
 
   return (
-    <div style={baseStyles.dashboardContainer} className={`dashboard-container ${isMobile && isSidebarOpen ? 'sidebar-open-mobile' : ''}`}>
-      
-      {/* Welcome Popup Overlay */}
-      {showWelcome && (
-        <div style={popupStyles.overlay}>
-          <div style={popupStyles.container} className={`welcome-popup ${isHiding ? 'hiding' : ''}`}>
-            <span style={popupStyles.icon}>{greeting.icon}</span>
-            <h2 style={popupStyles.title}>{greeting.text}, {userName}!</h2>
-            <p style={popupStyles.subtitle}>Welcome back to your dashboard.</p>
-          </div>
-        </div>
-      )}
-
+    <div style={baseStyles.dashboardContainer}>
       {/* Sidebar */}
-      <div style={baseStyles.sidebar} className={`sidebar ${isSidebarOpen ? 'sidebar-open' : ''}`}>
+      <div style={baseStyles.sidebar} className={`sidebar ${isSidebarOpen ? "open" : ""}`}>
         <div style={baseStyles.sidebarHeader}>
-          {isMobile && (
-            <button onClick={toggleSidebar} style={baseStyles.closeButton}>
-              <FontAwesomeIcon icon={faTimes} />
-            </button>
-          )}
+          {isMobile && <FontAwesomeIcon icon={faTimes} onClick={() => setIsSidebarOpen(false)} style={{alignSelf:'flex-end', cursor:'pointer'}} />}
           <img src={userProfilePic} alt="Profile" style={baseStyles.sidebarProfileImage} />
           <span style={baseStyles.sidebarUserName}>{userName}</span>
           <span style={baseStyles.sidebarUserRole}>{userRole}</span>
         </div>
 
         <nav style={baseStyles.sidebarNav}>
-          <div style={baseStyles.sidebarNavItem}>
+          <div style={baseStyles.sidebarNavItem} className="sidebar-item">
             <FontAwesomeIcon icon={faUserPlus} style={baseStyles.sidebarNavIcon} />
             <span style={baseStyles.sidebarNavText}>Manage Work</span>
           </div>
-          <div style={baseStyles.sidebarNavItem}>
+          <div style={baseStyles.sidebarNavItem} className="sidebar-item">
             <FontAwesomeIcon icon={faCogs} style={baseStyles.sidebarNavIcon} />
-            <span style={baseStyles.sidebarNavText}>Manage App</span>
+            <span style={baseStyles.sidebarNavText}>Application</span>
           </div>
-          <div style={baseStyles.sidebarNavItem}>
+          <div style={baseStyles.sidebarNavItem} className="sidebar-item">
             <FontAwesomeIcon icon={faBullhorn} style={baseStyles.sidebarNavIcon} />
             <span style={baseStyles.sidebarNavText}>Send Alert</span>
           </div>
-          <div style={baseStyles.sidebarNavItem}>
+          <div style={baseStyles.sidebarNavItem} className="sidebar-item">
             <FontAwesomeIcon icon={faFileAlt} style={baseStyles.sidebarNavIcon} />
             <span style={baseStyles.sidebarNavText}>Reports</span>
           </div>
         </nav>
 
-        <button onClick={handleLogout} style={baseStyles.logoutButton}>
-          <FontAwesomeIcon icon={faSignOutAlt} style={{marginRight: '10px'}} />
-          Logout
-        </button>
+        <div style={baseStyles.logoutBtnContainer}>
+          <button onClick={handleLogout} style={baseStyles.logoutBtn}>
+            <FontAwesomeIcon icon={faSignOutAlt} /> Logout
+          </button>
+        </div>
       </div>
 
       {/* Main Content */}
-      <div style={baseStyles.mainContent} className={`main-content ${!isMobile ? 'main-content-shifted' : ''}`}>
-        
+      <div style={baseStyles.mainContent} className={!isMobile ? "main-content-shifted" : ""}>
         {/* Header */}
         <div style={baseStyles.header}>
           <div style={baseStyles.headerLeft}>
-            {isMobile ? (
-              <button onClick={toggleSidebar} style={baseStyles.menuButton}>
-                <FontAwesomeIcon icon={faBars} />
-              </button>
-            ) : (
-              <h1 style={baseStyles.desktopHeaderTitle}>Helper Dashboard</h1>
+            {isMobile && <FontAwesomeIcon icon={faBars} onClick={() => setIsSidebarOpen(true)} style={{fontSize:'1.5rem', color:'#452983'}} />}
+            <h1 style={baseStyles.headerTitle}>Overview</h1>
+            {!isMobile && (
+              <div style={baseStyles.searchBarContainer} className="search-container">
+                <FontAwesomeIcon icon={faSearch} style={baseStyles.searchIcon} />
+                <input type="text" placeholder="Search tasks..." style={baseStyles.searchInput} />
+              </div>
             )}
           </div>
 
           <div style={baseStyles.headerRight}>
-            <div style={baseStyles.headerNotification}>
+            <div style={baseStyles.notificationBtn}>
               <FontAwesomeIcon icon={faBell} />
-              {notificationCount > 0 && <span style={baseStyles.notificationBadge}>{notificationCount}</span>}
+              <span style={baseStyles.badge}>3</span>
             </div>
-            {!isMobile && (
-              <div style={baseStyles.headerProfile}>
-                <img src={userProfilePic} alt="Profile" style={baseStyles.headerProfileImage} />
-                <span style={baseStyles.headerUserName}>Hello, {userName}</span>
-              </div>
-            )}
+            <div style={baseStyles.userBadge} className="header-user-badge">
+              <img src={userProfilePic} style={baseStyles.userBadgeImg} alt="user" />
+              <span style={baseStyles.userBadgeName}>{userName}</span>
+            </div>
           </div>
         </div>
 
-        {/* Welcome Text */}
+        {/* Welcome Section */}
         <div style={baseStyles.welcomeSection}>
-          <h2 style={baseStyles.welcomeText}>
-            {greeting.icon} {greeting.text}, {userName}!
+          <h2 style={baseStyles.welcomeTitle}>
+            <FontAwesomeIcon icon={faStar} style={{color: '#ffd700'}} /> Hello, {userName}
           </h2>
-          <p style={baseStyles.welcomeSubText}>Hope you have a productive day ahead.</p>
+          <p style={baseStyles.welcomeSubtitle}>Here's what's happening today.</p>
         </div>
 
-        {/* Cards Grid */}
+        {/* Dashboard Cards */}
         <div style={baseStyles.cardsGrid}>
-          <div style={{ ...baseStyles.card, ...baseStyles.cardHover }} onClick={handleAssignedTaskClick}>
+          <div style={baseStyles.card} className="dashboard-card" onClick={() => navigate("/assignments")}>
             <FontAwesomeIcon icon={faClipboardList} style={baseStyles.cardIcon} />
             <h3 style={baseStyles.cardTitle}>Assigned Task</h3>
             <p style={baseStyles.cardCount}>{assignedTasks}</p>
           </div>
 
-          <div style={{ ...baseStyles.card, ...baseStyles.cardHover }} onClick={handleOngoingTaskClick}>
+          <div style={baseStyles.card} className="dashboard-card" onClick={() => navigate("/viewtask")}>
             <FontAwesomeIcon icon={faHourglassHalf} style={baseStyles.cardIcon} />
             <h3 style={baseStyles.cardTitle}>Ongoing Task</h3>
             <p style={baseStyles.cardCount}>{ongoingTasks}</p>
           </div>
 
-          <div style={{ ...baseStyles.card, ...baseStyles.cardHover }} onClick={handleTransferTaskClick}>
+          <div style={baseStyles.card} className="dashboard-card" onClick={() => navigate("/transfertask")}>
             <FontAwesomeIcon icon={faRightLeft} style={baseStyles.cardIcon} />
             <h3 style={baseStyles.cardTitle}>Transfer Tasks</h3>
             <p style={baseStyles.cardCount}>{TransferTasks}</p>
