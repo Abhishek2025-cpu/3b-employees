@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react"; // Added useRef
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -15,6 +15,8 @@ import {
   faRightLeft,
   faSearch,
   faStar,
+  faCheck, // Added
+  faPenSquare, // Added
 } from "@fortawesome/free-solid-svg-icons";
 
 import userProfilePlaceholder from "./assets/user-profile.jpg";
@@ -244,10 +246,74 @@ const baseStyles = {
     alignItems: "center",
     justifyContent: "center",
     gap: "10px",
-  }
+  },
+  // NOTIFICATION POPUP STYLES
+  notificationDropdown: {
+    position: "absolute",
+    top: "40px",
+    right: "0",
+    width: "300px",
+    backgroundColor: "white",
+    borderRadius: "12px",
+    boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
+    zIndex: 1100,
+    overflow: "hidden",
+    border: "1px solid #eee",
+    animation: "fadeIn 0.2s ease-out",
+  },
+  notificationHeader: {
+    backgroundColor: "#452983",
+    color: "white",
+    padding: "12px 15px",
+    fontSize: "0.9rem",
+    fontWeight: "600",
+  },
+  notificationItem: {
+    display: "flex",
+    alignItems: "flex-start",
+    padding: "15px",
+    borderBottom: "1px solid #f0f0f0",
+    cursor: "pointer",
+  },
+  notificationIconBox: {
+    backgroundColor: "#452983",
+    width: "32px",
+    height: "32px",
+    borderRadius: "8px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: "12px",
+    color: "white",
+    flexShrink: 0,
+  },
+  notificationTitle: {
+    fontSize: "0.8rem",
+    fontWeight: "500",
+    color: "#333",
+    margin: "0 0 3px 0",
+    whiteSpace: "normal",
+    wordBreak: "break-word",
+    lineHeight: "1.3",
+  },
+  markAsRead: {
+    padding: "10px 15px",
+    fontSize: "0.85rem",
+    fontWeight: "600",
+    color: "#333",
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    cursor: "pointer",
+    borderTop: "1px solid #f0f0f0",
+  },
 };
 
 const responsiveCss = `
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
   .main-content-shifted { margin-left: 260px !important; }
   @media (max-width: 1024px) {
     .search-container { display: none !important; }
@@ -264,14 +330,22 @@ const responsiveCss = `
 
 const Helper = () => {
   const navigate = useNavigate();
+  const notificationRef = useRef(null); // Ref for closing popup
+  
   const [userName, setUserName] = useState("Helper");
   const [userRole, setUserRole] = useState("Staff");
   const [userProfilePic, setUserProfilePic] = useState(userProfilePlaceholder);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 767);
+  
   const [assignedTasks, setAssignedTasks] = useState(0);
   const [ongoingTasks, setOngoingTasks] = useState(0);
   const [TransferTasks, setTransferTasks] = useState(0);
+
+  // Notification API States
+  const [apiNotifCount, setApiNotifCount] = useState(0);
+  const [apiLatestMsg, setApiLatestMsg] = useState("");
+  const [showNotifications, setShowNotifications] = useState(false);
 
   useEffect(() => {
     const styleTag = document.createElement("style");
@@ -290,12 +364,31 @@ const Helper = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Handle outside click to close notification
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+        setShowNotifications(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [notificationRef]);
+
   useEffect(() => {
     const employeeId = localStorage.getItem("_id");
     if (!employeeId) return;
 
+    // Fetch Assigned Tasks + Notification
     fetch(`https://threebapi-1067354145699.asia-south1.run.app/api/items/items/employee/${employeeId}`)
-      .then(res => res.json()).then(data => setAssignedTasks(data?.data?.length || 0));
+      .then(res => res.json())
+      .then(data => {
+        setAssignedTasks(data?.data?.length || 0);
+        if (data.notification) {
+          setApiNotifCount(data.notification.count || 0);
+          setApiLatestMsg(data.notification.latestMessage || "No new assignments");
+        }
+      });
 
     fetch(`https://threebapi-1067354145699.asia-south1.run.app/api/workers/employee-task/${employeeId}`)
       .then(res => res.json()).then(data => setOngoingTasks(data?.data?.length || 0));
@@ -361,11 +454,34 @@ const Helper = () => {
             )}
           </div>
 
-          <div style={baseStyles.headerRight}>
-            <div style={baseStyles.notificationBtn}>
+          <div style={baseStyles.headerRight} ref={notificationRef}>
+            {/* Notification Bell Section */}
+            <div style={baseStyles.notificationBtn} onClick={() => setShowNotifications(!showNotifications)}>
               <FontAwesomeIcon icon={faBell} />
-              <span style={baseStyles.badge}>3</span>
+              {apiNotifCount > 0 && <span style={baseStyles.badge}>{apiNotifCount}</span>}
+              
+              {/* Popup Modal */}
+              {showNotifications && (
+                <div style={baseStyles.notificationDropdown}>
+                  <div style={baseStyles.notificationHeader}>Notifications ({apiNotifCount})</div>
+                  <div style={{ maxHeight: "250px", overflowY: "auto" }}>
+                    <div style={baseStyles.notificationItem}>
+                      <div style={baseStyles.notificationIconBox}>
+                        <FontAwesomeIcon icon={faPenSquare} />
+                      </div>
+                      <div>
+                        <p style={baseStyles.notificationTitle}>{apiLatestMsg}</p>
+                        <span style={{fontSize:'0.7rem', color:'#888'}}>Recently</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div style={baseStyles.markAsRead} onClick={(e) => { e.stopPropagation(); setShowNotifications(false); setApiNotifCount(0); }}>
+                    Mark as Read <FontAwesomeIcon icon={faCheck} />
+                  </div>
+                </div>
+              )}
             </div>
+
             <div style={baseStyles.userBadge} className="header-user-badge">
               <img src={userProfilePic} style={baseStyles.userBadgeImg} alt="user" />
               <span style={baseStyles.userBadgeName}>{userName}</span>
