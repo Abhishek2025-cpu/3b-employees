@@ -28,19 +28,25 @@ const MixtureForm = () => {
   const location = useLocation();
 
   const [formData, setFormData] = useState({
-    date: new Date().toISOString().slice(0, 10),
-    shift: 'Day',
-    time: '9:00-10:00',
-    backDana: 0,
-    smoke: 0,
-    grayHips: 0,
-    eps: 0,
-    h1: 0,
-    yellowForm: 0,
-    whiteFormOptional: 0,
-    zink: 0,
-    oil: 0
-  });
+  "itemName": "Test Item",
+  "machineNo": "3",
+  "date": "2025-11-17",
+  "shift": "Day",
+  "mixtureId": "686e6c62e503b3b8b4c46644",
+  "time": "9:00-10:00",
+  "backDana": 0,
+  "smoke": 0,
+  "grayHips": 0,
+  "eps": 0,
+  "h1": 0,
+  "blackGula": 0,
+  "whiteGula": 0,
+  "whiteGulaGrades": 0,
+  "yellowForm": 0,
+  "whiteFormOptional": 0,
+  "zink": 0,
+  "oil": 0,
+});
 
   const [productName, setProductName] = useState('');
   const [mixtureName, setMixtureName] = useState('');
@@ -84,10 +90,15 @@ const MixtureForm = () => {
       const itemId = localStorage.getItem("currentItemId");
       const machineNo = localStorage.getItem("currentMachineNo");
       const mixtureNameLS = localStorage.getItem("name");
-      const mixtureId = localStorage.getItem("mixtureId");
+      
+      // ERROR FIX HERE: Agar mixtureId "null" string hai, toh use '_id' se replace karo
+      let mixtureId = localStorage.getItem("mixtureId");
+      if (!mixtureId || mixtureId === "null") {
+        mixtureId = localStorage.getItem("_id"); // localStorage mein '_id' key hai aapke screenshot mein
+      }
 
       if (!itemName || !machineNo || !mixtureId) {
-        alert("Missing required info in localStorage.");
+        alert("Missing required info (Item, Machine, or ID). Please check login/selection.");
         setLoading(false);
         return;
       }
@@ -96,7 +107,7 @@ const MixtureForm = () => {
         itemName,
         itemId,
         machineNo,
-        mixtureId,
+        mixtureId, // Ab yahan valid ID jayegi
         mixtureName: mixtureNameLS,
         date: formData.date,
         shift: formData.shift,
@@ -123,13 +134,15 @@ const MixtureForm = () => {
       const result = await response.json();
       if (result.success) {
         alert("Mixture added successfully!");
+        navigate('/assignments'); // Success ke baad wapas bhej do
       } else {
-        alert(result.message || "Failed to submit form");
+        // Agar abhi bhi error aaye toh server ka error message dikhao
+        alert(result.error || result.message || "Failed to submit form");
       }
 
     } catch (err) {
       console.error("Submit error:", err);
-      alert("An error occurred.");
+      alert("An error occurred. Check console.");
     } finally {
       setLoading(false);
     }
