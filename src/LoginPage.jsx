@@ -7,6 +7,7 @@ import {
   faCopyright,
   faEye,
   faEyeSlash,
+  faUserTie,
 } from "@fortawesome/free-solid-svg-icons";
 
 import adminLogo from "./assets/3b.png";
@@ -138,14 +139,38 @@ function LoginPage() {
   const [mobile, setMobile] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [role, setRole] = useState("");
+  const [otherRole, setOtherRole] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState({ show: false, message: "", type: "" });
+
+  const [roleEmployeeData, setRoleEmployeeData] = useState([]);
 
   useEffect(() => {
     const styleSheet = document.createElement("style");
     styleSheet.innerText = keyframes;
     document.head.appendChild(styleSheet);
   }, []);
+
+  useEffect(() => {
+    const finalRole = role === "Other" ? otherRole : role;
+
+    if (finalRole) {
+      const fetchRoleData = async () => {
+        try {
+          const roleParam = finalRole.toLowerCase();
+          const response = await fetch(
+            `https://threebapi-1067354145699.asia-south1.run.app/api/staff/get-role-base-employee-data?selectedRole=${roleParam}`,
+          );
+          const data = await response.json();
+          setRoleEmployeeData(data);
+        } catch (error) {
+          console.error("Error fetching role based data:", error);
+        }
+      };
+      fetchRoleData();
+    }
+  }, [role, otherRole]);
 
   const showToast = (message, type) => {
     setToast({ show: true, message, type });
@@ -160,23 +185,27 @@ function LoginPage() {
     if (!/^\d{10}$/.test(mobile)) {
       return showToast("Please enter a valid 10-digit phone number.", "error");
     }
-
     if (password.trim() === "") {
       return showToast("Password is required.", "error");
     }
-
-    // --- STATIC BYPASS LOGIC ---
-    if (mobile === "8888888888" && password === "manager123") {
-      showToast("Login successful!", "success");
-      localStorage.setItem("_id", "static_admin_id");
-      localStorage.setItem("name", "Super Admin");
-      localStorage.setItem("role", "Admin");
-      localStorage.setItem("token", "static_bypass_token");
-      setTimeout(() => navigate("/admin-dashboard"), 600);
-      return;
+    if (!role) {
+      return showToast("Please select a role.", "error");
+    }
+    if (role === "Other" && !otherRole) {
+      return showToast("Please select the other role.", "error");
     }
 
     setIsLoading(true);
+
+    const payload = {
+      mobile: mobile,
+      password: password,
+      role: role,
+    };
+
+    if (role === "Other") {
+      payload.otherRoles = otherRole.toLowerCase();
+    }
 
     try {
       const response = await fetch(
@@ -184,60 +213,89 @@ function LoginPage() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ mobile, password }),
+          body: JSON.stringify(payload),
         },
       );
 
       const result = await response.json();
 
-      if (!result.success) {
+      if (result.success === false || (!response.ok && !result.token)) {
         setIsLoading(false);
         return showToast(result.message || "Login failed.", "error");
       }
 
-      // --- EXTRACT DATA FROM API RESPONSE ---
-      const employeeData = result.employee;
+      const employeeData = result.employee || result.data || result;
       const userName = employeeData?.name || "User";
-      // Fixing userRole detection based on your provided JSON snippet
-      const userRole = employeeData?.role || "User"; 
-      const profilePic = employeeData?.profilePic?.url || "";
+      const token = result.token || employeeData?.token;
 
-      // --- SAVE TO LOCALSTORAGE ---
-      localStorage.setItem("_id", employeeData?._id);
+      let userRole = "User";
+      if (Array.isArray(employeeData?.role) && employeeData.role.length > 0) {
+        userRole = employeeData.role[0];
+      } else if (employeeData?.role && typeof employeeData.role === "string") {
+        userRole = employeeData.role;
+      }
+
+      if (String(userRole).toLowerCase().trim() === "other") {
+        userRole = employeeData?.otherRoles || otherRole;
+      }
+
+      // Safe Extraction: leading/trailing spaces hateye aur safely string me convert kiye
+      const finalSafeRole = String(userRole || "User").trim();
+
+      const profilePic =
+        typeof employeeData?.profilePic === "string"
+          ? employeeData.profilePic
+          : employeeData?.profilePic?.url || "";
+
+      localStorage.setItem("_id", employeeData?._id || "");
       localStorage.setItem("name", userName);
-      localStorage.setItem("role", userRole);
-      localStorage.setItem("token", result.token);
+      localStorage.setItem("role", finalSafeRole);
+      localStorage.setItem("token", token || "");
       localStorage.setItem("profilePic", profilePic);
       localStorage.setItem("eid", employeeData?.eid || "");
 
       showToast("Login successful!", "success");
 
-      // --- NAVIGATION LOGIC ---
       setTimeout(() => {
-        switch (userRole) {
-          case "Admin":
+        setIsLoading(false);
+
+        // Routing fix: Sab roles ko lowercase aur trim karke check kar rahe hain taaki capital letter aur spaces ki wajah se navigation naa fase.
+        const routingRole = finalSafeRole.toLowerCase();
+        console.log("Navigating for precise role:", routingRole);
+
+        switch (routingRole) {
+          case "admin":
             navigate("/admin-dashboard");
             break;
-          case "Manager":
+          case "manager":
             navigate("/manager-dashboard");
             break;
-          case "Operator":
+          case "operator":
             navigate("/operator-dashboard");
             break;
-          case "Mixture":
+          case "mixture":
             navigate("/mixture-db");
             break;
-          case "Helper":
+          case "helper":
             navigate("/helper");
             break;
-          case "Driver":
+          case "driver":
             navigate("/driver-dashboard");
             break;
+          case "chef":
+            navigate("/Chefdash");
+            break;
+          case "electrician":
+            navigate("/electrician-dashboard");
+            break;
           default:
+            console.warn("Unknown role ->", routingRole);
+            showToast("Role not matched for dashboard routing.", "error");
+            // Agar unknown role hai tabhi wahi page pe rukega.
             navigate("/");
+            break;
         }
-      }, 600);
-
+      }, 800);
     } catch (error) {
       showToast("Error during login. Check console.", "error");
       console.error("Login Error:", error);
@@ -277,6 +335,7 @@ function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
+
             <FontAwesomeIcon
               icon={showPassword ? faEyeSlash : faEye}
               onClick={() => setShowPassword(!showPassword)}
@@ -290,6 +349,40 @@ function LoginPage() {
               }}
             />
           </div>
+
+          <div style={styles.inputWrapper}>
+            <FontAwesomeIcon icon={faUserTie} style={styles.iconLeft} />
+            <select
+              value={role}
+              onChange={(e) => {
+                setRole(e.target.value);
+                setOtherRole("");
+              }}
+              style={styles.input}
+            >
+              <option value="">Select Role (Login as)</option>
+              <option value="Helper">Helper</option>
+              <option value="Operator">Operator</option>
+              <option value="Mixture">Mixture</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          {role === "Other" && (
+            <div style={styles.inputWrapper}>
+              <FontAwesomeIcon icon={faUserTie} style={styles.iconLeft} />
+              <select
+                value={otherRole}
+                onChange={(e) => setOtherRole(e.target.value)}
+                style={styles.input}
+              >
+                <option value="">Select Other Role</option>
+                <option value="Electrician">Electrician</option>
+                <option value="Chef">Chef</option>
+                <option value="Admin">Admin</option>
+              </select>
+            </div>
+          )}
 
           <button
             type="submit"

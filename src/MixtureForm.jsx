@@ -146,7 +146,7 @@ const MixtureForm = () => {
     } finally {
       setLoading(false);
     }
-  };
+  };      
 
   const handleBack = () => {
     navigate('/assignments');
