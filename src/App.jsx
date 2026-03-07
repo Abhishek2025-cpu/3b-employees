@@ -21,14 +21,13 @@ import InventoryScannerPage from "./InventoryScannerPage";
 import DriverDashboard from "./Driver/DriverDashboard.jsx";
 import Chefdash from "./Chefdash.jsx";
 
-
 function App() {
   return (
     <>
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
-          <Route path="Chefdash" element={<Chefdash/>} />
+          <Route path="/:role-dashboard" element={<Chefdash />} />
           <Route path="/operator-dashboard" element={<OperatorDashboard />} />
           <Route path="/mixture-db" element={<MixtureDb />} />
           <Route path="/mixture-form" element={<MixtureForm />} />

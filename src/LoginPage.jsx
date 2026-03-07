@@ -135,133 +135,93 @@ const keyframes = `
 
 function LoginPage() {
   const navigate = useNavigate();
-
   const [mobile, setMobile] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState("");
-  const[otherRole, setOtherRole] = useState("");
+  const [otherRole, setOtherRole] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const[toast, setToast] = useState({ show: false, message: "", type: "" });
-
-  const[roleEmployeeData, setRoleEmployeeData] = useState([]);
-  
-  // NAYE STATES: Roles API se fetch karne ke liye
-  const [mainRoles, setMainRoles] = useState(["Helper", "Operator", "Mixture", "Other"]);
-  const [dynamicOtherRoles, setDynamicOtherRoles] = useState(["Electrician", "Chef", "Admin"]);
+  const [toast, setToast] = useState({ show: false, message: "", type: "" });
+  const [mainRoles, setMainRoles] = useState([
+    "Helper",
+    "Operator",
+    "Mixture",
+    "Other",
+  ]);
+  const [dynamicOtherRoles, setDynamicOtherRoles] = useState([
+    "Electrician",
+    "Chef",
+    "Admin",
+  ]);
 
   useEffect(() => {
     const styleSheet = document.createElement("style");
     styleSheet.innerText = keyframes;
     document.head.appendChild(styleSheet);
-  },[]);
+  }, []);
 
-  // NAYE API CALL: Roles dynamically fetch karne ke liye
   useEffect(() => {
     const fetchAllRoles = async () => {
       try {
-        const response = await fetch("https://threebapi-1067354145699.asia-south1.run.app/api/staff/roles/all");
+        const response = await fetch(
+          "https://threebapi-1067354145699.asia-south1.run.app/api/staff/roles/all",
+        );
         const result = await response.json();
-
         if (result.success && result.data) {
           const main = [];
-          let others =[];
-
+          let others = [];
           result.data.forEach((item) => {
-            if (typeof item === "string") {
-              // Main role ko capitalize kar rahe hain
+            if (typeof item === "string")
               main.push(item.charAt(0).toUpperCase() + item.slice(1));
-            } else if (typeof item === "object" && item.Other) {
+            else if (typeof item === "object" && item.Other)
               others = item.Other;
-            }
           });
-
-          // Ensure "Other" list me rahe
-          if (!main.includes("Other")) {
-            main.push("Other");
-          }
-
-          // Duplicate roles ko hatana aur capitalize karna (jaise chef, Chef bhai etc)
-          const uniqueOthers =[];
+          if (!main.includes("Other")) main.push("Other");
+          const uniqueOthers = [];
           const lowerCaseSet = new Set();
-
-          // Purane important roles miss na ho (like Admin) in case database me abhi add na hue ho
-          const combinedOthers = [...others, "Admin"]; 
-
-          combinedOthers.forEach((r) => {
+          [...others, "Admin"].forEach((r) => {
             if (typeof r === "string") {
               const lower = r.trim().toLowerCase();
               if (!lowerCaseSet.has(lower)) {
                 lowerCaseSet.add(lower);
-                uniqueOthers.push(r.trim().charAt(0).toUpperCase() + r.trim().slice(1));
+                uniqueOthers.push(
+                  r.trim().charAt(0).toUpperCase() + r.trim().slice(1),
+                );
               }
             }
           });
-
           setMainRoles(main);
           setDynamicOtherRoles(uniqueOthers);
         }
       } catch (error) {
-        console.error("Error fetching all roles:", error);
+        console.error("Error fetching roles:", error);
       }
     };
     fetchAllRoles();
-  },[]);
-
-  useEffect(() => {
-    const finalRole = role === "Other" ? otherRole : role;
-
-    if (finalRole) {
-      const fetchRoleData = async () => {
-        try {
-          const roleParam = finalRole.toLowerCase();
-          const response = await fetch(
-            `https://threebapi-1067354145699.asia-south1.run.app/api/staff/get-role-base-employee-data?selectedRole=${roleParam}`
-          );
-          const data = await response.json();
-          setRoleEmployeeData(data);
-        } catch (error) {
-          console.error("Error fetching role based data:", error);
-        }
-      };
-      fetchRoleData();
-    }
-  },[role, otherRole]);
+  }, []);
 
   const showToast = (message, type) => {
     setToast({ show: true, message, type });
-    setTimeout(() => {
-      setToast({ show: false, message: "", type: "" });
-    }, 4000);
+    setTimeout(() => setToast({ show: false, message: "", type: "" }), 4000);
   };
 
   const handleLogin = async (e) => {
     e.preventDefault();
-
-    if (!/^\d{10}$/.test(mobile)) {
-      return showToast("Please enter a valid 10-digit phone number.", "error");
-    }
-    if (password.trim() === "") {
-      return showToast("Password is required.", "error");
-    }
-    if (!role) {
-      return showToast("Please select a role.", "error");
-    }
-    if (role === "Other" && !otherRole) {
-      return showToast("Please select the other role.", "error");
-    }
+    if (!/^\d{10}$/.test(mobile))
+      return showToast("Enter a valid 10-digit number.", "error");
+    if (!password.trim()) return showToast("Password is required.", "error");
+    if (!role) return showToast("Please select a role.", "error");
+    if (role === "Other" && !otherRole)
+      return showToast("Please select other role.", "error");
 
     setIsLoading(true);
 
     const payload = {
-      mobile: mobile,
-      password: password,
-      role: role,
+      mobile,
+      password,
+      role,
+      ...(role === "Other" && { otherRoles: otherRole.toLowerCase() }),
     };
-
-    if (role === "Other") {
-      payload.otherRoles = otherRole.toLowerCase();
-    }
 
     try {
       const response = await fetch(
@@ -270,98 +230,68 @@ function LoginPage() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
-        }
+        },
       );
-
       const result = await response.json();
 
-      if (result.success === false || (!response.ok && !result.token)) {
-        setIsLoading(false);
-        return showToast(result.message || "Login failed.", "error");
+      if (!result.token) {
+        throw new Error(result.message || "Login failed.");
       }
 
       const employeeData = result.employee || result.data || result;
-      const userName = employeeData?.name || "User";
-      const token = result.token || employeeData?.token;
 
-      let userRole = "User";
-      if (Array.isArray(employeeData?.role) && employeeData.role.length > 0) {
-        userRole = employeeData.role[0];
-      } else if (employeeData?.role && typeof employeeData.role === "string") {
-        userRole = employeeData.role;
+      // Determine the correct role string
+      let userRole = role === "Other" ? otherRole : role;
+
+      // Fallback if backend sends something different
+      if (!userRole) {
+        userRole =
+          (Array.isArray(employeeData.role)
+            ? employeeData.role[0]
+            : employeeData.role) || "User";
       }
 
-      if (String(userRole).toLowerCase().trim() === "other") {
-        userRole = employeeData?.otherRoles || otherRole;
-      }
-
-      // Safe Extraction
-      const finalSafeRole = String(userRole || "User").trim();
-
-      const profilePic =
-        typeof employeeData?.profilePic === "string"
+      // Store Data
+      localStorage.setItem("_id", employeeData._id || "");
+      localStorage.setItem("name", employeeData.name || "User");
+      localStorage.setItem("role", userRole); // Store raw role (e.g., "Admin")
+      localStorage.setItem("token", result.token);
+      localStorage.setItem(
+        "profilePic",
+        typeof employeeData.profilePic === "string"
           ? employeeData.profilePic
-          : employeeData?.profilePic?.url || "";
-
-      localStorage.setItem("_id", employeeData?._id || "");
-      localStorage.setItem("name", userName);
-      localStorage.setItem("role", finalSafeRole);
-      localStorage.setItem("token", token || "");
-      localStorage.setItem("profilePic", profilePic);
-      localStorage.setItem("eid", employeeData?.eid || "");
+          : employeeData.profilePic?.url || "",
+      );
+      localStorage.setItem("eid", employeeData.eid || "");
 
       showToast("Login successful!", "success");
 
-      setTimeout(() => {
-        setIsLoading(false);
+      // --- NAVIGATION LOGIC ---
+      const routingRole = userRole.toLowerCase().trim();
 
-        const routingRole = finalSafeRole.toLowerCase();
-        console.log("Navigating for precise role:", routingRole);
+      // Define exact paths for your roles
+      const routeExceptions = {
+        mixture: "/mixture-db",
+        helper: "/helper",
+        chef: "/Chefdash",
+        admin: "/admin-dashboard", // Added Admin support
+        operator: "/operator-dashboard", // Added common cases
+        electrician: "/electrician-dashboard",
+      };
 
-        switch (routingRole) {
-          case "admin":
-            navigate("/admin-dashboard");
-            break;
-          case "manager":
-            navigate("/manager-dashboard");
-            break;
-          case "operator":
-            navigate("/operator-dashboard");
-            break;
-          case "mixture":
-            navigate("/mixture-db");
-            break;
-          case "helper":
-            navigate("/helper");
-            break;
-          case "driver":
-            navigate("/driver-dashboard");
-            break;
-          case "chef":
-            navigate("/Chefdash");
-            break;
-          case "electrician":
-            navigate("/electrician-dashboard");
-            break;
-          case "tailor": // <--- Tailor/Tailler role ke liye navigation yaha add kiya hai
-            navigate("/tailor-dashboard"); // Note: Agar aapka page name alag hai (eg: /tailler) toh isey badal lena
-            break;
-          case "supervisor":
-            navigate("/supervisor-dashboard");
-            break;
-          case "carpainter":
-            navigate("/carpainter-dashboard");
-            break;
-          default:
-            console.warn("Unknown role ->", routingRole);
-            showToast("Role not matched for dashboard routing.", "error");
-            navigate("/");
-            break;
-        }
-      }, 800);
+      // Calculate path: check exceptions first, otherwise use default pattern
+      const targetPath =
+        routeExceptions[routingRole] ||
+        `/${routingRole.replace(/\s+/g, "-")}-dashboard`;
+
+      console.log("Navigating to:", targetPath); // Debugging check
+
+      // Navigate immediately
+      setIsLoading(false);
+      navigate(targetPath);
     } catch (error) {
-      showToast("Error during login. Check console.", "error");
-      console.error("Login Error:", error);
+      console.error(error);
+      showToast(error.message, "error");
       setIsLoading(false);
     }
   };
@@ -371,34 +301,30 @@ function LoginPage() {
       <div style={styles.topImgContainer}>
         <img src={vectorNew} alt="Decoration" style={styles.topImg} />
       </div>
-
       <div style={styles.loginContainer}>
-        <img src={adminLogo} alt="Company Logo" style={styles.logo} />
+        <img src={adminLogo} alt="Logo" style={styles.logo} />
         <h1 style={styles.h1}>3B Profiles</h1>
-
         <form onSubmit={handleLogin}>
           <div style={styles.inputWrapper}>
             <FontAwesomeIcon icon={faPhone} style={styles.iconLeft} />
             <input
               type="tel"
-              placeholder="Enter Phone Number"
+              placeholder="Phone Number"
               style={styles.input}
               value={mobile}
               onChange={(e) => setMobile(e.target.value)}
               maxLength="10"
             />
           </div>
-
           <div style={styles.inputWrapper}>
             <FontAwesomeIcon icon={faKey} style={styles.iconLeft} />
             <input
               type={showPassword ? "text" : "password"}
-              placeholder="Enter Password"
+              placeholder="Password"
               style={styles.input}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-
             <FontAwesomeIcon
               icon={showPassword ? faEyeSlash : faEye}
               onClick={() => setShowPassword(!showPassword)}
@@ -412,8 +338,6 @@ function LoginPage() {
               }}
             />
           </div>
-
-          {/* DYNAMIC MAIN ROLES DROPDOWN */}
           <div style={styles.inputWrapper}>
             <FontAwesomeIcon icon={faUserTie} style={styles.iconLeft} />
             <select
@@ -424,16 +348,14 @@ function LoginPage() {
               }}
               style={styles.input}
             >
-              <option value="">Select Role (Login as)</option>
-              {mainRoles.map((r, index) => (
-                <option key={index} value={r}>
+              <option value="">Select Role</option>
+              {mainRoles.map((r, i) => (
+                <option key={i} value={r}>
                   {r}
                 </option>
               ))}
             </select>
           </div>
-
-          {/* DYNAMIC OTHER ROLES DROPDOWN */}
           {role === "Other" && (
             <div style={styles.inputWrapper}>
               <FontAwesomeIcon icon={faUserTie} style={styles.iconLeft} />
@@ -443,20 +365,19 @@ function LoginPage() {
                 style={styles.input}
               >
                 <option value="">Select Other Role</option>
-                {dynamicOtherRoles.map((r, index) => (
-                  <option key={index} value={r}>
+                {dynamicOtherRoles.map((r, i) => (
+                  <option key={i} value={r}>
                     {r}
                   </option>
                 ))}
               </select>
             </div>
           )}
-
           <button
             type="submit"
             style={{
               ...styles.loginButton,
-              ...(isLoading ? styles.loginButtonDisabled : {}),
+              ...(isLoading && styles.loginButtonDisabled),
             }}
             disabled={isLoading}
           >
@@ -464,22 +385,18 @@ function LoginPage() {
           </button>
         </form>
       </div>
-
       {toast.show && (
         <div style={styles.toastContainer}>
           <div
             style={{
               ...styles.toast,
-              ...(toast.type === "success"
-                ? styles.toastSuccess
-                : styles.toastError),
+              backgroundColor: toast.type === "success" ? "#28a745" : "#dc3545",
             }}
           >
             {toast.message}
           </div>
         </div>
       )}
-
       <div style={styles.footer}>
         <FontAwesomeIcon icon={faCopyright} /> All Rights Reserved By 3B
         Profiles

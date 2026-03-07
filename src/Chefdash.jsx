@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react"; // Added useRef
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+// useParams जोड़ा
 import {
   faBars,
   faBell,
@@ -331,13 +332,14 @@ const responsiveCss = `
 const Chefdash = () => {
   const navigate = useNavigate();
   const notificationRef = useRef(null); // Ref for closing popup
-  
+  const { "role-dashboard": roleFromUrl } = useParams();
+
   const [userName, setUserName] = useState("Chefdash");
   const [userRole, setUserRole] = useState("Staff");
   const [userProfilePic, setUserProfilePic] = useState(userProfilePlaceholder);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 767);
-  
+
   const [assignedTasks, setAssignedTasks] = useState(0);
   const [ongoingTasks, setOngoingTasks] = useState(0);
   const [TransferTasks, setTransferTasks] = useState(0);
@@ -367,7 +369,10 @@ const Chefdash = () => {
   // Handle outside click to close notification
   useEffect(() => {
     function handleClickOutside(event) {
-      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+      if (
+        notificationRef.current &&
+        !notificationRef.current.contains(event.target)
+      ) {
         setShowNotifications(false);
       }
     }
@@ -379,22 +384,35 @@ const Chefdash = () => {
     const employeeId = localStorage.getItem("_id");
     if (!employeeId) return;
 
-    // Fetch Assigned Tasks + Notification
-    fetch(`https://threebapi-10mployee/${employeeId}`)
-      .then(res => res.json())
-      .then(data => {
+    // यहाँ अपनी बेस URL सेट करें
+    const baseUrl =
+      "https://threebapi-1067354145699.asia-south1.run.app/api/staff";
+
+    // 1. Fetch Assigned Tasks + Notification
+    fetch(`${baseUrl}/employee/${employeeId}`)
+      .then((res) => res.json())
+      .then((data) => {
         setAssignedTasks(data?.data?.length || 0);
         if (data.notification) {
           setApiNotifCount(data.notification.count || 0);
-          setApiLatestMsg(data.notification.latestMessage || "No new assignments");
+          setApiLatestMsg(
+            data.notification.latestMessage || "No new assignments",
+          );
         }
-      });
+      })
+      .catch((err) => console.log("Error fetching assigned tasks:", err));
 
-    fetch(`/${employeeId}`)
-      .then(res => res.json()).then(data => setOngoingTasks(data?.data?.length || 0));
+    // 2. Fetch Ongoing Tasks
+    fetch(`${baseUrl}/ongoing/${employeeId}`)
+      .then((res) => res.json())
+      .then((data) => setOngoingTasks(data?.data?.length || 0))
+      .catch((err) => console.log("Error fetching ongoing tasks:", err));
 
-    fetch(`ht/transfers`)
-      .then(res => res.json()).then(data => setTransferTasks(data?.data?.length || 0));
+    // 3. Fetch Transfer Tasks
+    fetch(`${baseUrl}/transfers`)
+      .then((res) => res.json())
+      .then((data) => setTransferTasks(data?.data?.length || 0))
+      .catch((err) => console.log("Error fetching transfers:", err));
   }, []);
 
   const handleLogout = () => {
@@ -405,17 +423,33 @@ const Chefdash = () => {
   return (
     <div style={baseStyles.dashboardContainer}>
       {/* Sidebar */}
-      <div style={baseStyles.sidebar} className={`sidebar ${isSidebarOpen ? "open" : ""}`}>
+      <div
+        style={baseStyles.sidebar}
+        className={`sidebar ${isSidebarOpen ? "open" : ""}`}
+      >
         <div style={baseStyles.sidebarHeader}>
-          {isMobile && <FontAwesomeIcon icon={faTimes} onClick={() => setIsSidebarOpen(false)} style={{alignSelf:'flex-end', cursor:'pointer'}} />}
-          <img src={userProfilePic} alt="Profile" style={baseStyles.sidebarProfileImage} />
+          {isMobile && (
+            <FontAwesomeIcon
+              icon={faTimes}
+              onClick={() => setIsSidebarOpen(false)}
+              style={{ alignSelf: "flex-end", cursor: "pointer" }}
+            />
+          )}
+          <img
+            src={userProfilePic}
+            alt="Profile"
+            style={baseStyles.sidebarProfileImage}
+          />
           <span style={baseStyles.sidebarUserName}>{userName}</span>
           <span style={baseStyles.sidebarUserRole}>{userRole}</span>
         </div>
 
         <nav style={baseStyles.sidebarNav}>
           <div style={baseStyles.sidebarNavItem} className="sidebar-item">
-            <FontAwesomeIcon icon={faUserPlus} style={baseStyles.sidebarNavIcon} />
+            <FontAwesomeIcon
+              icon={faUserPlus}
+              style={baseStyles.sidebarNavIcon}
+            />
             <span style={baseStyles.sidebarNavText}>Manage Work</span>
           </div>
           <div style={baseStyles.sidebarNavItem} className="sidebar-item">
@@ -423,11 +457,17 @@ const Chefdash = () => {
             <span style={baseStyles.sidebarNavText}>Application</span>
           </div>
           <div style={baseStyles.sidebarNavItem} className="sidebar-item">
-            <FontAwesomeIcon icon={faBullhorn} style={baseStyles.sidebarNavIcon} />
+            <FontAwesomeIcon
+              icon={faBullhorn}
+              style={baseStyles.sidebarNavIcon}
+            />
             <span style={baseStyles.sidebarNavText}>Send Alert</span>
           </div>
           <div style={baseStyles.sidebarNavItem} className="sidebar-item">
-            <FontAwesomeIcon icon={faFileAlt} style={baseStyles.sidebarNavIcon} />
+            <FontAwesomeIcon
+              icon={faFileAlt}
+              style={baseStyles.sidebarNavIcon}
+            />
             <span style={baseStyles.sidebarNavText}>Reports</span>
           </div>
         </nav>
@@ -440,42 +480,83 @@ const Chefdash = () => {
       </div>
 
       {/* Main Content */}
-      <div style={baseStyles.mainContent} className={!isMobile ? "main-content-shifted" : ""}>
+      <div
+        style={baseStyles.mainContent}
+        className={!isMobile ? "main-content-shifted" : ""}
+      >
         {/* Header */}
         <div style={baseStyles.header}>
           <div style={baseStyles.headerLeft}>
-            {isMobile && <FontAwesomeIcon icon={faBars} onClick={() => setIsSidebarOpen(true)} style={{fontSize:'1.5rem', color:'#452983'}} />}
-            <h1 style={baseStyles.headerTitle}>Overview</h1>
+            {isMobile && (
+              <FontAwesomeIcon
+                icon={faBars}
+                onClick={() => setIsSidebarOpen(true)}
+                style={{ fontSize: "1.5rem", color: "#452983" }}
+              />
+            )}
+            <h1 style={baseStyles.headerTitle}>
+              {roleFromUrl
+                ? roleFromUrl.replace("-", " ").toUpperCase()
+                : "Overview"}
+            </h1>
             {!isMobile && (
-              <div style={baseStyles.searchBarContainer} className="search-container">
-                <FontAwesomeIcon icon={faSearch} style={baseStyles.searchIcon} />
-                <input type="text" placeholder="Search tasks..." style={baseStyles.searchInput} />
+              <div
+                style={baseStyles.searchBarContainer}
+                className="search-container"
+              >
+                <FontAwesomeIcon
+                  icon={faSearch}
+                  style={baseStyles.searchIcon}
+                />
+                <input
+                  type="text"
+                  placeholder="Search tasks..."
+                  style={baseStyles.searchInput}
+                />
               </div>
             )}
           </div>
 
           <div style={baseStyles.headerRight} ref={notificationRef}>
             {/* Notification Bell Section */}
-            <div style={baseStyles.notificationBtn} onClick={() => setShowNotifications(!showNotifications)}>
+            <div
+              style={baseStyles.notificationBtn}
+              onClick={() => setShowNotifications(!showNotifications)}
+            >
               <FontAwesomeIcon icon={faBell} />
-              {apiNotifCount > 0 && <span style={baseStyles.badge}>{apiNotifCount}</span>}
-              
+              {apiNotifCount > 0 && (
+                <span style={baseStyles.badge}>{apiNotifCount}</span>
+              )}
+
               {/* Popup Modal */}
               {showNotifications && (
                 <div style={baseStyles.notificationDropdown}>
-                  <div style={baseStyles.notificationHeader}>Notifications ({apiNotifCount})</div>
+                  <div style={baseStyles.notificationHeader}>
+                    Notifications ({apiNotifCount})
+                  </div>
                   <div style={{ maxHeight: "250px", overflowY: "auto" }}>
                     <div style={baseStyles.notificationItem}>
                       <div style={baseStyles.notificationIconBox}>
                         <FontAwesomeIcon icon={faPenSquare} />
                       </div>
                       <div>
-                        <p style={baseStyles.notificationTitle}>{apiLatestMsg}</p>
-                        <span style={{fontSize:'0.7rem', color:'#888'}}>Recently</span>
+                        <p style={baseStyles.notificationTitle}>
+                          {apiLatestMsg}
+                        </p>
+                        <span style={{ fontSize: "0.7rem", color: "#888" }}>
+                          Recently
+                        </span>
                       </div>
                     </div>
                   </div>
-                  <div style={baseStyles.markAsRead} onClick={(e) => { e.stopPropagation(); setShowNotifications(false); setApiNotifCount(0); }}>
+                  <div
+                    style={baseStyles.markAsRead}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowNotifications(false);
+                      setApiNotifCount(0);
+                    }}
+                  >
                     Mark as Read <FontAwesomeIcon icon={faCheck} />
                   </div>
                 </div>
@@ -483,7 +564,11 @@ const Chefdash = () => {
             </div>
 
             <div style={baseStyles.userBadge} className="header-user-badge">
-              <img src={userProfilePic} style={baseStyles.userBadgeImg} alt="user" />
+              <img
+                src={userProfilePic}
+                style={baseStyles.userBadgeImg}
+                alt="user"
+              />
               <span style={baseStyles.userBadgeName}>{userName}</span>
             </div>
           </div>
@@ -492,21 +577,30 @@ const Chefdash = () => {
         {/* Welcome Section */}
         <div style={baseStyles.welcomeSection}>
           <h2 style={baseStyles.welcomeTitle}>
-            <FontAwesomeIcon icon={faStar} style={{color: '#ffd700'}} /> Hello, {userName}
+            <FontAwesomeIcon icon={faStar} style={{ color: "#ffd700" }} />{" "}
+            Hello, {userName}
           </h2>
-          <p style={baseStyles.welcomeSubtitle}>Here's what's happening today.</p>
+          <p style={baseStyles.welcomeSubtitle}>
+            Here's what's happening today.
+          </p>
         </div>
 
         {/* Dashboard Cards */}
         <div style={baseStyles.cardsGrid}>
           <div style={baseStyles.card} className="dashboard-card">
-            <FontAwesomeIcon icon={faClipboardList} style={baseStyles.cardIcon} />
+            <FontAwesomeIcon
+              icon={faClipboardList}
+              style={baseStyles.cardIcon}
+            />
             <h3 style={baseStyles.cardTitle}>Assigned Task</h3>
             <p style={baseStyles.cardCount}>{assignedTasks}</p>
           </div>
 
           <div style={baseStyles.card} className="dashboard-card">
-            <FontAwesomeIcon icon={faHourglassHalf} style={baseStyles.cardIcon} />
+            <FontAwesomeIcon
+              icon={faHourglassHalf}
+              style={baseStyles.cardIcon}
+            />
             <h3 style={baseStyles.cardTitle}>Ongoing Task</h3>
             <p style={baseStyles.cardCount}>{ongoingTasks}</p>
           </div>
