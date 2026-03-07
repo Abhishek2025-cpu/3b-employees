@@ -380,7 +380,7 @@ const Chefdash = () => {
     if (!employeeId) return;
 
     // Fetch Assigned Tasks + Notification
-    fetch(`https://threebapi-1067354145699.asia-south1.run.app/api/items/items/employee/${employeeId}`)
+    fetch(`https://threebapi-10mployee/${employeeId}`)
       .then(res => res.json())
       .then(data => {
         setAssignedTasks(data?.data?.length || 0);
@@ -390,10 +390,10 @@ const Chefdash = () => {
         }
       });
 
-    fetch(`https://threebapi-1067354145699.asia-south1.run.app/api/workers/employee-task/${employeeId}`)
+    fetch(`/${employeeId}`)
       .then(res => res.json()).then(data => setOngoingTasks(data?.data?.length || 0));
 
-    fetch(`https://threebapi-1067354145699.asia-south1.run.app/api/task-transfers/transfers`)
+    fetch(`ht/transfers`)
       .then(res => res.json()).then(data => setTransferTasks(data?.data?.length || 0));
   }, []);
 
@@ -499,19 +499,19 @@ const Chefdash = () => {
 
         {/* Dashboard Cards */}
         <div style={baseStyles.cardsGrid}>
-          <div style={baseStyles.card} className="dashboard-card" onClick={() => navigate("/assignments")}>
+          <div style={baseStyles.card} className="dashboard-card">
             <FontAwesomeIcon icon={faClipboardList} style={baseStyles.cardIcon} />
             <h3 style={baseStyles.cardTitle}>Assigned Task</h3>
             <p style={baseStyles.cardCount}>{assignedTasks}</p>
           </div>
 
-          <div style={baseStyles.card} className="dashboard-card" onClick={() => navigate("/viewtask")}>
+          <div style={baseStyles.card} className="dashboard-card">
             <FontAwesomeIcon icon={faHourglassHalf} style={baseStyles.cardIcon} />
             <h3 style={baseStyles.cardTitle}>Ongoing Task</h3>
             <p style={baseStyles.cardCount}>{ongoingTasks}</p>
           </div>
 
-          <div style={baseStyles.card} className="dashboard-card" onClick={() => navigate("/transfertask")}>
+          <div style={baseStyles.card} className="dashboard-card">
             <FontAwesomeIcon icon={faRightLeft} style={baseStyles.cardIcon} />
             <h3 style={baseStyles.cardTitle}>Transfer Tasks</h3>
             <p style={baseStyles.cardCount}>{TransferTasks}</p>

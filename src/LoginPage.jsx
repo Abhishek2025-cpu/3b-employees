@@ -140,17 +140,73 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState("");
-  const [otherRole, setOtherRole] = useState("");
+  const[otherRole, setOtherRole] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [toast, setToast] = useState({ show: false, message: "", type: "" });
+  const[toast, setToast] = useState({ show: false, message: "", type: "" });
 
-  const [roleEmployeeData, setRoleEmployeeData] = useState([]);
+  const[roleEmployeeData, setRoleEmployeeData] = useState([]);
+  
+  // NAYE STATES: Roles API se fetch karne ke liye
+  const [mainRoles, setMainRoles] = useState(["Helper", "Operator", "Mixture", "Other"]);
+  const [dynamicOtherRoles, setDynamicOtherRoles] = useState(["Electrician", "Chef", "Admin"]);
 
   useEffect(() => {
     const styleSheet = document.createElement("style");
     styleSheet.innerText = keyframes;
     document.head.appendChild(styleSheet);
-  }, []);
+  },[]);
+
+  // NAYE API CALL: Roles dynamically fetch karne ke liye
+  useEffect(() => {
+    const fetchAllRoles = async () => {
+      try {
+        const response = await fetch("https://threebapi-1067354145699.asia-south1.run.app/api/staff/roles/all");
+        const result = await response.json();
+
+        if (result.success && result.data) {
+          const main = [];
+          let others =[];
+
+          result.data.forEach((item) => {
+            if (typeof item === "string") {
+              // Main role ko capitalize kar rahe hain
+              main.push(item.charAt(0).toUpperCase() + item.slice(1));
+            } else if (typeof item === "object" && item.Other) {
+              others = item.Other;
+            }
+          });
+
+          // Ensure "Other" list me rahe
+          if (!main.includes("Other")) {
+            main.push("Other");
+          }
+
+          // Duplicate roles ko hatana aur capitalize karna (jaise chef, Chef bhai etc)
+          const uniqueOthers =[];
+          const lowerCaseSet = new Set();
+
+          // Purane important roles miss na ho (like Admin) in case database me abhi add na hue ho
+          const combinedOthers = [...others, "Admin"]; 
+
+          combinedOthers.forEach((r) => {
+            if (typeof r === "string") {
+              const lower = r.trim().toLowerCase();
+              if (!lowerCaseSet.has(lower)) {
+                lowerCaseSet.add(lower);
+                uniqueOthers.push(r.trim().charAt(0).toUpperCase() + r.trim().slice(1));
+              }
+            }
+          });
+
+          setMainRoles(main);
+          setDynamicOtherRoles(uniqueOthers);
+        }
+      } catch (error) {
+        console.error("Error fetching all roles:", error);
+      }
+    };
+    fetchAllRoles();
+  },[]);
 
   useEffect(() => {
     const finalRole = role === "Other" ? otherRole : role;
@@ -160,7 +216,7 @@ function LoginPage() {
         try {
           const roleParam = finalRole.toLowerCase();
           const response = await fetch(
-            `https://threebapi-1067354145699.asia-south1.run.app/api/staff/get-role-base-employee-data?selectedRole=${roleParam}`,
+            `https://threebapi-1067354145699.asia-south1.run.app/api/staff/get-role-base-employee-data?selectedRole=${roleParam}`
           );
           const data = await response.json();
           setRoleEmployeeData(data);
@@ -170,7 +226,7 @@ function LoginPage() {
       };
       fetchRoleData();
     }
-  }, [role, otherRole]);
+  },[role, otherRole]);
 
   const showToast = (message, type) => {
     setToast({ show: true, message, type });
@@ -214,7 +270,7 @@ function LoginPage() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
-        },
+        }
       );
 
       const result = await response.json();
@@ -239,7 +295,7 @@ function LoginPage() {
         userRole = employeeData?.otherRoles || otherRole;
       }
 
-      // Safe Extraction: leading/trailing spaces hateye aur safely string me convert kiye
+      // Safe Extraction
       const finalSafeRole = String(userRole || "User").trim();
 
       const profilePic =
@@ -259,7 +315,6 @@ function LoginPage() {
       setTimeout(() => {
         setIsLoading(false);
 
-        // Routing fix: Sab roles ko lowercase aur trim karke check kar rahe hain taaki capital letter aur spaces ki wajah se navigation naa fase.
         const routingRole = finalSafeRole.toLowerCase();
         console.log("Navigating for precise role:", routingRole);
 
@@ -288,10 +343,18 @@ function LoginPage() {
           case "electrician":
             navigate("/electrician-dashboard");
             break;
+          case "tailor": // <--- Tailor/Tailler role ke liye navigation yaha add kiya hai
+            navigate("/tailor-dashboard"); // Note: Agar aapka page name alag hai (eg: /tailler) toh isey badal lena
+            break;
+          case "supervisor":
+            navigate("/supervisor-dashboard");
+            break;
+          case "carpainter":
+            navigate("/carpainter-dashboard");
+            break;
           default:
             console.warn("Unknown role ->", routingRole);
             showToast("Role not matched for dashboard routing.", "error");
-            // Agar unknown role hai tabhi wahi page pe rukega.
             navigate("/");
             break;
         }
@@ -350,6 +413,7 @@ function LoginPage() {
             />
           </div>
 
+          {/* DYNAMIC MAIN ROLES DROPDOWN */}
           <div style={styles.inputWrapper}>
             <FontAwesomeIcon icon={faUserTie} style={styles.iconLeft} />
             <select
@@ -361,13 +425,15 @@ function LoginPage() {
               style={styles.input}
             >
               <option value="">Select Role (Login as)</option>
-              <option value="Helper">Helper</option>
-              <option value="Operator">Operator</option>
-              <option value="Mixture">Mixture</option>
-              <option value="Other">Other</option>
+              {mainRoles.map((r, index) => (
+                <option key={index} value={r}>
+                  {r}
+                </option>
+              ))}
             </select>
           </div>
 
+          {/* DYNAMIC OTHER ROLES DROPDOWN */}
           {role === "Other" && (
             <div style={styles.inputWrapper}>
               <FontAwesomeIcon icon={faUserTie} style={styles.iconLeft} />
@@ -377,9 +443,11 @@ function LoginPage() {
                 style={styles.input}
               >
                 <option value="">Select Other Role</option>
-                <option value="Electrician">Electrician</option>
-                <option value="Chef">Chef</option>
-                <option value="Admin">Admin</option>
+                {dynamicOtherRoles.map((r, index) => (
+                  <option key={index} value={r}>
+                    {r}
+                  </option>
+                ))}
               </select>
             </div>
           )}
