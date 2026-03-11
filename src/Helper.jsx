@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react"; // Added useRef
+import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -15,13 +15,13 @@ import {
   faRightLeft,
   faSearch,
   faStar,
-  faCheck, // Added
-  faPenSquare, // Added
+  faCheck,
+  faPenSquare,
+  faGlobe, // Added for language
 } from "@fortawesome/free-solid-svg-icons";
 
 import userProfilePlaceholder from "./assets/user-profile.jpg";
 
-// --- UPDATED STYLES TO MATCH IMAGE ---
 const baseStyles = {
   dashboardContainer: {
     display: "flex",
@@ -247,7 +247,6 @@ const baseStyles = {
     justifyContent: "center",
     gap: "10px",
   },
-  // NOTIFICATION POPUP STYLES
   notificationDropdown: {
     position: "absolute",
     top: "40px",
@@ -307,6 +306,56 @@ const baseStyles = {
     cursor: "pointer",
     borderTop: "1px solid #f0f0f0",
   },
+
+  // NEW: SETTINGS MODAL STYLES
+  modalOverlay: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 2000,
+    backdropFilter: "blur(3px)",
+  },
+  modalContent: {
+    backgroundColor: "white",
+    width: "350px",
+    borderRadius: "20px",
+    padding: "25px",
+    boxShadow: "0 20px 40px rgba(0,0,0,0.2)",
+    position: "relative",
+    animation: "fadeIn 0.3s ease-out",
+  },
+  modalTitle: {
+    fontSize: "1.3rem",
+    fontWeight: "700",
+    color: "#452983",
+    marginBottom: "20px",
+    textAlign: "center",
+  },
+  languageList: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "10px",
+  },
+  languageBtn: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: "15px",
+    borderRadius: "10px",
+    border: "1px solid #eee",
+    backgroundColor: "#fff",
+    cursor: "pointer",
+    transition: "0.2s",
+    fontSize: "1rem",
+    fontWeight: "500",
+    color: "#444",
+  },
 };
 
 const responsiveCss = `
@@ -326,11 +375,13 @@ const responsiveCss = `
   }
   .sidebar-item:hover { background-color: rgba(255,255,255,0.1); }
   .dashboard-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.06) !important; }
+  .lang-btn:hover { background-color: #f0ebff !important; border-color: #452983 !important; color: #452983 !important; }
+  .lang-btn.active { background-color: #452983 !important; color: white !important; }
 `;
 
 const Helper = () => {
   const navigate = useNavigate();
-  const notificationRef = useRef(null); // Ref for closing popup
+  const notificationRef = useRef(null);
   
   const [userName, setUserName] = useState("Helper");
   const [userRole, setUserRole] = useState("Staff");
@@ -342,10 +393,13 @@ const Helper = () => {
   const [ongoingTasks, setOngoingTasks] = useState(0);
   const [TransferTasks, setTransferTasks] = useState(0);
 
-  // Notification API States
   const [apiNotifCount, setApiNotifCount] = useState(0);
   const [apiLatestMsg, setApiLatestMsg] = useState("");
   const [showNotifications, setShowNotifications] = useState(false);
+
+  // Language Modal State
+  const [showLangModal, setShowLangModal] = useState(false);
+  const [selectedLang, setSelectedLang] = useState("English");
 
   useEffect(() => {
     const styleTag = document.createElement("style");
@@ -364,7 +418,6 @@ const Helper = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Handle outside click to close notification
   useEffect(() => {
     function handleClickOutside(event) {
       if (notificationRef.current && !notificationRef.current.contains(event.target)) {
@@ -379,7 +432,6 @@ const Helper = () => {
     const employeeId = localStorage.getItem("_id");
     if (!employeeId) return;
 
-    // Fetch Assigned Tasks + Notification
     fetch(`https://threebapi-1067354145699.asia-south1.run.app/api/items/items/employee/${employeeId}`)
       .then(res => res.json())
       .then(data => {
@@ -402,8 +454,44 @@ const Helper = () => {
     navigate("/");
   };
 
+  const languages = ["English", "Hindi", "Marathi"];
+
   return (
     <div style={baseStyles.dashboardContainer}>
+      
+      {/* LANGUAGE SELECTION MODAL */}
+      {showLangModal && (
+        <div style={baseStyles.modalOverlay} onClick={() => setShowLangModal(false)}>
+          <div style={baseStyles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <FontAwesomeIcon 
+              icon={faTimes} 
+              style={{position:'absolute', right:'20px', top:'20px', cursor:'pointer', color:'#999'}} 
+              onClick={() => setShowLangModal(false)}
+            />
+            <h3 style={baseStyles.modalTitle}>
+              <FontAwesomeIcon icon={faGlobe} style={{marginRight:'10px'}} />
+              Select Language
+            </h3>
+            <div style={baseStyles.languageList}>
+              {languages.map((lang) => (
+                <div 
+                  key={lang} 
+                  className={`lang-btn ${selectedLang === lang ? 'active' : ''}`}
+                  style={baseStyles.languageBtn}
+                  onClick={() => {
+                    setSelectedLang(lang);
+                    setTimeout(() => setShowLangModal(false), 300);
+                  }}
+                >
+                  {lang}
+                  {selectedLang === lang && <FontAwesomeIcon icon={faCheck} />}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Sidebar */}
       <div style={baseStyles.sidebar} className={`sidebar ${isSidebarOpen ? "open" : ""}`}>
         <div style={baseStyles.sidebarHeader}>
@@ -430,6 +518,15 @@ const Helper = () => {
             <FontAwesomeIcon icon={faFileAlt} style={baseStyles.sidebarNavIcon} />
             <span style={baseStyles.sidebarNavText}>Reports</span>
           </div>
+          {/* UPDATED SETTINGS CLICK */}
+          <div
+            style={baseStyles.sidebarNavItem}
+            className="sidebar-item"
+            onClick={() => setShowLangModal(true)}
+          >
+            <FontAwesomeIcon icon={faGlobe} style={baseStyles.sidebarNavIcon} />
+            <span style={baseStyles.sidebarNavText}>Settings</span>
+          </div>
         </nav>
 
         <div style={baseStyles.logoutBtnContainer}>
@@ -441,7 +538,6 @@ const Helper = () => {
 
       {/* Main Content */}
       <div style={baseStyles.mainContent} className={!isMobile ? "main-content-shifted" : ""}>
-        {/* Header */}
         <div style={baseStyles.header}>
           <div style={baseStyles.headerLeft}>
             {isMobile && <FontAwesomeIcon icon={faBars} onClick={() => setIsSidebarOpen(true)} style={{fontSize:'1.5rem', color:'#452983'}} />}
@@ -455,12 +551,9 @@ const Helper = () => {
           </div>
 
           <div style={baseStyles.headerRight} ref={notificationRef}>
-            {/* Notification Bell Section */}
             <div style={baseStyles.notificationBtn} onClick={() => setShowNotifications(!showNotifications)}>
               <FontAwesomeIcon icon={faBell} />
               {apiNotifCount > 0 && <span style={baseStyles.badge}>{apiNotifCount}</span>}
-              
-              {/* Popup Modal */}
               {showNotifications && (
                 <div style={baseStyles.notificationDropdown}>
                   <div style={baseStyles.notificationHeader}>Notifications ({apiNotifCount})</div>
@@ -489,7 +582,6 @@ const Helper = () => {
           </div>
         </div>
 
-        {/* Welcome Section */}
         <div style={baseStyles.welcomeSection}>
           <h2 style={baseStyles.welcomeTitle}>
             <FontAwesomeIcon icon={faStar} style={{color: '#ffd700'}} /> Hello, {userName}
@@ -497,7 +589,6 @@ const Helper = () => {
           <p style={baseStyles.welcomeSubtitle}>Here's what's happening today.</p>
         </div>
 
-        {/* Dashboard Cards */}
         <div style={baseStyles.cardsGrid}>
           <div style={baseStyles.card} className="dashboard-card" onClick={() => navigate("/assignments")}>
             <FontAwesomeIcon icon={faClipboardList} style={baseStyles.cardIcon} />
