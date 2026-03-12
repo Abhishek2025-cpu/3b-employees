@@ -323,7 +323,10 @@ const baseStyles = {
   },
   modalContent: {
     backgroundColor: "white",
-    width: "350px",
+    width: "90%",
+    maxWidth: "520px",
+    maxHeight: "80vh",
+    overflowY: "auto",
     borderRadius: "20px",
     padding: "25px",
     boxShadow: "0 20px 40px rgba(0,0,0,0.2)",
@@ -338,21 +341,21 @@ const baseStyles = {
     textAlign: "center",
   },
   languageList: {
-    display: "flex",
-    flexDirection: "column",
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
     gap: "10px",
   },
   languageBtn: {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: "15px",
+    padding: "12px",
     borderRadius: "10px",
     border: "1px solid #eee",
     backgroundColor: "#fff",
     cursor: "pointer",
     transition: "0.2s",
-    fontSize: "1rem",
+    fontSize: "0.9rem",
     fontWeight: "500",
     color: "#444",
   },
@@ -382,13 +385,13 @@ const responsiveCss = `
 const Helper = () => {
   const navigate = useNavigate();
   const notificationRef = useRef(null);
-  
+
   const [userName, setUserName] = useState("Helper");
   const [userRole, setUserRole] = useState("Staff");
   const [userProfilePic, setUserProfilePic] = useState(userProfilePlaceholder);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 767);
-  
+
   const [assignedTasks, setAssignedTasks] = useState(0);
   const [ongoingTasks, setOngoingTasks] = useState(0);
   const [TransferTasks, setTransferTasks] = useState(0);
@@ -420,7 +423,10 @@ const Helper = () => {
 
   useEffect(() => {
     function handleClickOutside(event) {
-      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+      if (
+        notificationRef.current &&
+        !notificationRef.current.contains(event.target)
+      ) {
         setShowNotifications(false);
       }
     }
@@ -432,21 +438,31 @@ const Helper = () => {
     const employeeId = localStorage.getItem("_id");
     if (!employeeId) return;
 
-    fetch(`https://threebapi-1067354145699.asia-south1.run.app/api/items/items/employee/${employeeId}`)
-      .then(res => res.json())
-      .then(data => {
+    fetch(
+      `https://threebapi-1067354145699.asia-south1.run.app/api/items/items/employee/${employeeId}`,
+    )
+      .then((res) => res.json())
+      .then((data) => {
         setAssignedTasks(data?.data?.length || 0);
         if (data.notification) {
           setApiNotifCount(data.notification.count || 0);
-          setApiLatestMsg(data.notification.latestMessage || "No new assignments");
+          setApiLatestMsg(
+            data.notification.latestMessage || "No new assignments",
+          );
         }
       });
 
-    fetch(`https://threebapi-1067354145699.asia-south1.run.app/api/workers/employee-task/${employeeId}`)
-      .then(res => res.json()).then(data => setOngoingTasks(data?.data?.length || 0));
+    fetch(
+      `https://threebapi-1067354145699.asia-south1.run.app/api/workers/employee-task/${employeeId}`,
+    )
+      .then((res) => res.json())
+      .then((data) => setOngoingTasks(data?.data?.length || 0));
 
-    fetch(`https://threebapi-1067354145699.asia-south1.run.app/api/task-transfers/transfers`)
-      .then(res => res.json()).then(data => setTransferTasks(data?.data?.length || 0));
+    fetch(
+      `https://threebapi-1067354145699.asia-south1.run.app/api/task-transfers/transfers`,
+    )
+      .then((res) => res.json())
+      .then((data) => setTransferTasks(data?.data?.length || 0));
   }, []);
 
   const handleLogout = () => {
@@ -454,29 +470,60 @@ const Helper = () => {
     navigate("/");
   };
 
-  const languages = ["English", "Hindi", "Marathi"];
+  const languages = [
+    "English",
+    "Hindi",
+    "Marathi",
+    "Punjabi",
+    "Gujarati",
+    "Bengali",
+    "Tamil",
+    "Telugu",
+    "Kannada",
+    "Malayalam",
+    "Odia",
+    "Urdu",
+    "Nepali",
+    "Spanish",
+    "French",
+    "German",
+    "Chinese",
+    "Japanese",
+    "Korean",
+  ];
 
   return (
     <div style={baseStyles.dashboardContainer}>
-      
       {/* LANGUAGE SELECTION MODAL */}
       {showLangModal && (
-        <div style={baseStyles.modalOverlay} onClick={() => setShowLangModal(false)}>
-          <div style={baseStyles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <FontAwesomeIcon 
-              icon={faTimes} 
-              style={{position:'absolute', right:'20px', top:'20px', cursor:'pointer', color:'#999'}} 
+        <div
+          style={baseStyles.modalOverlay}
+          onClick={() => setShowLangModal(false)}
+        >
+          <div
+            style={baseStyles.modalContent}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <FontAwesomeIcon
+              icon={faTimes}
+              style={{
+                position: "absolute",
+                right: "20px",
+                top: "20px",
+                cursor: "pointer",
+                color: "#999",
+              }}
               onClick={() => setShowLangModal(false)}
             />
             <h3 style={baseStyles.modalTitle}>
-              <FontAwesomeIcon icon={faGlobe} style={{marginRight:'10px'}} />
+              <FontAwesomeIcon icon={faGlobe} style={{ marginRight: "10px" }} />
               Select Language
             </h3>
             <div style={baseStyles.languageList}>
               {languages.map((lang) => (
-                <div 
-                  key={lang} 
-                  className={`lang-btn ${selectedLang === lang ? 'active' : ''}`}
+                <div
+                  key={lang}
+                  className={`lang-btn ${selectedLang === lang ? "active" : ""}`}
                   style={baseStyles.languageBtn}
                   onClick={() => {
                     setSelectedLang(lang);
@@ -493,17 +540,33 @@ const Helper = () => {
       )}
 
       {/* Sidebar */}
-      <div style={baseStyles.sidebar} className={`sidebar ${isSidebarOpen ? "open" : ""}`}>
+      <div
+        style={baseStyles.sidebar}
+        className={`sidebar ${isSidebarOpen ? "open" : ""}`}
+      >
         <div style={baseStyles.sidebarHeader}>
-          {isMobile && <FontAwesomeIcon icon={faTimes} onClick={() => setIsSidebarOpen(false)} style={{alignSelf:'flex-end', cursor:'pointer'}} />}
-          <img src={userProfilePic} alt="Profile" style={baseStyles.sidebarProfileImage} />
+          {isMobile && (
+            <FontAwesomeIcon
+              icon={faTimes}
+              onClick={() => setIsSidebarOpen(false)}
+              style={{ alignSelf: "flex-end", cursor: "pointer" }}
+            />
+          )}
+          <img
+            src={userProfilePic}
+            alt="Profile"
+            style={baseStyles.sidebarProfileImage}
+          />
           <span style={baseStyles.sidebarUserName}>{userName}</span>
           <span style={baseStyles.sidebarUserRole}>{userRole}</span>
         </div>
 
         <nav style={baseStyles.sidebarNav}>
           <div style={baseStyles.sidebarNavItem} className="sidebar-item">
-            <FontAwesomeIcon icon={faUserPlus} style={baseStyles.sidebarNavIcon} />
+            <FontAwesomeIcon
+              icon={faUserPlus}
+              style={baseStyles.sidebarNavIcon}
+            />
             <span style={baseStyles.sidebarNavText}>Manage Work</span>
           </div>
           <div style={baseStyles.sidebarNavItem} className="sidebar-item">
@@ -511,11 +574,17 @@ const Helper = () => {
             <span style={baseStyles.sidebarNavText}>Application</span>
           </div>
           <div style={baseStyles.sidebarNavItem} className="sidebar-item">
-            <FontAwesomeIcon icon={faBullhorn} style={baseStyles.sidebarNavIcon} />
+            <FontAwesomeIcon
+              icon={faBullhorn}
+              style={baseStyles.sidebarNavIcon}
+            />
             <span style={baseStyles.sidebarNavText}>Send Alert</span>
           </div>
           <div style={baseStyles.sidebarNavItem} className="sidebar-item">
-            <FontAwesomeIcon icon={faFileAlt} style={baseStyles.sidebarNavIcon} />
+            <FontAwesomeIcon
+              icon={faFileAlt}
+              style={baseStyles.sidebarNavIcon}
+            />
             <span style={baseStyles.sidebarNavText}>Reports</span>
           </div>
           {/* UPDATED SETTINGS CLICK */}
@@ -537,38 +606,75 @@ const Helper = () => {
       </div>
 
       {/* Main Content */}
-      <div style={baseStyles.mainContent} className={!isMobile ? "main-content-shifted" : ""}>
+      <div
+        style={baseStyles.mainContent}
+        className={!isMobile ? "main-content-shifted" : ""}
+      >
         <div style={baseStyles.header}>
           <div style={baseStyles.headerLeft}>
-            {isMobile && <FontAwesomeIcon icon={faBars} onClick={() => setIsSidebarOpen(true)} style={{fontSize:'1.5rem', color:'#452983'}} />}
+            {isMobile && (
+              <FontAwesomeIcon
+                icon={faBars}
+                onClick={() => setIsSidebarOpen(true)}
+                style={{ fontSize: "1.5rem", color: "#452983" }}
+              />
+            )}
             <h1 style={baseStyles.headerTitle}>Overview</h1>
             {!isMobile && (
-              <div style={baseStyles.searchBarContainer} className="search-container">
-                <FontAwesomeIcon icon={faSearch} style={baseStyles.searchIcon} />
-                <input type="text" placeholder="Search tasks..." style={baseStyles.searchInput} />
+              <div
+                style={baseStyles.searchBarContainer}
+                className="search-container"
+              >
+                <FontAwesomeIcon
+                  icon={faSearch}
+                  style={baseStyles.searchIcon}
+                />
+                <input
+                  type="text"
+                  placeholder="Search tasks..."
+                  style={baseStyles.searchInput}
+                />
               </div>
             )}
           </div>
 
           <div style={baseStyles.headerRight} ref={notificationRef}>
-            <div style={baseStyles.notificationBtn} onClick={() => setShowNotifications(!showNotifications)}>
+            <div
+              style={baseStyles.notificationBtn}
+              onClick={() => setShowNotifications(!showNotifications)}
+            >
               <FontAwesomeIcon icon={faBell} />
-              {apiNotifCount > 0 && <span style={baseStyles.badge}>{apiNotifCount}</span>}
+              {apiNotifCount > 0 && (
+                <span style={baseStyles.badge}>{apiNotifCount}</span>
+              )}
               {showNotifications && (
                 <div style={baseStyles.notificationDropdown}>
-                  <div style={baseStyles.notificationHeader}>Notifications ({apiNotifCount})</div>
+                  <div style={baseStyles.notificationHeader}>
+                    Notifications ({apiNotifCount})
+                  </div>
                   <div style={{ maxHeight: "250px", overflowY: "auto" }}>
                     <div style={baseStyles.notificationItem}>
                       <div style={baseStyles.notificationIconBox}>
                         <FontAwesomeIcon icon={faPenSquare} />
                       </div>
                       <div>
-                        <p style={baseStyles.notificationTitle}>{apiLatestMsg}</p>
-                        <span style={{fontSize:'0.7rem', color:'#888'}}>Recently</span>
+                        <p style={baseStyles.notificationTitle}>
+                          {apiLatestMsg}
+                        </p>
+                        <span style={{ fontSize: "0.7rem", color: "#888" }}>
+                          Recently
+                        </span>
                       </div>
                     </div>
                   </div>
-                  <div style={baseStyles.markAsRead} onClick={(e) => { e.stopPropagation(); setShowNotifications(false); setApiNotifCount(0); }}>
+                  <div
+                    style={baseStyles.markAsRead}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowNotifications(false);
+                      setApiNotifCount(0);
+                    }}
+                  >
                     Mark as Read <FontAwesomeIcon icon={faCheck} />
                   </div>
                 </div>
@@ -576,7 +682,11 @@ const Helper = () => {
             </div>
 
             <div style={baseStyles.userBadge} className="header-user-badge">
-              <img src={userProfilePic} style={baseStyles.userBadgeImg} alt="user" />
+              <img
+                src={userProfilePic}
+                style={baseStyles.userBadgeImg}
+                alt="user"
+              />
               <span style={baseStyles.userBadgeName}>{userName}</span>
             </div>
           </div>
@@ -584,25 +694,46 @@ const Helper = () => {
 
         <div style={baseStyles.welcomeSection}>
           <h2 style={baseStyles.welcomeTitle}>
-            <FontAwesomeIcon icon={faStar} style={{color: '#ffd700'}} /> Hello, {userName}
+            <FontAwesomeIcon icon={faStar} style={{ color: "#ffd700" }} />{" "}
+            Hello, {userName}
           </h2>
-          <p style={baseStyles.welcomeSubtitle}>Here's what's happening today.</p>
+          <p style={baseStyles.welcomeSubtitle}>
+            Here's what's happening today.
+          </p>
         </div>
 
         <div style={baseStyles.cardsGrid}>
-          <div style={baseStyles.card} className="dashboard-card" onClick={() => navigate("/assignments")}>
-            <FontAwesomeIcon icon={faClipboardList} style={baseStyles.cardIcon} />
+          <div
+            style={baseStyles.card}
+            className="dashboard-card"
+            onClick={() => navigate("/assignments")}
+          >
+            <FontAwesomeIcon
+              icon={faClipboardList}
+              style={baseStyles.cardIcon}
+            />
             <h3 style={baseStyles.cardTitle}>Assigned Task</h3>
             <p style={baseStyles.cardCount}>{assignedTasks}</p>
           </div>
 
-          <div style={baseStyles.card} className="dashboard-card" onClick={() => navigate("/viewtask")}>
-            <FontAwesomeIcon icon={faHourglassHalf} style={baseStyles.cardIcon} />
+          <div
+            style={baseStyles.card}
+            className="dashboard-card"
+            onClick={() => navigate("/viewtask")}
+          >
+            <FontAwesomeIcon
+              icon={faHourglassHalf}
+              style={baseStyles.cardIcon}
+            />
             <h3 style={baseStyles.cardTitle}>Ongoing Task</h3>
             <p style={baseStyles.cardCount}>{ongoingTasks}</p>
           </div>
 
-          <div style={baseStyles.card} className="dashboard-card" onClick={() => navigate("/transfertask")}>
+          <div
+            style={baseStyles.card}
+            className="dashboard-card"
+            onClick={() => navigate("/transfertask")}
+          >
             <FontAwesomeIcon icon={faRightLeft} style={baseStyles.cardIcon} />
             <h3 style={baseStyles.cardTitle}>Transfer Tasks</h3>
             <p style={baseStyles.cardCount}>{TransferTasks}</p>

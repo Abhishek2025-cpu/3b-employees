@@ -20,7 +20,8 @@ import {
   faClipboardList,
   faHourglassHalf,
   faRightLeft,
-  faPenSquare, // Added for notification icon
+  faPenSquare,
+  faGlobe,
 } from "@fortawesome/free-solid-svg-icons";
 import userProfilePlaceholder from "./assets/user-profile.jpg";
 
@@ -268,12 +269,16 @@ const responsiveCss = `
 
 function OperatorDashboard() {
   const navigate = useNavigate();
-  const notificationRef = useRef(null); 
+  const notificationRef = useRef(null);
 
-  const [userName, setUserName] = useState(localStorage.getItem("name") || "Operator");
-  const [userRole, setUserRole] = useState(localStorage.getItem("role") || "Operator");
+  const [userName, setUserName] = useState(
+    localStorage.getItem("name") || "Operator",
+  );
+  const [userRole, setUserRole] = useState(
+    localStorage.getItem("role") || "Operator",
+  );
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false); 
+  const [showNotifications, setShowNotifications] = useState(false);
 
   const [assignedTasks, setAssignedTasks] = useState(0);
   const [ongoingTasks, setOngoingTasks] = useState(0);
@@ -282,30 +287,62 @@ function OperatorDashboard() {
   // Notification states from API
   const [notifCount, setNotifCount] = useState(0);
   const [latestMsg, setLatestMsg] = useState("No new assignments");
+  const [showLangModal, setShowLangModal] = useState(false);
+const [selectedLang, setSelectedLang] = useState("English");
+
+const languages = [
+  "English",
+  "Hindi",
+  "Marathi",
+  "Punjabi",
+  "Gujarati",
+  "Bengali",
+  "Tamil",
+  "Telugu",
+  "Kannada",
+  "Malayalam",
+  "Odia",
+  "Urdu",
+  "Nepali",
+  "Spanish",
+  "French",
+  "German",
+  "Chinese",
+  "Japanese",
+  "Korean"
+];
 
   useEffect(() => {
     const employeeId = localStorage.getItem("_id");
     if (employeeId) {
       // Combined Notification and Assigned Tasks fetch
-      fetch(`https://threebapi-1067354145699.asia-south1.run.app/api/items/items/employee/${employeeId}`)
+      fetch(
+        `https://threebapi-1067354145699.asia-south1.run.app/api/items/items/employee/${employeeId}`,
+      )
         .then((res) => res.json())
         .then((data) => {
           setAssignedTasks(data?.data?.length || 0);
           // Setting API notification data
           if (data.notification) {
             setNotifCount(data.notification.count || 0);
-            setLatestMsg(data.notification.latestMessage || "No new assignments");
+            setLatestMsg(
+              data.notification.latestMessage || "No new assignments",
+            );
           }
         })
         .catch((err) => console.error(err));
 
-      fetch(`https://threebapi-1067354145699.asia-south1.run.app/api/workers/employee-task/${employeeId}`)
+      fetch(
+        `https://threebapi-1067354145699.asia-south1.run.app/api/workers/employee-task/${employeeId}`,
+      )
         .then((res) => res.json())
         .then((data) => setOngoingTasks(data?.data?.length || 0))
         .catch((err) => console.error(err));
     }
-    
-    fetch(`https://threebapi-1067354145699.asia-south1.run.app/api/task-transfers/transfers`)
+
+    fetch(
+      `https://threebapi-1067354145699.asia-south1.run.app/api/task-transfers/transfers`,
+    )
       .then((res) => res.json())
       .then((data) => setTransferTasks(data?.data?.length || 0))
       .catch((err) => console.error(err));
@@ -313,7 +350,10 @@ function OperatorDashboard() {
 
   useEffect(() => {
     function handleClickOutside(event) {
-      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+      if (
+        notificationRef.current &&
+        !notificationRef.current.contains(event.target)
+      ) {
         setShowNotifications(false);
       }
     }
@@ -334,28 +374,141 @@ function OperatorDashboard() {
   };
 
   return (
-    <div style={baseStyles.dashboardContainer}>
-      <div className={`overlay ${isSidebarOpen ? "show" : ""}`} onClick={() => setIsSidebarOpen(false)}></div>
+  <div style={baseStyles.dashboardContainer}>
 
-      <div style={baseStyles.sidebar} className={`sidebar ${isSidebarOpen ? "open" : ""}`}>
+    {showLangModal && (
+      <div style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: "rgba(0,0,0,0.5)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 2000
+      }}>
+        <div style={{
+  background: "white",
+  width: "90%",
+  maxWidth: "520px",
+  maxHeight: "80vh",
+  overflowY: "auto",
+  padding: "25px",
+  borderRadius: "20px",
+  position: "relative"
+}}>
+
+          <FontAwesomeIcon
+            icon={faTimes}
+            onClick={() => setShowLangModal(false)}
+            style={{position:"absolute", right:"20px", top:"20px", cursor:"pointer"}}
+          />
+
+          <h3 style={{textAlign:"center", color:"#452983"}}>
+            <FontAwesomeIcon icon={faGlobe}/> Select Language
+          </h3>
+
+          <div style={{
+  display:"grid",
+  gridTemplateColumns:"repeat(auto-fit, minmax(120px,1fr))",
+  gap:"10px",
+  marginTop:"20px"
+}}>
+            {languages.map((lang)=>(
+              <div
+                key={lang}
+                onClick={()=>{
+                  setSelectedLang(lang)
+                  setShowLangModal(false)
+                }}
+                style={{
+  padding:"10px",
+  border:"1px solid #eee",
+  borderRadius:"10px",
+  cursor:"pointer",
+  textAlign:"center",
+  fontSize:"0.9rem",
+  background:selectedLang===lang ? "#452983":"#fff",
+  color:selectedLang===lang ? "white":"#333"
+}}
+              >
+                {lang} {selectedLang===lang && "✓"}
+              </div>
+            ))}
+          </div>
+
+        </div>
+      </div>
+    )}
+
+    {/* BAQI TUMHARA DASHBOARD CODE SAME RAHEGA */}
+
+      <div
+        className={`overlay ${isSidebarOpen ? "show" : ""}`}
+        onClick={() => setIsSidebarOpen(false)}
+      ></div>
+
+      <div
+        style={baseStyles.sidebar}
+        className={`sidebar ${isSidebarOpen ? "open" : ""}`}
+      >
         <div style={baseStyles.sidebarHeader}>
-          <img src={userProfilePlaceholder} alt="Profile" style={baseStyles.sidebarProfileImage} />
+          <button
+  onClick={() => setIsSidebarOpen(false)}
+  className="mobile-only"
+  style={{
+    position: "absolute",
+    top: "15px",
+    right: "15px",
+    background: "transparent",
+    border: "none",
+    color: "white",
+    fontSize: "1.2rem",
+    cursor: "pointer"
+  }}
+>
+  <FontAwesomeIcon icon={faTimes} />
+</button>
+          <img
+            src={userProfilePlaceholder}
+            alt="Profile"
+            style={baseStyles.sidebarProfileImage}
+          />
           <span style={baseStyles.sidebarUserName}>{userName}</span>
           <span style={baseStyles.sidebarUserRole}>{userRole}</span>
         </div>
         <nav style={baseStyles.sidebarNav}>
           <div style={baseStyles.sidebarNavItem} className="nav-item">
-            <FontAwesomeIcon icon={faUserPlus} style={{ marginRight: "10px" }} /> Manage Work
+            <FontAwesomeIcon
+              icon={faUserPlus}
+              style={{ marginRight: "10px" }}
+            />{" "}
+            Manage Work
           </div>
           <div style={baseStyles.sidebarNavItem} className="nav-item">
-            <FontAwesomeIcon icon={faCogs} style={{ marginRight: "10px" }} /> Application
+            <FontAwesomeIcon icon={faCogs} style={{ marginRight: "10px" }} />{" "}
+            Application
           </div>
           <div style={baseStyles.sidebarNavItem} className="nav-item">
-            <FontAwesomeIcon icon={faBullhorn} style={{ marginRight: "10px" }} /> Send Alert
+            <FontAwesomeIcon
+              icon={faBullhorn}
+              style={{ marginRight: "10px" }}
+            />{" "}
+            Send Alert
           </div>
           <div style={baseStyles.sidebarNavItem} className="nav-item">
-            <FontAwesomeIcon icon={faFileAlt} style={{ marginRight: "10px" }} /> Reports
+            <FontAwesomeIcon icon={faFileAlt} style={{ marginRight: "10px" }} />{" "}
+            Reports
           </div>
+          <div
+  style={baseStyles.sidebarNavItem}
+  className="nav-item"
+  onClick={() => setShowLangModal(true)}
+>
+  <FontAwesomeIcon icon={faGlobe} style={{ marginRight: "10px" }} /> Settings
+</div>
         </nav>
         <button onClick={handleLogout} style={baseStyles.logoutButton}>
           <FontAwesomeIcon icon={faSignOutAlt} /> Logout
@@ -364,28 +517,92 @@ function OperatorDashboard() {
 
       <div style={baseStyles.mainContent} className="main-content">
         <header style={baseStyles.header} className="header">
-          <div style={{ display: "flex", alignItems: "center", flex: "1 1 auto" }}>
+          <div
+            style={{ display: "flex", alignItems: "center", flex: "1 1 auto" }}
+          >
             <button
               onClick={() => setIsSidebarOpen(true)}
-              style={{ border: "none", background: "#f0ecf9", color: "#452983", padding: "10px 12px", borderRadius: "8px", marginRight: "15px", cursor: "pointer", fontSize: "1rem" }}
+              style={{
+                border: "none",
+                background: "#f0ecf9",
+                color: "#452983",
+                padding: "10px 12px",
+                borderRadius: "8px",
+                marginRight: "15px",
+                cursor: "pointer",
+                fontSize: "1rem",
+              }}
               className="mobile-only"
             >
               <FontAwesomeIcon icon={faBars} />
             </button>
-            <h2 style={{ margin: 0, color: "#452983", fontWeight: "700", fontSize: "clamp(1.2rem, 4vw, 1.5rem)" }}>Overview</h2>
+            <h2
+              style={{
+                margin: 0,
+                color: "#452983",
+                fontWeight: "700",
+                fontSize: "clamp(1.2rem, 4vw, 1.5rem)",
+              }}
+            >
+              Overview
+            </h2>
           </div>
 
-          <div style={{ ...baseStyles.searchWrapper, flex: "1 1 auto" }} className="desktop-only search-wrapper">
-            <FontAwesomeIcon icon={faSearch} style={{ position: "absolute", left: "15px", top: "50%", transform: "translateY(-50%)", color: "#aaa" }} />
-            <input type="text" placeholder="Search tasks..." style={baseStyles.searchInput} />
+          <div
+            style={{ ...baseStyles.searchWrapper, flex: "1 1 auto" }}
+            className="desktop-only search-wrapper"
+          >
+            <FontAwesomeIcon
+              icon={faSearch}
+              style={{
+                position: "absolute",
+                left: "15px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                color: "#aaa",
+              }}
+            />
+            <input
+              type="text"
+              placeholder="Search tasks..."
+              style={baseStyles.searchInput}
+            />
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "15px", flex: "0 0 auto", position: "relative" }} ref={notificationRef}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "15px",
+              flex: "0 0 auto",
+              position: "relative",
+            }}
+            ref={notificationRef}
+          >
             {/* Bell Icon with Toggle */}
-            <div style={{ position: "relative", cursor: "pointer" }} onClick={() => setShowNotifications(!showNotifications)}>
-              <FontAwesomeIcon icon={faBell} style={{ fontSize: "1.2rem", color: "#452983" }} />
+            <div
+              style={{ position: "relative", cursor: "pointer" }}
+              onClick={() => setShowNotifications(!showNotifications)}
+            >
+              <FontAwesomeIcon
+                icon={faBell}
+                style={{ fontSize: "1.2rem", color: "#452983" }}
+              />
               {notifCount > 0 && (
-                <span style={{ position: "absolute", top: "-8px", right: "-8px", background: "red", color: "white", fontSize: "0.6rem", padding: "2px 5px", borderRadius: "50%", minWidth: "18px", textAlign: "center" }}>
+                <span
+                  style={{
+                    position: "absolute",
+                    top: "-8px",
+                    right: "-8px",
+                    background: "red",
+                    color: "white",
+                    fontSize: "0.6rem",
+                    padding: "2px 5px",
+                    borderRadius: "50%",
+                    minWidth: "18px",
+                    textAlign: "center",
+                  }}
+                >
                   {notifCount}
                 </span>
               )}
@@ -394,9 +611,14 @@ function OperatorDashboard() {
             {/* Notification Popup Modal */}
             {showNotifications && (
               <div style={baseStyles.notificationDropdown}>
-                <div style={baseStyles.notificationHeader}>Notifications ({notifCount})</div>
+                <div style={baseStyles.notificationHeader}>
+                  Notifications ({notifCount})
+                </div>
                 <div style={{ maxHeight: "300px", overflowY: "auto" }}>
-                  <div style={baseStyles.notificationItem} className="notif-hover">
+                  <div
+                    style={baseStyles.notificationItem}
+                    className="notif-hover"
+                  >
                     <div style={baseStyles.notificationIconBox}>
                       <FontAwesomeIcon icon={faPenSquare} />
                     </div>
@@ -406,49 +628,159 @@ function OperatorDashboard() {
                     </div>
                   </div>
                 </div>
-                <div style={baseStyles.markAsRead} onClick={() => { setShowNotifications(false); setNotifCount(0); }}>
+                <div
+                  style={baseStyles.markAsRead}
+                  onClick={() => {
+                    setShowNotifications(false);
+                    setNotifCount(0);
+                  }}
+                >
                   Mark as Read <FontAwesomeIcon icon={faCheck} />
                 </div>
               </div>
             )}
 
-            <div style={{ display: "flex", alignItems: "center", gap: "10px" }} className="desktop-only">
-              <img src={userProfilePlaceholder} style={{ width: "35px", height: "35px", borderRadius: "8px", objectFit: "cover" }} alt="user" />
-              <span style={{ fontWeight: "600", fontSize: "0.9rem", whiteSpace: "nowrap" }}>{userName}</span>
+            <div
+              style={{ display: "flex", alignItems: "center", gap: "10px" }}
+              className="desktop-only"
+            >
+              <img
+                src={userProfilePlaceholder}
+                style={{
+                  width: "35px",
+                  height: "35px",
+                  borderRadius: "8px",
+                  objectFit: "cover",
+                }}
+                alt="user"
+              />
+              <span
+                style={{
+                  fontWeight: "600",
+                  fontSize: "0.9rem",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {userName}
+              </span>
             </div>
           </div>
         </header>
 
         <div style={{ marginBottom: "25px" }}>
-          <h1 style={{ margin: 0, fontSize: "clamp(1.4rem, 5vw, 1.8rem)" }} className="greeting-title">🌟 Hello, {userName}</h1>
-          <p style={{ color: "#666", margin: "5px 0", fontSize: "clamp(0.85rem, 2.5vw, 1rem)" }} className="greeting-subtitle">Here's what's happening today.</p>
+          <h1
+            style={{ margin: 0, fontSize: "clamp(1.4rem, 5vw, 1.8rem)" }}
+            className="greeting-title"
+          >
+            🌟 Hello, {userName}
+          </h1>
+          <p
+            style={{
+              color: "#666",
+              margin: "5px 0",
+              fontSize: "clamp(0.85rem, 2.5vw, 1rem)",
+            }}
+            className="greeting-subtitle"
+          >
+            Here's what's happening today.
+          </p>
         </div>
 
         <div style={baseStyles.cardsGrid} className="cards-grid">
-          <div style={baseStyles.card} className="dashboard-card" onClick={() => navigate("/review-tasks")}>
-            <FontAwesomeIcon icon={faClipboardCheck} style={baseStyles.cardIcon} className="card-icon" />
-            <div style={{ fontWeight: "600", color: "#666", fontSize: "0.95rem" }}>Review Tasks</div>
-            <p style={baseStyles.cardCount} className="card-count">0</p>
+          <div
+            style={baseStyles.card}
+            className="dashboard-card"
+            onClick={() => navigate("/review-tasks")}
+          >
+            <FontAwesomeIcon
+              icon={faClipboardCheck}
+              style={baseStyles.cardIcon}
+              className="card-icon"
+            />
+            <div
+              style={{ fontWeight: "600", color: "#666", fontSize: "0.95rem" }}
+            >
+              Review Tasks
+            </div>
+            <p style={baseStyles.cardCount} className="card-count">
+              0
+            </p>
           </div>
-          <div style={baseStyles.card} className="dashboard-card" onClick={() => navigate("/submit-tasks")}>
-            <FontAwesomeIcon icon={faPaperPlane} style={baseStyles.cardIcon} className="card-icon" />
-            <div style={{ fontWeight: "600", color: "#666", fontSize: "0.95rem" }}>Submit Tasks</div>
-            <p style={baseStyles.cardCount} className="card-count">0</p>
+          <div
+            style={baseStyles.card}
+            className="dashboard-card"
+            onClick={() => navigate("/submit-tasks")}
+          >
+            <FontAwesomeIcon
+              icon={faPaperPlane}
+              style={baseStyles.cardIcon}
+              className="card-icon"
+            />
+            <div
+              style={{ fontWeight: "600", color: "#666", fontSize: "0.95rem" }}
+            >
+              Submit Tasks
+            </div>
+            <p style={baseStyles.cardCount} className="card-count">
+              0
+            </p>
           </div>
-          <div style={baseStyles.card} className="dashboard-card" onClick={() => navigate("/assignments")}>
-            <FontAwesomeIcon icon={faClipboardList} style={baseStyles.cardIcon} className="card-icon" />
-            <div style={{ fontWeight: "600", color: "#666", fontSize: "0.95rem" }}>Assigned Task</div>
-            <p style={baseStyles.cardCount} className="card-count">{assignedTasks}</p>
+          <div
+            style={baseStyles.card}
+            className="dashboard-card"
+            onClick={() => navigate("/assignments")}
+          >
+            <FontAwesomeIcon
+              icon={faClipboardList}
+              style={baseStyles.cardIcon}
+              className="card-icon"
+            />
+            <div
+              style={{ fontWeight: "600", color: "#666", fontSize: "0.95rem" }}
+            >
+              Assigned Task
+            </div>
+            <p style={baseStyles.cardCount} className="card-count">
+              {assignedTasks}
+            </p>
           </div>
-          <div style={baseStyles.card} className="dashboard-card" onClick={() => navigate("/viewtask")}>
-            <FontAwesomeIcon icon={faHourglassHalf} style={baseStyles.cardIcon} className="card-icon" />
-            <div style={{ fontWeight: "600", color: "#666", fontSize: "0.95rem" }}>Ongoing Task</div>
-            <p style={baseStyles.cardCount} className="card-count">{ongoingTasks}</p>
+          <div
+            style={baseStyles.card}
+            className="dashboard-card"
+            onClick={() => navigate("/viewtask")}
+          >
+            <FontAwesomeIcon
+              icon={faHourglassHalf}
+              style={baseStyles.cardIcon}
+              className="card-icon"
+            />
+            <div
+              style={{ fontWeight: "600", color: "#666", fontSize: "0.95rem" }}
+            >
+              Ongoing Task
+            </div>
+            <p style={baseStyles.cardCount} className="card-count">
+              {ongoingTasks}
+            </p>
           </div>
-          <div style={baseStyles.card} className="dashboard-card" onClick={() => navigate("/transfertask")}>
-            <FontAwesomeIcon icon={faRightLeft} style={baseStyles.cardIcon} className="card-icon" />
-            <div style={{ fontWeight: "600", color: "#666", fontSize: "0.95rem" }}>Transfer Tasks</div>
-            <p style={baseStyles.cardCount} className="card-count">{transferTasks}</p>
+          <div
+            style={baseStyles.card}
+            className="dashboard-card"
+            onClick={() => navigate("/transfertask")}
+          >
+            <FontAwesomeIcon
+              icon={faRightLeft}
+              style={baseStyles.cardIcon}
+              className="card-icon"
+            />
+            <div
+              style={{ fontWeight: "600", color: "#666", fontSize: "0.95rem" }}
+            >
+              Transfer Tasks
+            </div>
+            <p style={baseStyles.cardCount} className="card-count">
+              {transferTasks}
+            </p>
           </div>
         </div>
       </div>
