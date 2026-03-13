@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { translations, languages } from "../src/AssignmentsPage/translations";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBars,
@@ -402,7 +403,7 @@ const Helper = () => {
 
   // Language Modal State
   const [showLangModal, setShowLangModal] = useState(false);
-  const [selectedLang, setSelectedLang] = useState("English");
+  const [lang, setLang] = useState("en");
 
   useEffect(() => {
     const styleTag = document.createElement("style");
@@ -470,28 +471,6 @@ const Helper = () => {
     navigate("/");
   };
 
-  const languages = [
-    "English",
-    "Hindi",
-    "Marathi",
-    "Punjabi",
-    "Gujarati",
-    "Bengali",
-    "Tamil",
-    "Telugu",
-    "Kannada",
-    "Malayalam",
-    "Odia",
-    "Urdu",
-    "Nepali",
-    "Spanish",
-    "French",
-    "German",
-    "Chinese",
-    "Japanese",
-    "Korean",
-  ];
-
   return (
     <div style={baseStyles.dashboardContainer}>
       {/* LANGUAGE SELECTION MODAL */}
@@ -520,18 +499,18 @@ const Helper = () => {
               Select Language
             </h3>
             <div style={baseStyles.languageList}>
-              {languages.map((lang) => (
+              {languages.map((l) => (
                 <div
-                  key={lang}
-                  className={`lang-btn ${selectedLang === lang ? "active" : ""}`}
+                  key={l.code}
+                  className={`lang-btn ${lang === l.code ? "active" : ""}`}
                   style={baseStyles.languageBtn}
                   onClick={() => {
-                    setSelectedLang(lang);
+                    setLang(l.code);
                     setTimeout(() => setShowLangModal(false), 300);
                   }}
                 >
-                  {lang}
-                  {selectedLang === lang && <FontAwesomeIcon icon={faCheck} />}
+                  {l.name}
+                  {lang === l.code && <FontAwesomeIcon icon={faCheck} />}
                 </div>
               ))}
             </div>
@@ -567,25 +546,33 @@ const Helper = () => {
               icon={faUserPlus}
               style={baseStyles.sidebarNavIcon}
             />
-            <span style={baseStyles.sidebarNavText}>Manage Work</span>
+            <span style={baseStyles.sidebarNavText}>
+              {translations[lang]?.manageWork}
+            </span>
           </div>
           <div style={baseStyles.sidebarNavItem} className="sidebar-item">
             <FontAwesomeIcon icon={faCogs} style={baseStyles.sidebarNavIcon} />
-            <span style={baseStyles.sidebarNavText}>Application</span>
+            <span style={baseStyles.sidebarNavText}>
+              {translations[lang]?.application}
+            </span>
           </div>
           <div style={baseStyles.sidebarNavItem} className="sidebar-item">
             <FontAwesomeIcon
               icon={faBullhorn}
               style={baseStyles.sidebarNavIcon}
             />
-            <span style={baseStyles.sidebarNavText}>Send Alert</span>
+            <span style={baseStyles.sidebarNavText}>
+              {translations[lang]?.sendAlert}
+            </span>
           </div>
           <div style={baseStyles.sidebarNavItem} className="sidebar-item">
             <FontAwesomeIcon
               icon={faFileAlt}
               style={baseStyles.sidebarNavIcon}
             />
-            <span style={baseStyles.sidebarNavText}>Reports</span>
+            <span style={baseStyles.sidebarNavText}>
+              {translations[lang]?.reports}
+            </span>
           </div>
           {/* UPDATED SETTINGS CLICK */}
           <div
@@ -594,13 +581,15 @@ const Helper = () => {
             onClick={() => setShowLangModal(true)}
           >
             <FontAwesomeIcon icon={faGlobe} style={baseStyles.sidebarNavIcon} />
-            <span style={baseStyles.sidebarNavText}>Settings</span>
+            <span style={baseStyles.sidebarNavText}>
+              {translations[lang]?.settings}
+            </span>
           </div>
         </nav>
 
         <div style={baseStyles.logoutBtnContainer}>
           <button onClick={handleLogout} style={baseStyles.logoutBtn}>
-            <FontAwesomeIcon icon={faSignOutAlt} /> Logout
+            <FontAwesomeIcon icon={faSignOutAlt} /> {translations[lang]?.logout}
           </button>
         </div>
       </div>
@@ -619,7 +608,9 @@ const Helper = () => {
                 style={{ fontSize: "1.5rem", color: "#452983" }}
               />
             )}
-            <h1 style={baseStyles.headerTitle}>Overview</h1>
+            <h1 style={baseStyles.headerTitle}>
+              {translations[lang]?.overview}
+            </h1>
             {!isMobile && (
               <div
                 style={baseStyles.searchBarContainer}
@@ -631,7 +622,7 @@ const Helper = () => {
                 />
                 <input
                   type="text"
-                  placeholder="Search tasks..."
+                  placeholder={translations[lang]?.search}
                   style={baseStyles.searchInput}
                 />
               </div>
@@ -695,10 +686,10 @@ const Helper = () => {
         <div style={baseStyles.welcomeSection}>
           <h2 style={baseStyles.welcomeTitle}>
             <FontAwesomeIcon icon={faStar} style={{ color: "#ffd700" }} />{" "}
-            Hello, {userName}
+            {translations[lang]?.hello}, {userName}
           </h2>
           <p style={baseStyles.welcomeSubtitle}>
-            Here's what's happening today.
+            {translations[lang]?.happening}
           </p>
         </div>
 
@@ -712,7 +703,7 @@ const Helper = () => {
               icon={faClipboardList}
               style={baseStyles.cardIcon}
             />
-            <h3 style={baseStyles.cardTitle}>Assigned Task</h3>
+            <h3 style={baseStyles.cardTitle}>{translations[lang]?.assigned}</h3>
             <p style={baseStyles.cardCount}>{assignedTasks}</p>
           </div>
 
@@ -725,7 +716,7 @@ const Helper = () => {
               icon={faHourglassHalf}
               style={baseStyles.cardIcon}
             />
-            <h3 style={baseStyles.cardTitle}>Ongoing Task</h3>
+            <h3 style={baseStyles.cardTitle}>{translations[lang]?.ongoing}</h3>
             <p style={baseStyles.cardCount}>{ongoingTasks}</p>
           </div>
 
@@ -735,7 +726,7 @@ const Helper = () => {
             onClick={() => navigate("/transfertask")}
           >
             <FontAwesomeIcon icon={faRightLeft} style={baseStyles.cardIcon} />
-            <h3 style={baseStyles.cardTitle}>Transfer Tasks</h3>
+            <h3 style={baseStyles.cardTitle}>{translations[lang]?.transfer}</h3>
             <p style={baseStyles.cardCount}>{TransferTasks}</p>
           </div>
         </div>

@@ -64,9 +64,9 @@ const TransferTasks = () => {
           <h2>Transfer Tasks</h2>
           <p>Manage and track all task transfers efficiently</p>
         </div>
-        <button className="transfer-main-btn" onClick={() => setOpen(true)}>
+        {/* <button className="transfer-main-btn" onClick={() => setOpen(true)}>
           <span className="plus-icon">+</span> Transfer New Task
-        </button>
+        </button> */}
       </div>
 
       {/* Modal */}
