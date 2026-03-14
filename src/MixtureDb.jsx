@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { translations } from "../src/AssignmentsPage/translations";
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -350,28 +351,22 @@ const MixtureDb = () => {
   const [TransferTasks, setTransferTasks] = useState(5); // New state for Transfer Tasks
   const [reportsGenerated, setReportsGenerated] = useState(4);
   const [showLangModal, setShowLangModal] = useState(false);
-  const [selectedLang, setSelectedLang] = useState("English");
+  const [lang, setLang] = useState(localStorage.getItem("lang") || "en");
 
   const languages = [
-    "English",
-    "Hindi",
-    "Marathi",
-    "Punjabi",
-    "Gujarati",
-    "Bengali",
-    "Tamil",
-    "Telugu",
-    "Kannada",
-    "Malayalam",
-    "Odia",
-    "Urdu",
-    "Nepali",
-    "Spanish",
-    "French",
-    "German",
-    "Chinese",
-    "Japanese",
-    "Korean",
+    { code: "en", name: "English" },
+    { code: "hi", name: "Hindi" },
+    { code: "mr", name: "Marathi" },
+    { code: "pa", name: "Punjabi" },
+    { code: "gu", name: "Gujarati" },
+    { code: "bn", name: "Bengali" },
+    { code: "ta", name: "Tamil" },
+    { code: "te", name: "Telugu" },
+    { code: "kn", name: "Kannada" },
+    { code: "ml", name: "Malayalam" },
+    { code: "or", name: "Odia" },
+    { code: "ur", name: "Urdu" },
+    { code: "ne", name: "Nepali" },
   ];
 
   useEffect(() => {
@@ -464,13 +459,13 @@ const MixtureDb = () => {
 
   // Navigation items remain the same for the sidebar
   const navItems = [
-    { name: "Manage Work", icon: faUserPlus },
-    { name: "Manage Application", icon: faCogs },
-    { name: "Send Alert", icon: faBullhorn },
-    { name: "Send Report", icon: faFileAlt },
-    { name: "Swap", icon: faRightLeft },
-    { name: "Settings", icon: faGlobe },
-  ];
+  { key: "manageWork", label: "Manage Work", icon: faUserPlus },
+  { key: "manageApplication", label: "Manage Application", icon: faCogs },
+  { key: "sendAlert", label: "Send Alert", icon: faBullhorn },
+  { key: "sendReport", label: "Send Report", icon: faFileAlt },
+  { key: "swap", label: "Swap", icon: faRightLeft },
+  { key: "settings", label: "Settings", icon: faGlobe },
+];
 
   return (
     <div
@@ -542,16 +537,18 @@ const MixtureDb = () => {
               onClick={() => {
                 setActiveNavItem(item.name);
 
-                if (item.name === "Settings") {
-                  setShowLangModal(true);
-                }
+                if (item.key === "settings") {
+  setShowLangModal(true);
+}
               }}
             >
               <FontAwesomeIcon
                 icon={item.icon}
                 style={baseStyles.sidebarNavIcon}
               />
-              <span style={baseStyles.sidebarNavText}>{item.name}</span>
+              <span style={baseStyles.sidebarNavText}>
+{translations[lang]?.[item.key] || item.label}
+</span>
             </div>
           ))}
         </nav>
@@ -573,7 +570,7 @@ const MixtureDb = () => {
             icon={faSignOutAlt}
             style={{ marginRight: "10px" }}
           />
-          Logout
+          {translations[lang]?.logout}
         </button>
       </aside>
 
@@ -627,11 +624,12 @@ const MixtureDb = () => {
                 marginTop: "20px",
               }}
             >
-              {languages.map((lang) => (
+              {languages.map((l) => (
                 <div
-                  key={lang}
+                  key={l.code}
                   onClick={() => {
-                    setSelectedLang(lang);
+                    setLang(l.code);
+                    localStorage.setItem("lang", l.code);
                     setShowLangModal(false);
                   }}
                   style={{
@@ -641,14 +639,14 @@ const MixtureDb = () => {
                     borderRadius: "10px",
                     cursor: "pointer",
                     textAlign: "center",
-                    background: selectedLang === lang ? "#452983" : "white",
-                    color: selectedLang === lang ? "white" : "#333",
+                    background: lang === l.code ? "#452983" : "white",
+                    color: lang === l.code ? "white" : "#333",
                     fontWeight: "500",
                   }}
                 >
-                  {lang} {selectedLang === lang && "✓"}
+                  {l.name} {lang === l.code && "✓"}
                 </div>
-              ))}
+              ))}{" "}
             </div>
           </div>
         </div>
@@ -669,12 +667,9 @@ const MixtureDb = () => {
             >
               <FontAwesomeIcon icon={faBars} />
             </button>
-            <h1
-              style={baseStyles.desktopHeaderTitle}
-              className="desktop-header-title"
-            >
-              Dashboard
-            </h1>
+            <h1 style={baseStyles.desktopHeaderTitle}>
+  {translations[lang]?.dashboard}
+</h1>
           </div>
 
           <div style={baseStyles.headerRight}>
@@ -714,7 +709,7 @@ const MixtureDb = () => {
               icon={faClipboardList}
               style={{ ...baseStyles.cardIcon, color: "#7853C2" }}
             />
-            <h3 style={baseStyles.cardTitle}>Assigned Task</h3>
+            <h3 style={baseStyles.cardTitle}>{translations[lang]?.assigned}</h3>
             <p style={baseStyles.cardCount}>{assignedTasks}</p>
           </div>
 
@@ -734,7 +729,7 @@ const MixtureDb = () => {
               icon={faHourglassHalf}
               style={{ ...baseStyles.cardIcon, color: "#FFC107" }}
             />
-            <h3 style={baseStyles.cardTitle}>Ongoing Task</h3>
+            <h3 style={baseStyles.cardTitle}>{translations[lang]?.ongoing}</h3>
             <p style={baseStyles.cardCount}>{ongoingTasks}</p>
           </div>
 
@@ -762,7 +757,9 @@ const MixtureDb = () => {
               style={{ ...baseStyles.cardIcon, color: "#17A2B8" }}
             />{" "}
             {/* Using a suitable color for new card */}
-            <h3 style={baseStyles.cardTitle}>Transfer Tasks</h3>
+            <h3 style={baseStyles.cardTitle}>
+{translations[lang]?.transfer}
+</h3>
             <p style={baseStyles.cardCount}>{TransferTasks}</p>
           </div>
         </div>

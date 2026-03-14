@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react"; // Added useRef
+import { translations } from "./AssignmentsPage/translations";
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -271,9 +272,7 @@ function OperatorDashboard() {
   const navigate = useNavigate();
   const notificationRef = useRef(null);
 
-  const [userName, setUserName] = useState(
-    localStorage.getItem("name") || "Operator",
-  );
+  const [userName, setUserName] = useState("Operator");
   const [userRole, setUserRole] = useState(
     localStorage.getItem("role") || "Operator",
   );
@@ -287,66 +286,60 @@ function OperatorDashboard() {
   // Notification states from API
   const [notifCount, setNotifCount] = useState(0);
   const [latestMsg, setLatestMsg] = useState("No new assignments");
-  const [showLangModal, setShowLangModal] = useState(false);
-const [selectedLang, setSelectedLang] = useState("English");
 
-const languages = [
-  "English",
-  "Hindi",
-  "Marathi",
-  "Punjabi",
-  "Gujarati",
-  "Bengali",
-  "Tamil",
-  "Telugu",
-  "Kannada",
-  "Malayalam",
-  "Odia",
-  "Urdu",
-  "Nepali",
-  "Spanish",
-  "French",
-  "German",
-  "Chinese",
-  "Japanese",
-  "Korean"
-];
+  const [showLangModal, setShowLangModal] = useState(false);
+
+  const [selectedLang, setSelectedLang] = useState(
+    localStorage.getItem("lang") || "en",
+  );
+
+  const t = translations[selectedLang] || translations["en"];
+
+  const languages = [
+    { code: "en", name: "English" },
+    { code: "hi", name: "Hindi" },
+    { code: "mr", name: "Marathi" },
+    { code: "pa", name: "Punjabi" },
+    { code: "gu", name: "Gujarati" },
+    { code: "bn", name: "Bengali" },
+    { code: "ta", name: "Tamil" },
+    { code: "te", name: "Telugu" },
+    { code: "kn", name: "Kannada" },
+    { code: "ml", name: "Malayalam" },
+    { code: "or", name: "Odia" },
+    { code: "ur", name: "Urdu" },
+    { code: "ne", name: "Nepali" },
+  ];
 
   useEffect(() => {
     const employeeId = localStorage.getItem("_id");
-    if (employeeId) {
-      // Combined Notification and Assigned Tasks fetch
-      fetch(
-        `https://threebapi-1067354145699.asia-south1.run.app/api/items/items/employee/${employeeId}`,
-      )
-        .then((res) => res.json())
-        .then((data) => {
-          setAssignedTasks(data?.data?.length || 0);
-          // Setting API notification data
-          if (data.notification) {
-            setNotifCount(data.notification.count || 0);
-            setLatestMsg(
-              data.notification.latestMessage || "No new assignments",
-            );
-          }
-        })
-        .catch((err) => console.error(err));
+    const lang = selectedLang || "en";
 
-      fetch(
-        `https://threebapi-1067354145699.asia-south1.run.app/api/workers/employee-task/${employeeId}`,
-      )
-        .then((res) => res.json())
-        .then((data) => setOngoingTasks(data?.data?.length || 0))
-        .catch((err) => console.error(err));
-    }
+    if (!employeeId) return;
 
-    fetch(
-      `https://threebapi-1067354145699.asia-south1.run.app/api/task-transfers/transfers`,
-    )
+    fetch(`https://threebapi-1067354145699.asia-south1.run.app/api/items/items/employee/${employeeId}?lang=${selectedLang}`)
+      .then((res) => res.json())
+      .then((data) => {
+
+setAssignedTasks(data?.data?.length || 0);
+
+const operatorName =
+data?.data?.[0]?.operators?.[0]?.name || "Operator";
+
+setUserName(operatorName);
+        setNotifCount(data?.notification?.count || 0);
+        setLatestMsg(data?.notification?.latestMessage || "");
+      })
+      .catch((err) => console.error(err));
+    fetch(`https://threebapi-1067354145699.asia-south1.run.app/api/workers/employee-task/${employeeId}?lang=${selectedLang}`)
+      .then((res) => res.json())
+      .then((data) => setOngoingTasks(data?.data?.length || 0))
+      .catch((err) => console.error(err));
+fetch(`https://threebapi-1067354145699.asia-south1.run.app/api/task-transfers/transfers?lang=${selectedLang}`)
       .then((res) => res.json())
       .then((data) => setTransferTasks(data?.data?.length || 0))
       .catch((err) => console.error(err));
-  }, []);
+  }, [selectedLang]);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -374,76 +367,85 @@ const languages = [
   };
 
   return (
-  <div style={baseStyles.dashboardContainer}>
+    <div style={baseStyles.dashboardContainer}>
+      {showLangModal && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0,0,0,0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 2000,
+          }}
+        >
+          <div
+            style={{
+              background: "white",
+              width: "90%",
+              maxWidth: "520px",
+              maxHeight: "80vh",
+              overflowY: "auto",
+              padding: "25px",
+              borderRadius: "20px",
+              position: "relative",
+            }}
+          >
+            <FontAwesomeIcon
+              icon={faTimes}
+              onClick={() => setShowLangModal(false)}
+              style={{
+                position: "absolute",
+                right: "20px",
+                top: "20px",
+                cursor: "pointer",
+              }}
+            />
 
-    {showLangModal && (
-      <div style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: "rgba(0,0,0,0.5)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 2000
-      }}>
-        <div style={{
-  background: "white",
-  width: "90%",
-  maxWidth: "520px",
-  maxHeight: "80vh",
-  overflowY: "auto",
-  padding: "25px",
-  borderRadius: "20px",
-  position: "relative"
-}}>
+            <h3 style={{ textAlign: "center", color: "#452983" }}>
+              <FontAwesomeIcon icon={faGlobe} /> Select Language
+            </h3>
 
-          <FontAwesomeIcon
-            icon={faTimes}
-            onClick={() => setShowLangModal(false)}
-            style={{position:"absolute", right:"20px", top:"20px", cursor:"pointer"}}
-          />
-
-          <h3 style={{textAlign:"center", color:"#452983"}}>
-            <FontAwesomeIcon icon={faGlobe}/> Select Language
-          </h3>
-
-          <div style={{
-  display:"grid",
-  gridTemplateColumns:"repeat(auto-fit, minmax(120px,1fr))",
-  gap:"10px",
-  marginTop:"20px"
-}}>
-            {languages.map((lang)=>(
-              <div
-                key={lang}
-                onClick={()=>{
-                  setSelectedLang(lang)
-                  setShowLangModal(false)
-                }}
-                style={{
-  padding:"10px",
-  border:"1px solid #eee",
-  borderRadius:"10px",
-  cursor:"pointer",
-  textAlign:"center",
-  fontSize:"0.9rem",
-  background:selectedLang===lang ? "#452983":"#fff",
-  color:selectedLang===lang ? "white":"#333"
-}}
-              >
-                {lang} {selectedLang===lang && "✓"}
-              </div>
-            ))}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(120px,1fr))",
+                gap: "10px",
+                marginTop: "20px",
+              }}
+            >
+              {languages.map((lang) => (
+                <div
+                  key={lang.code}
+                  onClick={() => {
+                    setSelectedLang(lang.code);
+                    localStorage.setItem("lang", lang.code);
+                    setShowLangModal(false);
+                  }}
+                  style={{
+                    padding: "10px",
+                    border: "1px solid #eee",
+                    borderRadius: "10px",
+                    cursor: "pointer",
+                    textAlign: "center",
+                    fontSize: "0.9rem",
+                    background: selectedLang === lang.code ? "#452983" : "#fff",
+                    color: selectedLang === lang.code ? "white" : "#333",
+                  }}
+                >
+                  {lang.name} {selectedLang === lang.code && "✓"}
+                </div>
+              ))}
+            </div>
           </div>
-
         </div>
-      </div>
-    )}
+      )}
 
-    {/* BAQI TUMHARA DASHBOARD CODE SAME RAHEGA */}
+      {/* BAQI TUMHARA DASHBOARD CODE SAME RAHEGA */}
 
       <div
         className={`overlay ${isSidebarOpen ? "show" : ""}`}
@@ -456,21 +458,21 @@ const languages = [
       >
         <div style={baseStyles.sidebarHeader}>
           <button
-  onClick={() => setIsSidebarOpen(false)}
-  className="mobile-only"
-  style={{
-    position: "absolute",
-    top: "15px",
-    right: "15px",
-    background: "transparent",
-    border: "none",
-    color: "white",
-    fontSize: "1.2rem",
-    cursor: "pointer"
-  }}
->
-  <FontAwesomeIcon icon={faTimes} />
-</button>
+            onClick={() => setIsSidebarOpen(false)}
+            className="mobile-only"
+            style={{
+              position: "absolute",
+              top: "15px",
+              right: "15px",
+              background: "transparent",
+              border: "none",
+              color: "white",
+              fontSize: "1.2rem",
+              cursor: "pointer",
+            }}
+          >
+            <FontAwesomeIcon icon={faTimes} />
+          </button>
           <img
             src={userProfilePlaceholder}
             alt="Profile"
@@ -485,33 +487,34 @@ const languages = [
               icon={faUserPlus}
               style={{ marginRight: "10px" }}
             />{" "}
-            Manage Work
+            {t.manageWork}
           </div>
           <div style={baseStyles.sidebarNavItem} className="nav-item">
             <FontAwesomeIcon icon={faCogs} style={{ marginRight: "10px" }} />{" "}
-            Application
+            {t.application}
           </div>
           <div style={baseStyles.sidebarNavItem} className="nav-item">
             <FontAwesomeIcon
               icon={faBullhorn}
               style={{ marginRight: "10px" }}
             />{" "}
-            Send Alert
+            {t.sendAlert}
           </div>
           <div style={baseStyles.sidebarNavItem} className="nav-item">
             <FontAwesomeIcon icon={faFileAlt} style={{ marginRight: "10px" }} />{" "}
-            Reports
+            {t.reports}
           </div>
           <div
-  style={baseStyles.sidebarNavItem}
-  className="nav-item"
-  onClick={() => setShowLangModal(true)}
->
-  <FontAwesomeIcon icon={faGlobe} style={{ marginRight: "10px" }} /> Settings
-</div>
+            style={baseStyles.sidebarNavItem}
+            className="nav-item"
+            onClick={() => setShowLangModal(true)}
+          >
+            <FontAwesomeIcon icon={faGlobe} style={{ marginRight: "10px" }} />{" "}
+            {t.settings}
+          </div>
         </nav>
         <button onClick={handleLogout} style={baseStyles.logoutButton}>
-          <FontAwesomeIcon icon={faSignOutAlt} /> Logout
+          <FontAwesomeIcon icon={faSignOutAlt} /> {t.logout}
         </button>
       </div>
 
@@ -544,7 +547,7 @@ const languages = [
                 fontSize: "clamp(1.2rem, 4vw, 1.5rem)",
               }}
             >
-              Overview
+              {t.overview}
             </h2>
           </div>
 
@@ -564,7 +567,7 @@ const languages = [
             />
             <input
               type="text"
-              placeholder="Search tasks..."
+              placeholder={t.searchTasks}
               style={baseStyles.searchInput}
             />
           </div>
@@ -672,7 +675,7 @@ const languages = [
             style={{ margin: 0, fontSize: "clamp(1.4rem, 5vw, 1.8rem)" }}
             className="greeting-title"
           >
-            🌟 Hello, {userName}
+            🌟 {t.hello}, {userName}
           </h1>
           <p
             style={{
@@ -700,7 +703,7 @@ const languages = [
             <div
               style={{ fontWeight: "600", color: "#666", fontSize: "0.95rem" }}
             >
-              Review Tasks
+              {t.reviewTasks}
             </div>
             <p style={baseStyles.cardCount} className="card-count">
               0
@@ -719,7 +722,7 @@ const languages = [
             <div
               style={{ fontWeight: "600", color: "#666", fontSize: "0.95rem" }}
             >
-              Submit Tasks
+              {t.submitTasks}
             </div>
             <p style={baseStyles.cardCount} className="card-count">
               0
@@ -738,7 +741,7 @@ const languages = [
             <div
               style={{ fontWeight: "600", color: "#666", fontSize: "0.95rem" }}
             >
-              Assigned Task
+              {t.assignedTask}
             </div>
             <p style={baseStyles.cardCount} className="card-count">
               {assignedTasks}
@@ -757,7 +760,7 @@ const languages = [
             <div
               style={{ fontWeight: "600", color: "#666", fontSize: "0.95rem" }}
             >
-              Ongoing Task
+              {t.ongoingTask}
             </div>
             <p style={baseStyles.cardCount} className="card-count">
               {ongoingTasks}
@@ -776,7 +779,7 @@ const languages = [
             <div
               style={{ fontWeight: "600", color: "#666", fontSize: "0.95rem" }}
             >
-              Transfer Tasks
+              {t.transferTasks}
             </div>
             <p style={baseStyles.cardCount} className="card-count">
               {transferTasks}

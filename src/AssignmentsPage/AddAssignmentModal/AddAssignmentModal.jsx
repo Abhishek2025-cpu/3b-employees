@@ -101,7 +101,8 @@ const AddAssignmentModal = ({
       time: "9 AM - 10 AM",
       shift: initialData?.shift || "",
       frameLength: "",
-      numberOfBox: "",
+      // FIX: Yahan No. of Sticks map ho jayega
+      numberOfBox: initialData?.noOfSticks || "",
       boxWeight: "",
       frameWeight: "",
       description: initialData?.description || "",
@@ -110,7 +111,6 @@ const AddAssignmentModal = ({
       mainItemId: finalItemId,
       itemName: finalItemName,
     });
-
     setIsSubmitting(false);
 
     // --- DATE & UNIQUE BOOKING LOGIC ---
@@ -290,17 +290,13 @@ const AddAssignmentModal = ({
 
             <div className="mb-2">
               <label>Shift</label>
-              <select
+              <input
+                type="text"
                 id="shift"
-                className="form-select"
+                className="form-control"
                 value={formData.shift}
-                onChange={handleChange}
-                required
-              >
-                <option value="">Select Shift</option>
-                <option value="day">Day</option>
-                <option value="night">Night</option>
-              </select>
+                readOnly
+              />
             </div>
 
             <div className="mb-2">
@@ -316,14 +312,13 @@ const AddAssignmentModal = ({
             </div>
 
             <div className="mb-2">
-              <label>Number of Box</label>
+              <label>No. of Sticks</label>
               <input
-                type="number"
+                type="text"
                 id="numberOfBox"
                 className="form-control"
                 value={formData.numberOfBox}
-                onChange={handleChange}
-                required
+                readOnly
               />
             </div>
 
