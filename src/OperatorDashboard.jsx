@@ -324,12 +324,25 @@ function OperatorDashboard() {
     )
       .then((res) => res.json())
       .then((data) => {
-        console.log("FULL API DATA:", data);
+        console.log("CHECK NAME:", data, data.data);
 
         setAssignedTasks(data?.data?.length || 0);
 
         setNotifCount(data?.notification?.count || 0);
         setLatestMsg(data?.notification?.latestMessage || "");
+
+        // ✅ NAME FIX
+        // ✅ naya code: API se assigned operator ka name fetch
+let operatorName = "Operator"; // default fallback
+data?.data?.forEach(item => {
+  item?.operators?.forEach(op => {
+    if(op.employeeId === employeeId){
+      operatorName = op.name;
+    }
+  });
+});
+setUserName(operatorName);
+localStorage.setItem("name", operatorName);
       })
       .catch((err) => console.error(err));
     fetch(
@@ -797,4 +810,3 @@ function OperatorDashboard() {
 }
 
 export default OperatorDashboard;
-
