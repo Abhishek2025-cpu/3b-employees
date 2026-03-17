@@ -145,8 +145,8 @@ function AssignmentsPage() {
   };
 
   useEffect(() => {
-  fetchAssignments();
-}, [lang]);
+    fetchAssignments();
+  }, [lang]);
 
   const handleOpenEditModal = (assignment) => {
     const currentItemName =
@@ -247,10 +247,10 @@ function AssignmentsPage() {
                   {assignment.noOfSticks || "N/A"}
                 </p>
 
-                <div style={baseStyles.cardRow}>
-                  <strong>{translations[lang]?.productDescription}:</strong>{" "}
-                  Power Cut
-                </div>
+                <p style={baseStyles.cardRow}>
+  <strong>{translations[lang]?.productDescription}:</strong>{" "}
+  {assignment.product?.description || "N/A"}
+</p>
 
                 <p style={baseStyles.cardRow}>
                   <strong>{translations[lang]?.mixture}:</strong>{" "}
