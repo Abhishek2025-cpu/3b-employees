@@ -188,7 +188,7 @@ function AssignmentsPage() {
       helperName: assignment.helpers?.[0]?.name || "",
       operatorId: assignment.operators?.[0]?._id || "",
       operatorName: assignment.operators?.[0]?.name || "",
-      description: "Power Cut",
+      description: "",
       date: new Date().toISOString().slice(0, 10),
       time: "9-10",
     });
