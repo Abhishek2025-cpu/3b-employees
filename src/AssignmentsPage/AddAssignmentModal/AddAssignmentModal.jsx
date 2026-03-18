@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import assignMachineWithOperator from "../../api/allApi/assignMachine.js";
 import { toast } from "react-toastify";
+import { translations } from "./translation.js"; 
 
 const AddAssignmentModal = ({
   show,
@@ -8,6 +9,8 @@ const AddAssignmentModal = ({
   onSubmitSuccess,
   initialData,
 }) => {
+
+  const [lang, setLang] = useState(localStorage.getItem("lang") || "en");
   // 1. FORM STATE
   const [formData, setFormData] = useState({
     time: "9 AM - 10 AM",
@@ -194,7 +197,7 @@ const AddAssignmentModal = ({
       const response = await assignMachineWithOperator(data);
 
       if (response.success) {
-        toast.success("Worker task added successfully!");
+        toast.success(translations[lang]?.addWorkerTask + " " + translations[lang]?.save);
 
         // --- SAVE TO LOCAL STORAGE (UNIQUE KEY BASED) ---
         const allBookings = JSON.parse(
@@ -237,14 +240,14 @@ const AddAssignmentModal = ({
     >
       <div className="modal-dialog modal-dialog-centered">
         <div className="modal-content p-3">
-          <h5>Add Worker Task</h5>
+          <h5>{translations[lang]?.addWorkerTask}</h5>
 
           {/* Debugging: Dikha sakte hain ki kaunse ID ke liye book ho raha hai */}
           {/* <small className="text-muted">Booking ID: {currentKey}</small> */}
 
           <form onSubmit={handleSubmit}>
             <div className="mb-2">
-              <label>Item</label>
+              <label>{translations[lang]?.item}</label>
               <input
                 type="text"
                 className="form-control"
@@ -254,7 +257,7 @@ const AddAssignmentModal = ({
             </div>
 
             <div className="mb-2">
-              <label>Machine</label>
+              <label>{translations[lang]?.machine}</label>
               <input
                 type="text"
                 className="form-control"
@@ -265,7 +268,7 @@ const AddAssignmentModal = ({
 
             {/* Time Slot */}
             <div className="mb-2">
-              <label>Time Slot</label>
+              <label>{translations[lang]?.timeSlot}</label>
               <select
                 id="time"
                 className="form-select"
@@ -284,12 +287,12 @@ const AddAssignmentModal = ({
                       {t} {isDisabled ? "(Booked)" : ""}
                     </option>
                   );
-                })}
+                })} 
               </select>
             </div>
 
             <div className="mb-2">
-              <label>Shift</label>
+              <label>{translations[lang]?.shift}</label>
               <input
                 type="text"
                 id="shift"
@@ -300,7 +303,7 @@ const AddAssignmentModal = ({
             </div>
 
             <div className="mb-2">
-              <label>Frame Length (comma-separated)</label>
+              <label>{translations[lang]?.frameLength}</label>
               <input
                 type="text"
                 id="frameLength"
@@ -312,7 +315,7 @@ const AddAssignmentModal = ({
             </div>
 
             <div className="mb-2">
-              <label>No. of Sticks</label>
+             <label>{translations[lang]?.noOfSticks}</label>
               <input
                 type="text"
                 id="numberOfBox"
@@ -323,7 +326,7 @@ const AddAssignmentModal = ({
             </div>
 
             <div className="mb-2">
-              <label>Box Weight</label>
+              <label>{translations[lang]?.boxWeight}</label>
               <input
                 type="number"
                 id="boxWeight"
@@ -335,7 +338,7 @@ const AddAssignmentModal = ({
             </div>
 
             <div className="mb-2">
-              <label>Frame Weight</label>
+              <label>{translations[lang]?.frameWeight}</label>
               <input
                 type="number"
                 id="frameWeight"
@@ -347,7 +350,7 @@ const AddAssignmentModal = ({
             </div>
 
             <div className="mb-2">
-              <label>Description</label>
+             <label>{translations[lang]?.description}</label>
               <textarea
                 id="description"
                 className="form-control"
@@ -357,12 +360,12 @@ const AddAssignmentModal = ({
             </div>
 
             <div className="mb-2">
-              <label>Total No. of Wasteage</label>
+              <label>{translations[lang]?.totalWasteage}</label>
               <input
                 type="Text"
                 id="wasteage"
                 className="form-control"
-                placeholder="Enter total wasteage"
+                placeholder={translations[lang]?.enterTotalWasteage}
                 value={formData.wasteage || ""}
                 onChange={handleChange}
               />
@@ -370,7 +373,7 @@ const AddAssignmentModal = ({
 
             <div className="mb-3 border p-2 rounded bg-light">
               <label className="form-label fw-bold text-danger">
-                Take Selfie *
+                {translations[lang]?.takeSelfie}
               </label>
               <input
                 type="file"
@@ -397,7 +400,7 @@ const AddAssignmentModal = ({
               className="btn btn-dark w-100"
               disabled={isSubmitting || bookedSlots.includes(formData.time)}
             >
-              {isSubmitting ? "Saving..." : "Save"}
+              {isSubmitting ? "Saving..." : translations[lang]?.save}
             </button>
           </form>
 
@@ -405,7 +408,7 @@ const AddAssignmentModal = ({
             className="btn btn-outline-secondary mt-2 w-100"
             onClick={onClose}
           >
-            Close
+            {translations[lang]?.close}
           </button>
         </div>
       </div>
