@@ -39,7 +39,9 @@ const baseStyles = {
     display: "flex",
     flexDirection: "column",
     position: "fixed", // Default fixed for mobile drawer behavior
-    height: "100%",
+    height: "100vh",
+top: 0,
+left: 0,
     zIndex: 1000,
     transition: "transform 0.3s ease-in-out",
     transform: "translateX(-100%)", // Hidden by default (mobile)
@@ -271,10 +273,12 @@ const responsiveCss = `
   @media (min-width: 768px) {
     /* Sidebar on Desktop */
     .sidebar {
-      transform: translateX(0) !important; /* Always visible on desktop */
-      position: relative !important; /* Change from fixed to relative */
-      box-shadow: none !important; /* Remove shadow when relative */
-    }
+  transform: translateX(0) !important;
+  position: fixed !important;   /* ✅ CHANGE */
+  height: 100vh !important;     /* ✅ ADD */
+  top: 0;
+  left: 0;
+}
     .sidebar-header {
         display: none !important; /* Hide mobile profile in sidebar on desktop */
     }
@@ -286,9 +290,9 @@ const responsiveCss = `
     }
 
     /* Main Content on Desktop */
-    .main-content {
-      margin-left: 0 !important; /* Adjust margin for sidebar when it's relative */
-    }
+  .main-content {
+  margin-left: 280px !important; /* ✅ ADD */
+}
 
     /* Header elements on Desktop */
     .menu-button {
@@ -460,10 +464,10 @@ const MixtureDb = () => {
   // Navigation items remain the same for the sidebar
   const navItems = [
   { key: "manageWork", label: "Manage Work", icon: faUserPlus },
-  { key: "manageApplication", label: "Manage Application", icon: faCogs },
+//  { key: "manageApplication", label: "Manage Application", icon: faCogs },//
   { key: "sendAlert", label: "Send Alert", icon: faBullhorn },
-  { key: "sendReport", label: "Send Report", icon: faFileAlt },
-  { key: "swap", label: "Swap", icon: faRightLeft },
+//  { key: "sendReport", label: "Send Report", icon: faFileAlt },//
+  //{ key: "swap", label: "Swap", icon: faRightLeft },//
   { key: "settings", label: "Settings", icon: faGlobe },
 ];
 
