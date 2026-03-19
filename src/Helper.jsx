@@ -18,7 +18,7 @@ import {
   faStar,
   faCheck,
   faPenSquare,
-  faGlobe, // Added for language
+  faGlobe,
 } from "@fortawesome/free-solid-svg-icons";
 
 import userProfilePlaceholder from "./assets/user-profile.jpg";
@@ -308,7 +308,6 @@ const baseStyles = {
     borderTop: "1px solid #f0f0f0",
   },
 
-  // NEW: SETTINGS MODAL STYLES
   modalOverlay: {
     position: "fixed",
     top: 0,
@@ -387,6 +386,9 @@ const Helper = () => {
   const navigate = useNavigate();
   const notificationRef = useRef(null);
 
+  // --- UPDATED: Get language from localStorage on load ---
+  const [lang, setLang] = useState(localStorage.getItem("lang") || "en");
+
   const [userName, setUserName] = useState("Helper");
   const [userRole, setUserRole] = useState("Staff");
   const [userProfilePic, setUserProfilePic] = useState(userProfilePlaceholder);
@@ -401,9 +403,7 @@ const Helper = () => {
   const [apiLatestMsg, setApiLatestMsg] = useState("");
   const [showNotifications, setShowNotifications] = useState(false);
 
-  // Language Modal State
   const [showLangModal, setShowLangModal] = useState(false);
-  const [lang, setLang] = useState("en");
 
   useEffect(() => {
     const styleTag = document.createElement("style");
@@ -439,59 +439,51 @@ const Helper = () => {
     const employeeId = localStorage.getItem("_id");
     if (!employeeId) return;
 
-    fetch(
-      `https://threebapi-1067354145699.asia-south1.run.app/api/items/items/employee/${employeeId}`,
-    )
+    fetch(`https://threebapi-1067354145699.asia-south1.run.app/api/items/items/employee/${employeeId}`)
       .then((res) => res.json())
       .then((data) => {
         setAssignedTasks(data?.data?.length || 0);
         if (data.notification) {
           setApiNotifCount(data.notification.count || 0);
-          setApiLatestMsg(
-            data.notification.latestMessage || "No new assignments",
-          );
+          setApiLatestMsg(data.notification.latestMessage || "No new assignments");
         }
       });
 
-    fetch(
-      `https://threebapi-1067354145699.asia-south1.run.app/api/workers/employee-task/${employeeId}`,
-    )
+    fetch(`https://threebapi-1067354145699.asia-south1.run.app/api/workers/employee-task/${employeeId}`)
       .then((res) => res.json())
       .then((data) => setOngoingTasks(data?.data?.length || 0));
 
-    fetch(
-      `https://threebapi-1067354145699.asia-south1.run.app/api/task-transfers/transfers`,
-    )
+    fetch(`https://threebapi-1067354145699.asia-south1.run.app/api/task-transfers/transfers`)
       .then((res) => res.json())
       .then((data) => setTransferTasks(data?.data?.length || 0));
   }, []);
 
   const handleLogout = () => {
-    localStorage.clear();
+    // Note: If you use localStorage.clear(), the language will also be deleted.
+    // If you want the language to persist even after logout, use specific removes:
+    localStorage.removeItem("_id");
+    localStorage.removeItem("name");
+    localStorage.removeItem("role");
+    localStorage.removeItem("profilePic");
     navigate("/");
+  };
+
+  // Helper to change language
+  const changeLanguage = (code) => {
+    setLang(code);
+    localStorage.setItem("lang", code); // --- Save selection ---
+    setTimeout(() => setShowLangModal(false), 300);
   };
 
   return (
     <div style={baseStyles.dashboardContainer}>
       {/* LANGUAGE SELECTION MODAL */}
       {showLangModal && (
-        <div
-          style={baseStyles.modalOverlay}
-          onClick={() => setShowLangModal(false)}
-        >
-          <div
-            style={baseStyles.modalContent}
-            onClick={(e) => e.stopPropagation()}
-          >
+        <div style={baseStyles.modalOverlay} onClick={() => setShowLangModal(false)}>
+          <div style={baseStyles.modalContent} onClick={(e) => e.stopPropagation()}>
             <FontAwesomeIcon
               icon={faTimes}
-              style={{
-                position: "absolute",
-                right: "20px",
-                top: "20px",
-                cursor: "pointer",
-                color: "#999",
-              }}
+              style={{ position: "absolute", right: "20px", top: "20px", cursor: "pointer", color: "#999" }}
               onClick={() => setShowLangModal(false)}
             />
             <h3 style={baseStyles.modalTitle}>
@@ -504,10 +496,7 @@ const Helper = () => {
                   key={l.code}
                   className={`lang-btn ${lang === l.code ? "active" : ""}`}
                   style={baseStyles.languageBtn}
-                  onClick={() => {
-                    setLang(l.code);
-                    setTimeout(() => setShowLangModal(false), 300);
-                  }}
+                  onClick={() => changeLanguage(l.code)}
                 >
                   {l.name}
                   {lang === l.code && <FontAwesomeIcon icon={faCheck} />}
@@ -519,10 +508,7 @@ const Helper = () => {
       )}
 
       {/* Sidebar */}
-      <div
-        style={baseStyles.sidebar}
-        className={`sidebar ${isSidebarOpen ? "open" : ""}`}
-      >
+      <div style={baseStyles.sidebar} className={`sidebar ${isSidebarOpen ? "open" : ""}`}>
         <div style={baseStyles.sidebarHeader}>
           {isMobile && (
             <FontAwesomeIcon
@@ -531,59 +517,35 @@ const Helper = () => {
               style={{ alignSelf: "flex-end", cursor: "pointer" }}
             />
           )}
-          <img
-            src={userProfilePic}
-            alt="Profile"
-            style={baseStyles.sidebarProfileImage}
-          />
+          <img src={userProfilePic} alt="Profile" style={baseStyles.sidebarProfileImage} />
           <span style={baseStyles.sidebarUserName}>{userName}</span>
           <span style={baseStyles.sidebarUserRole}>{userRole}</span>
         </div>
 
         <nav style={baseStyles.sidebarNav}>
           <div style={baseStyles.sidebarNavItem} className="sidebar-item">
-            <FontAwesomeIcon
-              icon={faUserPlus}
-              style={baseStyles.sidebarNavIcon}
-            />
-            <span style={baseStyles.sidebarNavText}>
-              {translations[lang]?.manageWork}
-            </span>
+            <FontAwesomeIcon icon={faUserPlus} style={baseStyles.sidebarNavIcon} />
+            <span style={baseStyles.sidebarNavText}>{translations[lang]?.manageWork}</span>
           </div>
           <div style={baseStyles.sidebarNavItem} className="sidebar-item">
             <FontAwesomeIcon icon={faCogs} style={baseStyles.sidebarNavIcon} />
-            <span style={baseStyles.sidebarNavText}>
-              {translations[lang]?.application}
-            </span>
+            <span style={baseStyles.sidebarNavText}>{translations[lang]?.application}</span>
           </div>
           <div style={baseStyles.sidebarNavItem} className="sidebar-item">
-            <FontAwesomeIcon
-              icon={faBullhorn}
-              style={baseStyles.sidebarNavIcon}
-            />
-            <span style={baseStyles.sidebarNavText}>
-              {translations[lang]?.sendAlert}
-            </span>
+            <FontAwesomeIcon icon={faBullhorn} style={baseStyles.sidebarNavIcon} />
+            <span style={baseStyles.sidebarNavText}>{translations[lang]?.sendAlert}</span>
           </div>
           <div style={baseStyles.sidebarNavItem} className="sidebar-item">
-            <FontAwesomeIcon
-              icon={faFileAlt}
-              style={baseStyles.sidebarNavIcon}
-            />
-            <span style={baseStyles.sidebarNavText}>
-              {translations[lang]?.reports}
-            </span>
+            <FontAwesomeIcon icon={faFileAlt} style={baseStyles.sidebarNavIcon} />
+            <span style={baseStyles.sidebarNavText}>{translations[lang]?.reports}</span>
           </div>
-          {/* UPDATED SETTINGS CLICK */}
           <div
             style={baseStyles.sidebarNavItem}
             className="sidebar-item"
             onClick={() => setShowLangModal(true)}
           >
             <FontAwesomeIcon icon={faGlobe} style={baseStyles.sidebarNavIcon} />
-            <span style={baseStyles.sidebarNavText}>
-              {translations[lang]?.settings}
-            </span>
+            <span style={baseStyles.sidebarNavText}>{translations[lang]?.settings}</span>
           </div>
         </nav>
 
@@ -595,10 +557,7 @@ const Helper = () => {
       </div>
 
       {/* Main Content */}
-      <div
-        style={baseStyles.mainContent}
-        className={!isMobile ? "main-content-shifted" : ""}
-      >
+      <div style={baseStyles.mainContent} className={!isMobile ? "main-content-shifted" : ""}>
         <div style={baseStyles.header}>
           <div style={baseStyles.headerLeft}>
             {isMobile && (
@@ -608,18 +567,10 @@ const Helper = () => {
                 style={{ fontSize: "1.5rem", color: "#452983" }}
               />
             )}
-            <h1 style={baseStyles.headerTitle}>
-              {translations[lang]?.overview}
-            </h1>
+            <h1 style={baseStyles.headerTitle}>{translations[lang]?.overview}</h1>
             {!isMobile && (
-              <div
-                style={baseStyles.searchBarContainer}
-                className="search-container"
-              >
-                <FontAwesomeIcon
-                  icon={faSearch}
-                  style={baseStyles.searchIcon}
-                />
+              <div style={baseStyles.searchBarContainer} className="search-container">
+                <FontAwesomeIcon icon={faSearch} style={baseStyles.searchIcon} />
                 <input
                   type="text"
                   placeholder={translations[lang]?.search}
@@ -630,31 +581,20 @@ const Helper = () => {
           </div>
 
           <div style={baseStyles.headerRight} ref={notificationRef}>
-            <div
-              style={baseStyles.notificationBtn}
-              onClick={() => setShowNotifications(!showNotifications)}
-            >
+            <div style={baseStyles.notificationBtn} onClick={() => setShowNotifications(!showNotifications)}>
               <FontAwesomeIcon icon={faBell} />
-              {apiNotifCount > 0 && (
-                <span style={baseStyles.badge}>{apiNotifCount}</span>
-              )}
+              {apiNotifCount > 0 && <span style={baseStyles.badge}>{apiNotifCount}</span>}
               {showNotifications && (
                 <div style={baseStyles.notificationDropdown}>
-                  <div style={baseStyles.notificationHeader}>
-                    Notifications ({apiNotifCount})
-                  </div>
+                  <div style={baseStyles.notificationHeader}>Notifications ({apiNotifCount})</div>
                   <div style={{ maxHeight: "250px", overflowY: "auto" }}>
                     <div style={baseStyles.notificationItem}>
                       <div style={baseStyles.notificationIconBox}>
                         <FontAwesomeIcon icon={faPenSquare} />
                       </div>
                       <div>
-                        <p style={baseStyles.notificationTitle}>
-                          {apiLatestMsg}
-                        </p>
-                        <span style={{ fontSize: "0.7rem", color: "#888" }}>
-                          Recently
-                        </span>
+                        <p style={baseStyles.notificationTitle}>{apiLatestMsg}</p>
+                        <span style={{ fontSize: "0.7rem", color: "#888" }}>Recently</span>
                       </div>
                     </div>
                   </div>
@@ -673,11 +613,7 @@ const Helper = () => {
             </div>
 
             <div style={baseStyles.userBadge} className="header-user-badge">
-              <img
-                src={userProfilePic}
-                style={baseStyles.userBadgeImg}
-                alt="user"
-              />
+              <img src={userProfilePic} style={baseStyles.userBadgeImg} alt="user" />
               <span style={baseStyles.userBadgeName}>{userName}</span>
             </div>
           </div>
@@ -685,46 +621,25 @@ const Helper = () => {
 
         <div style={baseStyles.welcomeSection}>
           <h2 style={baseStyles.welcomeTitle}>
-            <FontAwesomeIcon icon={faStar} style={{ color: "#ffd700" }} />{" "}
-            {translations[lang]?.hello}, {userName}
+            <FontAwesomeIcon icon={faStar} style={{ color: "#ffd700" }} /> {translations[lang]?.hello}, {userName}
           </h2>
-          <p style={baseStyles.welcomeSubtitle}>
-            {translations[lang]?.happening}
-          </p>
+          <p style={baseStyles.welcomeSubtitle}>{translations[lang]?.happening}</p>
         </div>
 
         <div style={baseStyles.cardsGrid}>
-          <div
-            style={baseStyles.card}
-            className="dashboard-card"
-            onClick={() => navigate("/assignments")}
-          >
-            <FontAwesomeIcon
-              icon={faClipboardList}
-              style={baseStyles.cardIcon}
-            />
+          <div style={baseStyles.card} className="dashboard-card" onClick={() => navigate("/assignments")}>
+            <FontAwesomeIcon icon={faClipboardList} style={baseStyles.cardIcon} />
             <h3 style={baseStyles.cardTitle}>{translations[lang]?.assigned}</h3>
             <p style={baseStyles.cardCount}>{assignedTasks}</p>
           </div>
 
-          <div
-            style={baseStyles.card}
-            className="dashboard-card"
-            onClick={() => navigate("/viewtask")}
-          >
-            <FontAwesomeIcon
-              icon={faHourglassHalf}
-              style={baseStyles.cardIcon}
-            />
+          <div style={baseStyles.card} className="dashboard-card" onClick={() => navigate("/viewtask")}>
+            <FontAwesomeIcon icon={faHourglassHalf} style={baseStyles.cardIcon} />
             <h3 style={baseStyles.cardTitle}>{translations[lang]?.ongoing}</h3>
             <p style={baseStyles.cardCount}>{ongoingTasks}</p>
           </div>
 
-          <div
-            style={baseStyles.card}
-            className="dashboard-card"
-            onClick={() => navigate("/transfertask")}
-          >
+          <div style={baseStyles.card} className="dashboard-card" onClick={() => navigate("/transfertask")}>
             <FontAwesomeIcon icon={faRightLeft} style={baseStyles.cardIcon} />
             <h3 style={baseStyles.cardTitle}>{translations[lang]?.transfer}</h3>
             <p style={baseStyles.cardCount}>{TransferTasks}</p>

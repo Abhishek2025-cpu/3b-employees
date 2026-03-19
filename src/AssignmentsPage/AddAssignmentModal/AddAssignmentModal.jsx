@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import assignMachineWithOperator from "../../api/allApi/assignMachine.js";
 import { toast } from "react-toastify";
-import { translations } from "./translation.js"; 
+import { translations } from "./translation.js";
 
 const AddAssignmentModal = ({
   show,
@@ -30,6 +30,8 @@ const AddAssignmentModal = ({
   const [selfie, setSelfie] = useState(null);
   const [preview, setPreview] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [fileName, setFileName] = useState("");
+  
 
   // CURRENT UNIQUE KEY STORE KARNE KE LIYE
   const [currentKey, setCurrentKey] = useState("");
@@ -67,7 +69,10 @@ const AddAssignmentModal = ({
     // Agar Machine Name same bhi hai par Item alag hai, to ye alag key banegi.
     return `${mName}_${iName}`.trim();
   };
-
+  
+  useEffect(() => {
+  setFileName(translations[lang]?.noFileChosen || "No file chosen");
+}, [lang]);
   // 2. USE EFFECT - Load Data & Calculate Booked Slots
   useEffect(() => {
     if (!show) return;
@@ -148,10 +153,10 @@ const AddAssignmentModal = ({
 
   // Handle Selfie
   const handleSelfieChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setSelfie(file);
-      setPreview(URL.createObjectURL(file));
+    if (e.target.files.length > 0) {
+      setFileName(e.target.files[0].name);
+    } else {
+      setFileName(translations[lang]?.noFile || "No file chosen");
     }
   };
 
@@ -287,7 +292,7 @@ const AddAssignmentModal = ({
                       {t} {isDisabled ? "(Booked)" : ""}
                     </option>
                   );
-                })} 
+                })}
               </select>
             </div>
 
@@ -315,7 +320,7 @@ const AddAssignmentModal = ({
             </div>
 
             <div className="mb-2">
-             <label>{translations[lang]?.noOfSticks}</label>
+              <label>{translations[lang]?.noOfSticks}</label>
               <input
                 type="text"
                 id="numberOfBox"
@@ -350,7 +355,7 @@ const AddAssignmentModal = ({
             </div>
 
             <div className="mb-2">
-             <label>{translations[lang]?.description}</label>
+              <label>{translations[lang]?.description}</label>
               <textarea
                 id="description"
                 className="form-control"
@@ -375,14 +380,27 @@ const AddAssignmentModal = ({
               <label className="form-label fw-bold text-danger">
                 {translations[lang]?.takeSelfie}
               </label>
-              <input
-                type="file"
-                accept="image/*"
-                capture="user"
-                className="form-control"
-                onChange={handleSelfieChange}
-                required
-              />
+              <div>
+                {/* Hidden actual input */}
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="user"
+                  id="fileUpload"
+                  onChange={handleSelfieChange}
+                  style={{ display: "none" }}
+                />
+
+                {/* Custom UI */}
+                <label
+                  htmlFor="fileUpload"
+                  className="px-4 py-2 bg-indigo-600 text-black  rounded-lg cursor-pointer hover:bg-indigo-700 transition duration-200"
+                >
+                  {translations[lang]?.chooseFile}
+                </label>
+
+                <span style={{ marginLeft: "10px" }}>{fileName}</span>
+              </div>
               {preview && (
                 <div className="mt-2 text-center">
                   <img
