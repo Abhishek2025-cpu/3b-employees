@@ -57,7 +57,12 @@
   margin-top: 5px;
   border-radius: 2px;
 }
-
+tbody td {
+  color: black;
+}
+.badge {
+  color: black !important;
+}
 .custom-dropdown-container {
   position: relative;
   width: 250px;
@@ -159,6 +164,7 @@
   padding: 0.4rem 0.8rem;
   border-radius: 20px; /* Pill shape */
   font-weight: 600;
+  
   font-size: 0.75rem;
   display: inline-block;
 }

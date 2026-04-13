@@ -727,7 +727,7 @@ localStorage.setItem("name", operatorName);
               0
             </p>
           </div>
-          <div
+          {/* <div
             style={baseStyles.card}
             className="dashboard-card"
             onClick={() => navigate("/submit-tasks")}
@@ -745,7 +745,7 @@ localStorage.setItem("name", operatorName);
             <p style={baseStyles.cardCount} className="card-count">
               0
             </p>
-          </div>
+          </div> */}
           <div
             style={baseStyles.card}
             className="dashboard-card"

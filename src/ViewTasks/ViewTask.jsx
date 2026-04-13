@@ -191,7 +191,7 @@ const ViewTask = () => {
                         </span>
                       </td>
                       <td data-label="Box Wt.">
-                        <span className="badge badge-weight">
+                        <span className="badge badge-weight ">
                           {task.boxWeight} Kg
                         </span>
                       </td>
