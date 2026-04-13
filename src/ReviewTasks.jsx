@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./ReviewTasks.css";
 
@@ -22,6 +23,7 @@ const EditIcon = () => (
 );
 
 const ReviewTasks = () => {
+  const navigate = useNavigate();
   const [helpers, setHelpers] = useState([]);
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
@@ -41,12 +43,17 @@ const ReviewTasks = () => {
     const fetchHelpers = async () => {
       try {
         const res = await axios.get(
-          "https://threebapi-1067354145699.asia-south1.run.app/api/staff/get-employees"
+          "https://threebapi-1067354145699.asia-south1.run.app/api/staff/get-employees",
         );
         const list = Array.isArray(res.data) ? res.data : res.data?.data || [];
-        const helpersOnly = list.filter((emp) =>
-          emp.role?.toLowerCase().includes("helper")
-        );
+        const helpersOnly = list.filter((emp) => {
+  if (Array.isArray(emp.role)) {
+    return emp.role.some(r => r.toLowerCase().includes("helper"));
+  } else if (typeof emp.role === "string") {
+    return emp.role.toLowerCase().includes("helper");
+  }
+  return false;
+});
         setHelpers(helpersOnly);
       } catch (err) {
         console.error("Error fetching helpers:", err);
@@ -60,7 +67,7 @@ const ReviewTasks = () => {
     const fetchProducts = async () => {
       try {
         const res = await axios.get(
-          "https://threebapi-1067354145699.asia-south1.run.app/api/items/get-Allitems"
+          "https://threebapi-1067354145699.asia-south1.run.app/api/items/get-Allitems",
         );
         const list = res?.data?.data || res?.data || [];
         setProducts(list);
@@ -76,109 +83,123 @@ const ReviewTasks = () => {
   }, [products]);
 
   // Fetch tasks
-const fetchTasks = async () => {
-  if (!selectedHelper) {
-    alert("Please select a helper");
-    return;
-  }
+  const fetchTasks = async () => {
+    if (!selectedHelper) {
+      alert("Please select a helper");
+      return;
+    }
 
-  setLoading(true);
+    setLoading(true);
 
-  try {
-    const res = await axios.get(
-      `https://threebapi-1067354145699.asia-south1.run.app/api/workers/employee-task/${selectedHelper}`
-    );
-
-    let data = res.data?.data || [];
-    console.log("RAW DATA:", data);
-
-    // 🔥 FIX: convert selectedProduct ID → product name
-    const selectedProductObj = products.find(p => p._id === selectedProduct);
-    const selectedProductName = selectedProductObj?.itemName?.toLowerCase()?.trim();
-
-    // Product filter
-    if (selectedProductName) {
-      data = data.filter(
-        (task) =>
-          task.item?.toLowerCase().trim() === selectedProductName
+    try {
+      const res = await axios.get(
+        `https://threebapi-1067354145699.asia-south1.run.app/api/workers/employee-task/${selectedHelper}`,
       );
-    }
 
-    // Date filter (timezone safe)
-    if (selectedDate) {
-      data = data.filter((task) => {
-        const d = new Date(task.createdAt).toLocaleDateString("en-CA");
-        return d === selectedDate;
+      let data = res.data?.data || [];
+      console.log("RAW DATA:", data);
+
+      // 🔥 FIX: convert selectedProduct ID → product name
+      const selectedProductObj = products.find(
+        (p) => p._id === selectedProduct,
+      );
+      const selectedProductName = selectedProductObj?.itemName
+        ?.toLowerCase()
+        ?.trim();
+
+      // Product filter
+      if (selectedProductName) {
+        data = data.filter(
+          (task) => task.item?.toLowerCase().trim() === selectedProductName,
+        );
+      }
+
+      // Date filter (timezone safe)
+      if (selectedDate) {
+        data = data.filter((task) => {
+          const d = new Date(task.createdAt).toLocaleDateString("en-CA");
+          return d === selectedDate;
+        });
+      }
+
+      // Initialize editedRows
+      const initialEdited = {};
+      data.forEach((t) => {
+        initialEdited[t._id] = {
+          numberOfBox: t.numberOfBox ?? "",
+          boxWeight: String(t.boxWeight ?? "")
+            .replace(/kg$/i, "")
+            .trim(),
+          frameWeight: String(t.frameWeight ?? "")
+            .replace(/kg$/i, "")
+            .trim(),
+          frameLength: Array.isArray(t.frameLength)
+            ? t.frameLength.join(", ")
+            : t.frameLength || "",
+          description: t.description ?? "",
+        };
       });
+
+      setTasks(data);
+      setEditedRows(initialEdited);
+    } catch (err) {
+      console.error("Error fetching tasks:", err);
+      setTasks([]);
+      setEditedRows({});
+    } finally {
+      setLoading(false);
     }
-
-    // Initialize editedRows
-    const initialEdited = {};
-    data.forEach((t) => {
-      initialEdited[t._id] = {
-        numberOfBox: t.numberOfBox ?? "",
-        boxWeight: String(t.boxWeight ?? "").replace(/kg$/i, "").trim(),
-        frameWeight: String(t.frameWeight ?? "").replace(/kg$/i, "").trim(),
-        frameLength: Array.isArray(t.frameLength)
-          ? t.frameLength.join(", ")
-          : t.frameLength || "",
-        description: t.description ?? "",
-      };
-    });
-
-    setTasks(data);
-    setEditedRows(initialEdited);
-
-  } catch (err) {
-    console.error("Error fetching tasks:", err);
-    setTasks([]);
-    setEditedRows({});
-  } finally {
-    setLoading(false);
-  }
-};
-
+  };
 
   // Toggle inline edit
-const handleToggleEdit = (taskId) => {
-  setEditedRows((prev) => {
-    // If we are NOT currently editing this row, initialize the data
-    if (!prev[taskId]) {
-      const t = tasks.find((x) => x._id === taskId);
-      
+  const handleToggleEdit = (taskId) => {
+    setEditedRows((prev) => {
+      // If we are NOT currently editing this row, initialize the data
+      if (!prev[taskId]) {
+        const t = tasks.find((x) => x._id === taskId);
+
+        return {
+          ...prev,
+          [taskId]: {
+            numberOfBox: t?.numberOfBox ?? "",
+            boxWeight: String(t?.boxWeight ?? "")
+              .replace(/kg$/i, "")
+              .trim(),
+            frameWeight: String(t?.frameWeight ?? "")
+              .replace(/kg$/i, "")
+              .trim(),
+
+            // UPDATED SECTION:
+            // Keep it as an array. If it's a single string, wrap it in an array.
+            // If it's empty, return an empty array or an array with one empty string.
+            frameLength: Array.isArray(t?.frameLength)
+              ? [...t.frameLength] // Create a copy of the existing array
+              : t?.frameLength
+                ? [t.frameLength]
+                : [""], // Wrap single value or default to empty field
+
+            description: t?.description ?? "",
+            __editing: true,
+          },
+        };
+      }
+
+      // If we are already editing, just toggle the boolean
       return {
         ...prev,
         [taskId]: {
-          numberOfBox: t?.numberOfBox ?? "",
-          boxWeight: String(t?.boxWeight ?? "").replace(/kg$/i, "").trim(),
-          frameWeight: String(t?.frameWeight ?? "").replace(/kg$/i, "").trim(),
-          
-          // UPDATED SECTION:
-          // Keep it as an array. If it's a single string, wrap it in an array.
-          // If it's empty, return an empty array or an array with one empty string.
-          frameLength: Array.isArray(t?.frameLength) 
-            ? [...t.frameLength] // Create a copy of the existing array
-            : (t?.frameLength ? [t.frameLength] : [""]), // Wrap single value or default to empty field
-            
-          description: t?.description ?? "",
-          __editing: true,
+          ...prev[taskId],
+          __editing: !prev[taskId].__editing,
         },
       };
-    }
-    
-    // If we are already editing, just toggle the boolean
-    return { 
-      ...prev, 
-      [taskId]: { 
-        ...prev[taskId], 
-        __editing: !prev[taskId].__editing 
-      } 
-    };
-  });
-};
+    });
+  };
 
   const handleRowChange = (taskId, field, value) => {
-    setEditedRows((prev) => ({ ...prev, [taskId]: { ...prev[taskId], [field]: value } }));
+    setEditedRows((prev) => ({
+      ...prev,
+      [taskId]: { ...prev[taskId], [field]: value },
+    }));
   };
 
   // Save single row
@@ -190,26 +211,35 @@ const handleToggleEdit = (taskId) => {
     const frameLengthArray = edited.frameLength
       .toString()
       .split(",")
-      .map(str => str.trim())
+      .map((str) => str.trim())
       .filter(Boolean); // remove empty strings
 
     const payload = {
       numberOfBox: edited.numberOfBox,
-      boxWeight: isNaN(Number(edited.boxWeight)) ? edited.boxWeight : `${edited.boxWeight}kg`,
-      frameWeight: isNaN(Number(edited.frameWeight)) ? edited.frameWeight : `${edited.frameWeight}kg`,
-      frameLength: frameLengthArray, 
+      boxWeight: isNaN(Number(edited.boxWeight))
+        ? edited.boxWeight
+        : `${edited.boxWeight}kg`,
+      frameWeight: isNaN(Number(edited.frameWeight))
+        ? edited.frameWeight
+        : `${edited.frameWeight}kg`,
+      frameLength: frameLengthArray,
       description: edited.description,
     };
 
     try {
       await axios.put(
         `https://threebapi-1067354145699.asia-south1.run.app/api/workers/update-task/${taskId}`,
-        payload
+        payload,
       );
 
       // Reflect changes in UI
-      setTasks((prev) => prev.map((t) => (t._id === taskId ? { ...t, ...payload } : t)));
-      setEditedRows((prev) => ({ ...prev, [taskId]: { ...prev[taskId], __editing: false } }));
+      setTasks((prev) =>
+        prev.map((t) => (t._id === taskId ? { ...t, ...payload } : t)),
+      );
+      setEditedRows((prev) => ({
+        ...prev,
+        [taskId]: { ...prev[taskId], __editing: false },
+      }));
     } catch (err) {
       console.error("Error updating task:", err);
       alert("Failed to save changes. Please try again.");
@@ -217,7 +247,10 @@ const handleToggleEdit = (taskId) => {
   };
 
   const handleCancelEdit = (taskId) => {
-    setEditedRows((prev) => ({ ...prev, [taskId]: { ...prev[taskId], __editing: false } }));
+    setEditedRows((prev) => ({
+      ...prev,
+      [taskId]: { ...prev[taskId], __editing: false },
+    }));
   };
 
   const handleSubmitAll = async () => {
@@ -228,19 +261,31 @@ const handleToggleEdit = (taskId) => {
 
     const payloadTasks = tasks.map((t) => {
       const edited = editedRows[t._id] || {};
-      
-      // Logic to handle unsaved edits during submit-all if needed, 
+
+      // Logic to handle unsaved edits during submit-all if needed,
       // currently taking values from edit state if present, else original
       let fLength = t.frameLength;
-      if(edited.frameLength) {
-         fLength = edited.frameLength.toString().split(",").map(s=>s.trim()).filter(Boolean);
+      if (edited.frameLength) {
+        fLength = edited.frameLength
+          .toString()
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean);
       }
 
       return {
         _id: t._id,
         numberOfBox: edited.numberOfBox ?? t.numberOfBox,
-        boxWeight: edited.boxWeight ? (isNaN(Number(edited.boxWeight)) ? edited.boxWeight : `${edited.boxWeight}kg`) : t.boxWeight,
-        frameWeight: edited.frameWeight ? (isNaN(Number(edited.frameWeight)) ? edited.frameWeight : `${edited.frameWeight}kg`) : t.frameWeight,
+        boxWeight: edited.boxWeight
+          ? isNaN(Number(edited.boxWeight))
+            ? edited.boxWeight
+            : `${edited.boxWeight}kg`
+          : t.boxWeight,
+        frameWeight: edited.frameWeight
+          ? isNaN(Number(edited.frameWeight))
+            ? edited.frameWeight
+            : `${edited.frameWeight}kg`
+          : t.frameWeight,
         frameLength: fLength,
         description: edited.description ?? t.description,
         employee: t.employee?._id,
@@ -259,7 +304,7 @@ const handleToggleEdit = (taskId) => {
           helperId: selectedHelper,
           date: selectedDate || null,
           tasks: payloadTasks,
-        }
+        },
       );
       alert(res.data?.message || "Tasks submitted successfully");
       fetchTasks();
@@ -270,19 +315,35 @@ const handleToggleEdit = (taskId) => {
       setLoading(false);
     }
   };
+  
 
   return (
     <div className="review-task-page container">
+      <div style={{ marginBottom: "10px" }}>
+  <button
+    className="btn outline"
+    onClick={() => navigate(-1)}
+  >
+    ← Back
+  </button>
+</div>
       <h1 className="page-title">Review & Correct Tasks</h1>
 
       <div className="filters-wrapper">
         <div className="filter">
           <label>Helper</label>
-          <select value={selectedHelper} onChange={(e) => setSelectedHelper(e.target.value)}>
+          <select
+            value={selectedHelper}
+            onChange={(e) => setSelectedHelper(e.target.value)}
+          >
             <option value="">-- Select Helper --</option>
             {helpers.map((h) => (
               <option key={h._id} value={h._id}>
-                {h.name}
+                {h.name ||
+                  h.fullName ||
+                  h.employeeName ||
+                  h.firstName ||
+                  "No Name"}
               </option>
             ))}
           </select>
@@ -290,7 +351,10 @@ const handleToggleEdit = (taskId) => {
 
         <div className="filter">
           <label>Product</label>
-          <select value={selectedProduct} onChange={(e) => setSelectedProduct(e.target.value)}>
+          <select
+            value={selectedProduct}
+            onChange={(e) => setSelectedProduct(e.target.value)}
+          >
             <option value="">-- All Products --</option>
             {filteredProducts.map((p) => (
               <option key={p._id} value={p._id}>
@@ -302,11 +366,19 @@ const handleToggleEdit = (taskId) => {
 
         <div className="filter">
           <label>Date</label>
-          <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} />
+          <input
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+          />
         </div>
 
         <div className="filter actions">
-          <button className="btn primary" onClick={fetchTasks} disabled={!selectedHelper}>
+          <button
+            className="btn primary"
+            onClick={fetchTasks}
+            disabled={!selectedHelper}
+          >
             Fetch Tasks
           </button>
         </div>
@@ -319,14 +391,31 @@ const handleToggleEdit = (taskId) => {
           <>
             <div className="table-header">
               <div className="summary">
-                <span>Helper: <strong>{helpers.find(h => h._id === selectedHelper)?.name || "—"}</strong></span>
-                <span>Product: <strong>{products.find(p => p._id === selectedProduct)?.itemNo || "All"}</strong></span>
-                <span>Date: <strong>{selectedDate || "All"}</strong></span>
+                <span>
+                  Helper:{" "}
+                  <strong>
+                    {helpers.find((h) => h._id === selectedHelper)?.name || "—"}
+                  </strong>
+                </span>
+                <span>
+                  Product:{" "}
+                  <strong>
+                    {products.find((p) => p._id === selectedProduct)?.itemNo ||
+                      "All"}
+                  </strong>
+                </span>
+                <span>
+                  Date: <strong>{selectedDate || "All"}</strong>
+                </span>
               </div>
 
               <div className="submit-all">
                 {/* Changed class to 'btn primary' to match Fetch button */}
-                <button className="btn primary" onClick={handleSubmitAll} disabled={tasks.length === 0}>
+                <button
+                  className="btn primary"
+                  onClick={handleSubmitAll}
+                  disabled={tasks.length === 0}
+                >
                   Submit All Tasks
                 </button>
               </div>
@@ -352,7 +441,9 @@ const handleToggleEdit = (taskId) => {
                 <tbody>
                   {tasks.length === 0 && (
                     <tr>
-                      <td colSpan="9" className="empty">No tasks found</td>
+                      <td colSpan="9" className="empty">
+                        No tasks found
+                      </td>
                     </tr>
                   )}
 
@@ -367,27 +458,35 @@ const handleToggleEdit = (taskId) => {
                         <td>
                           <div className="time-badges">
                             {task.time?.map((t, i) => (
-                              <span key={i} className="badge time">{t}</span>
+                              <span key={i} className="badge time">
+                                {t}
+                              </span>
                             ))}
                           </div>
                         </td>
-
-                     
 
                         <td>
                           {isEditing ? (
                             /* Inline edit for Frame Lengths */
                             <input
-                                className="small-input"
-                                value={edit.frameLength}
-                                placeholder="e.g. 12, 14"
-                                onChange={(e) => handleRowChange(task._id, "frameLength", e.target.value)}
+                              className="small-input"
+                              value={edit.frameLength}
+                              placeholder="e.g. 12, 14"
+                              onChange={(e) =>
+                                handleRowChange(
+                                  task._id,
+                                  "frameLength",
+                                  e.target.value,
+                                )
+                              }
                             />
                           ) : (
                             <div className="frame-badges">
-                                {task.frameLength?.map((f, i) => (
-                                <span key={i} className="badge frame">{f}</span>
-                                ))}
+                              {task.frameLength?.map((f, i) => (
+                                <span key={i} className="badge frame">
+                                  {f}
+                                </span>
+                              ))}
                             </div>
                           )}
                         </td>
@@ -397,7 +496,13 @@ const handleToggleEdit = (taskId) => {
                             <input
                               className="small-input"
                               value={edit.numberOfBox}
-                              onChange={(e) => handleRowChange(task._id, "numberOfBox", e.target.value)}
+                              onChange={(e) =>
+                                handleRowChange(
+                                  task._id,
+                                  "numberOfBox",
+                                  e.target.value,
+                                )
+                              }
                             />
                           ) : (
                             task.numberOfBox
@@ -409,7 +514,13 @@ const handleToggleEdit = (taskId) => {
                             <input
                               className="small-input"
                               value={edit.boxWeight}
-                              onChange={(e) => handleRowChange(task._id, "boxWeight", e.target.value)}
+                              onChange={(e) =>
+                                handleRowChange(
+                                  task._id,
+                                  "boxWeight",
+                                  e.target.value,
+                                )
+                              }
                             />
                           ) : (
                             task.boxWeight
@@ -421,7 +532,13 @@ const handleToggleEdit = (taskId) => {
                             <input
                               className="small-input"
                               value={edit.frameWeight}
-                              onChange={(e) => handleRowChange(task._id, "frameWeight", e.target.value)}
+                              onChange={(e) =>
+                                handleRowChange(
+                                  task._id,
+                                  "frameWeight",
+                                  e.target.value,
+                                )
+                              }
                             />
                           ) : (
                             task.frameWeight
@@ -433,7 +550,13 @@ const handleToggleEdit = (taskId) => {
                             <textarea
                               className="desc-input"
                               value={edit.description}
-                              onChange={(e) => handleRowChange(task._id, "description", e.target.value)}
+                              onChange={(e) =>
+                                handleRowChange(
+                                  task._id,
+                                  "description",
+                                  e.target.value,
+                                )
+                              }
                             />
                           ) : (
                             task.description || "—"
@@ -443,15 +566,24 @@ const handleToggleEdit = (taskId) => {
                         <td>
                           {!isEditing ? (
                             /* Replaced text button with Edit Icon */
-                            <div onClick={() => handleToggleEdit(task._id)} title="Correct Task">
+                            <div
+                              onClick={() => handleToggleEdit(task._id)}
+                              title="Correct Task"
+                            >
                               <EditIcon />
                             </div>
                           ) : (
                             <div className="row-actions">
-                              <button className="btn small primary" onClick={() => handleSaveRow(task._id)}>
+                              <button
+                                className="btn small primary"
+                                onClick={() => handleSaveRow(task._id)}
+                              >
                                 Save
                               </button>
-                              <button className="btn small outline" onClick={() => handleCancelEdit(task._id)}>
+                              <button
+                                className="btn small outline"
+                                onClick={() => handleCancelEdit(task._id)}
+                              >
                                 Cancel
                               </button>
                             </div>

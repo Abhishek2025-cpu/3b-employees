@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './MaterialEntries.css';
 
 const MaterialEntries = () => {
@@ -7,12 +8,14 @@ const MaterialEntries = () => {
   const [error, setError] = useState(null);
   const [employeeName, setEmployeeName] = useState("");
 
+  const navigate = useNavigate();
+
   useEffect(() => {
     const fetchMaterialEntries = async () => {
       setLoading(true);
       setError(null);
 
-      const storedEmployeeId = localStorage.getItem("_id"); // mixtureId
+      const storedEmployeeId = localStorage.getItem("_id"); 
       const storedEmployeeName = localStorage.getItem("name");
       setEmployeeName(storedEmployeeName || "Unknown Mixture");
 
@@ -57,7 +60,6 @@ const MaterialEntries = () => {
   }, []);
 
   const ensureAMPMFormat = (time) => time || "N/A";
-
   const convertToHour = (timeStr) => parseInt(timeStr?.split('-')[0]?.split(':')[0] || '0', 10);
 
   const calculateSlotDuration = (timeSlot) => {
@@ -74,114 +76,132 @@ const MaterialEntries = () => {
   );
 
   const calculateTotals = () => {
-    let totalBackDana = 0,
-      totalSmoke = 0,
-      totalGrayHips = 0,
-      totalEps = 0,
-      totalH1 = 0,
-      totalYellowForm = 0,
-      totalWhiteForm = 0,
-      totalZinc = 0,
-      totalOil = 0,
-      totalWorkingHours = 0;
+    let totals = {
+      backDana: 0, smoke: 0, grayHips: 0, eps: 0, h1: 0,
+      yellowForm: 0, whiteForm: 0, zinc: 0, oil: 0, hours: 0
+    };
 
     sortedEntries.forEach(entry => {
-      totalBackDana += entry.backDana || 0;
-      totalSmoke += entry.smoke || 0;
-      totalGrayHips += entry.grayHips || 0;
-      totalEps += entry.eps || 0;
-      totalH1 += entry.h1 || 0;
-      totalYellowForm += entry.yellowForm || 0;
-      totalWhiteForm += entry.whiteFormOptional || 0;
-      totalZinc += entry.zink || 0;
-      totalOil += entry.oil || 0;
-      totalWorkingHours += calculateSlotDuration(entry.time);
+      totals.backDana += entry.backDana || 0;
+      totals.smoke += entry.smoke || 0;
+      totals.grayHips += entry.grayHips || 0;
+      totals.eps += entry.eps || 0;
+      totals.h1 += entry.h1 || 0;
+      totals.yellowForm += entry.yellowForm || 0;
+      totals.whiteForm += entry.whiteFormOptional || 0;
+      totals.zinc += entry.zink || 0;
+      totals.oil += entry.oil || 0;
+      totals.hours += calculateSlotDuration(entry.time);
     });
 
-    return { totalBackDana, totalSmoke, totalGrayHips, totalEps, totalH1, totalYellowForm, totalWhiteForm, totalZinc, totalOil, totalWorkingHours };
+    return totals;
   };
 
-  const { totalBackDana, totalSmoke, totalGrayHips, totalEps, totalH1, totalYellowForm, totalWhiteForm, totalZinc, totalOil, totalWorkingHours } = calculateTotals();
+  const totals = calculateTotals();
 
   return (
-    <div className="container mt-4">
-      <h1 className="text-center">Material Entries</h1>
+    <div className="main-wrapper py-3">
+      <div className="container-fluid">
+        <div className="d-flex align-items-center mb-3">
+  <button 
+    className="btn btn-outline-secondary me-3"
+    onClick={() => navigate(-1)}
+  >
+    ← Back
+  </button>
+</div>
+        <h1 className="page-title text-center mb-4">Material Entries</h1>
 
-      {loading && <div className="spinner-border text-primary" role="status"><span className="visually-hidden">Loading...</span></div>}
-      {error && <div className="alert alert-danger mt-3">{error}</div>}
+        {loading && (
+          <div className="text-center my-5">
+            <div className="spinner-border text-primary" role="status">
+              <span className="visually-hidden">Loading...</span>
+            </div>
+          </div>
+        )}
+        
+        {error && <div className="alert alert-danger mx-auto" style={{maxWidth: '600px'}}>{error}</div>}
 
-      {!loading && !error && entries.length > 0 && (
-        <div className="table-container">
-          <table className="table table-bordered">
-            <thead>
-              <tr>
-                <th>S. No.</th>
-                <th>Item Name</th>
-                <th>Machine No</th>
-                <th>Date</th>
-                <th>Shift</th>
-                <th>Time</th>
-                <th>Back Dana</th>
-                <th>Smoke</th>
-                <th>Gray Hips</th>
-                <th>EPS</th>
-                <th>H1</th>
-                <th>Yellow Form</th>
-                <th>White Form</th>
-                <th>Zinc</th>
-                <th>Oil</th>
-                <th>Submit Time</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sortedEntries.map((entry, i) => (
-                <tr key={entry._id || i}>
-                  <td>{i + 1}</td>
-                  <td>{entry.itemName}</td>
-                  <td>{entry.machineNo}</td>
-                  <td>{entry.date}</td>
-                  <td>{entry.shift}</td>
-                  <td>{ensureAMPMFormat(entry.time)}</td>
-                  <td>{entry.backDana}</td>
-                  <td>{entry.smoke}</td>
-                  <td>{entry.grayHips}</td>
-                  <td>{entry.eps}</td>
-                  <td>{entry.h1}</td>
-                  <td>{entry.yellowForm}</td>
-                  <td>{entry.whiteFormOptional}</td>
-                  <td>{entry.zink}</td>
-                  <td>{entry.oil}</td>
-                  <td>{new Date(entry.createdAt).toLocaleString()}</td>
-                </tr>
-              ))}
-            </tbody>
-            <tfoot>
-              <tr>
-                <td colSpan="6"><strong>Total</strong></td>
-                <td>{totalBackDana}</td>
-                <td>{totalSmoke}</td>
-                <td>{totalGrayHips}</td>
-                <td>{totalEps}</td>
-                <td>{totalH1}</td>
-                <td>{totalYellowForm}</td>
-                <td>{totalWhiteForm}</td>
-                <td>{totalZinc}</td>
-                <td>{totalOil}</td>
-                <td></td>
-              </tr>
-              <tr>
-                <td colSpan="15" style={{ textAlign: 'right', fontWeight: 'bold' }}>Total Working Hours: {totalWorkingHours} hrs</td>
-                <td></td>
-              </tr>
-              <tr>
-                <td colSpan="16" style={{ textAlign: 'right', fontWeight: 'bold', backgroundColor: '#e6f4ec' }}>
-                  Mixture: {employeeName}
-                </td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-      )}
+        {!loading && !error && entries.length > 0 && (
+          <div className="card shadow-sm border-0">
+            <div className="table-responsive">
+              <table className="table table-hover mb-0 custom-table">
+                <thead>
+                  <tr>
+                    <th className="sticky-col-first">S.No.</th>
+                    <th className="sticky-col-second">Item Name</th>
+                    <th>Machine</th>
+                    <th>Date</th>
+                    <th>Shift</th>
+                    <th>Time</th>
+                    <th>Back Dana</th>
+                    <th>Smoke</th>
+                    <th>Gray Hips</th>
+                    <th>EPS</th>
+                    <th>H1</th>
+                    <th>Yellow</th>
+                    <th>White</th>
+                    <th>Zinc</th>
+                    <th>Oil</th>
+                    <th>Submitted</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedEntries.map((entry, i) => (
+                    <tr key={entry._id || i}>
+                      <td className="sticky-col-first">{i + 1}</td>
+                      <td className="sticky-col-second fw-bold">{entry.itemName}</td>
+                      <td>{entry.machineNo}</td>
+                      <td>{entry.date}</td>
+                      <td>{entry.shift}</td>
+                      <td>{ensureAMPMFormat(entry.time)}</td>
+                      <td>{entry.backDana}</td>
+                      <td>{entry.smoke}</td>
+                      <td>{entry.grayHips}</td>
+                      <td>{entry.eps}</td>
+                      <td>{entry.h1}</td>
+                      <td>{entry.yellowForm}</td>
+                      <td>{entry.whiteFormOptional}</td>
+                      <td>{entry.zink}</td>
+                      <td>{entry.oil}</td>
+                      <td className="time-stamp">{new Date(entry.createdAt).toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot className="table-light">
+                  <tr className="fw-bold">
+                    <td colSpan="6" className="text-end bg-light sticky-col-summary">Total:</td>
+                    <td>{totals.backDana}</td>
+                    <td>{totals.smoke}</td>
+                    <td>{totals.grayHips}</td>
+                    <td>{totals.eps}</td>
+                    <td>{totals.h1}</td>
+                    <td>{totals.yellowForm}</td>
+                    <td>{totals.whiteForm}</td>
+                    <td>{totals.zinc}</td>
+                    <td>{totals.oil}</td>
+                    <td></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+            
+            {/* Mobile-Friendly Bottom Summary */}
+            <div className="card-footer bg-white p-3 border-top-0">
+              <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div className="summary-box">
+                  <span className="text-muted small d-block">Mixture Name</span>
+                  <span className="fw-bold text-primary">{employeeName}</span>
+                </div>
+                <div className="summary-box text-md-end">
+                  <span className="text-muted small d-block">Total Working Hours</span>
+                  <span className="h5 mb-0 fw-bold">{totals.hours} <small>hrs</small></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

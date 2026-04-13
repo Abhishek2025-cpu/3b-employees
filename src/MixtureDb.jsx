@@ -374,7 +374,7 @@ const MixtureDb = () => {
   ];
 
   useEffect(() => {
-    const storedEmployeeId = localStorage.getItem("employeeId");
+    const storedEmployeeId = localStorage.getItem("_id");
     if (!storedEmployeeId) return;
 
     // ✅ Assigned Tasks Count API

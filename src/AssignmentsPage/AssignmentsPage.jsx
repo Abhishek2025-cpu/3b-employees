@@ -13,6 +13,25 @@ const baseStyles = {
     minHeight: "100vh",
     fontFamily: "'Roboto', sans-serif",
     position: "relative",
+    backButton: {
+      position: "absolute",
+      top: "20px",
+      left: "20px",
+      display: "flex",
+      alignItems: "center",
+      gap: "8px",
+      background: "linear-gradient(135deg, #6a5af9, #8b5cf6)",
+      color: "#fff",
+      border: "none",
+      padding: "10px 18px",
+      borderRadius: "12px",
+      fontSize: "0.9rem",
+      fontWeight: "600",
+      cursor: "pointer",
+      boxShadow: "0 8px 20px rgba(106, 90, 249, 0.4)",
+      backdropFilter: "blur(10px)",
+      transition: "all 0.25s ease",
+    },
   },
   title: {
     fontSize: "2rem",
@@ -135,7 +154,17 @@ function AssignmentsPage() {
         localStorage.setItem("currentMachineNo", machineNumber);
       }
 
-      setAssignments(items);
+      // ✅ localStorage se completed ids le
+const completedIds =
+  JSON.parse(localStorage.getItem("completedAssignments")) || [];
+
+// ✅ API data me isCompleted add kar
+const updatedItems = items.map((item) => ({
+  ...item,
+  isCompleted: completedIds.includes(item._id),
+}));
+
+setAssignments(updatedItems);
     } catch (error) {
       console.error("Error fetching assignments:", error);
       setAssignments([]);
@@ -197,26 +226,96 @@ function AssignmentsPage() {
   };
 
   const handleMarkAsCompleteClick = (assignment) => {
-    setAssignmentToComplete(assignment);
-    setShowConfirmation(true);
-  };
+  if (assignment.isCompleted) return; // ✅ yeh line add hui hai
+
+  setAssignmentToComplete(assignment);
+  setShowConfirmation(true);
+};
 
   const handleConfirmComplete = async () => {
-    await new Promise((resolve) => setTimeout(resolve, 500));
+  await new Promise((resolve) => setTimeout(resolve, 500));
 
-    setShowConfirmation(false);
-    setToastMessage("Assignment marked as complete!");
-    setShowToast(true);
+  // ✅ localStorage se purane completed ids le
+  const completedIds =
+    JSON.parse(localStorage.getItem("completedAssignments")) || [];
 
-    fetchAssignments();
-  };
+  // ✅ new id add kar (duplicate avoid)
+  if (!completedIds.includes(assignmentToComplete._id)) {
+    completedIds.push(assignmentToComplete._id);
+    localStorage.setItem(
+      "completedAssignments",
+      JSON.stringify(completedIds)
+    );
+  }
 
-  if (loading) return <p>Loading...</p>;
+  // ✅ UI update
+  setAssignments((prev) =>
+    prev.map((item) =>
+      item._id === assignmentToComplete._id
+        ? { ...item, isCompleted: true }
+        : item
+    )
+  );
+
+  setShowConfirmation(false);
+  setToastMessage("Assignment marked as complete!");
+  setShowToast(true);
+};
+
+  if (loading) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        height: "100vh",
+        backgroundColor: "#f0f2f5",
+      }}
+    >
+      <div
+        style={{
+          width: "50px",
+          height: "50px",
+          border: "5px solid #ddd",
+          borderTop: "5px solid #6a5af9",
+          borderRadius: "50%",
+          animation: "spin 1s linear infinite",
+        }}
+      />
+      
+      <style>
+        {`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}
+      </style>
+    </div>
+  );
+}
 
   if (!employeeId) return <p>No employee data found. Please login.</p>;
 
   return (
     <div style={baseStyles.pageContainer}>
+      <button
+        style={baseStyles.backButton}
+        onClick={() => navigate(-1)}
+        onMouseOver={(e) => {
+          e.currentTarget.style.transform = "translateY(-2px) scale(1.03)";
+          e.currentTarget.style.boxShadow =
+            "0 12px 25px rgba(106, 90, 249, 0.6)";
+        }}
+        onMouseOut={(e) => {
+          e.currentTarget.style.transform = "translateY(0) scale(1)";
+          e.currentTarget.style.boxShadow =
+            "0 8px 20px rgba(106, 90, 249, 0.4)";
+        }}
+      >
+        ← Back
+      </button>
       <h1 style={baseStyles.title}>
         {translations[lang]?.assignedTask} {employeeName || "Employee"}
       </h1>
@@ -248,9 +347,9 @@ function AssignmentsPage() {
                 </p>
 
                 <p style={baseStyles.cardRow}>
-  <strong>{translations[lang]?.productDescription}:</strong>{" "}
-  {assignment.product?.description || "N/A"}
-</p>
+                  <strong>{translations[lang]?.productDescription}:</strong>{" "}
+                  {assignment.product?.description || "N/A"}
+                </p>
 
                 <p style={baseStyles.cardRow}>
                   <strong>{translations[lang]?.mixture}:</strong>{" "}
@@ -280,18 +379,32 @@ function AssignmentsPage() {
 
               <div style={baseStyles.cardButtonContainer}>
                 <button
-                  style={baseStyles.markCompleteButton}
-                  onClick={() => handleMarkAsCompleteClick(assignment)}
+                  style={{
+                    ...baseStyles.markCompleteButton,
+                    backgroundColor: assignment.isCompleted
+                      ? "#ccc"
+                      : "#28a745",
+                    cursor: assignment.isCompleted ? "not-allowed" : "pointer",
+                    opacity: assignment.isCompleted ? 0.6 : 1,
+                  }}
+                  onClick={() =>
+                    !assignment.isCompleted &&
+                    handleMarkAsCompleteClick(assignment)
+                  }
                 >
-                  {translations[lang]?.markAsComplete}
+                  {assignment.isCompleted
+                    ? "Completed"
+                    : translations[lang]?.markAsComplete}
                 </button>
 
-                <button
-                  style={baseStyles.cardButton}
-                  onClick={() => handleOpenEditModal(assignment)}
-                >
-                  {translations[lang]?.editAssignment}
-                </button>
+                {!assignment.isCompleted && (
+                  <button
+                    style={baseStyles.cardButton}
+                    onClick={() => handleOpenEditModal(assignment)}
+                  >
+                    {translations[lang]?.editAssignment}
+                  </button>
+                )}
               </div>
             </div>
           ))}
