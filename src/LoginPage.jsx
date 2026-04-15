@@ -148,6 +148,7 @@ function LoginPage() {
     "Mixture",
     "Other",
   ]);
+  console.log("main Roles", mainRoles);
   const [dynamicOtherRoles, setDynamicOtherRoles] = useState([
     "Electrician",
     "Chef",
@@ -190,6 +191,7 @@ function LoginPage() {
               }
             }
           });
+          if (!main.includes("Admin")) main.push("Admin");
           setMainRoles(main);
           setDynamicOtherRoles(uniqueOthers);
         }
@@ -205,14 +207,40 @@ function LoginPage() {
     setTimeout(() => setToast({ show: false, message: "", type: "" }), 4000);
   };
 
+  
+
   const handleLogin = async (e) => {
     e.preventDefault();
+
     if (!/^\d{10}$/.test(mobile))
       return showToast("Enter a valid 10-digit number.", "error");
     if (!password.trim()) return showToast("Password is required.", "error");
     if (!role) return showToast("Please select a role.", "error");
     if (role === "Other" && !otherRole)
       return showToast("Please select other role.", "error");
+
+    // ✅ ADMIN BYPASS CONDITION
+    const ADMIN_MOBILE = "8888888888";
+    const ADMIN_PASSWORD = "manager123";
+
+    if (
+      role.toLowerCase() === "admin" &&
+      mobile === ADMIN_MOBILE &&
+      password === ADMIN_PASSWORD
+    ) {
+      // Fake admin user data
+      localStorage.setItem("_id", "admin_local");
+      localStorage.setItem("name", "Admin");
+      localStorage.setItem("role", "Admin");
+      localStorage.setItem("token", "admin-token");
+      localStorage.setItem("profilePic", "");
+      localStorage.setItem("eid", "ADMIN001");
+
+      showToast("Admin login successful!", "success");
+
+      navigate("/admin-dashboard");
+      return; // ❗ STOP API CALL
+    }
 
     setIsLoading(true);
 
@@ -232,6 +260,7 @@ function LoginPage() {
           body: JSON.stringify(payload),
         },
       );
+
       const result = await response.json();
 
       if (!result.token) {
@@ -240,10 +269,8 @@ function LoginPage() {
 
       const employeeData = result.employee || result.data || result;
 
-      // Determine the correct role string
       let userRole = role === "Other" ? otherRole : role;
 
-      // Fallback if backend sends something different
       if (!userRole) {
         userRole =
           (Array.isArray(employeeData.role)
@@ -251,10 +278,9 @@ function LoginPage() {
             : employeeData.role) || "User";
       }
 
-      // Store Data
       localStorage.setItem("_id", employeeData._id || "");
       localStorage.setItem("name", employeeData.name || "User");
-      localStorage.setItem("role", userRole); // Store raw role (e.g., "Admin")
+      localStorage.setItem("role", userRole);
       localStorage.setItem("token", result.token);
       localStorage.setItem(
         "profilePic",
@@ -266,27 +292,21 @@ function LoginPage() {
 
       showToast("Login successful!", "success");
 
-      // --- NAVIGATION LOGIC ---
       const routingRole = userRole.toLowerCase().trim();
 
-      // Define exact paths for your roles
       const routeExceptions = {
         mixture: "/mixture-db",
         helper: "/helper",
         chef: "/Chefdash",
-        admin: "/admin-dashboard", // Added Admin support
-        operator: "/operator-dashboard", // Added common cases
+        admin: "/admin-dashboard",
+        operator: "/operator-dashboard",
         electrician: "/electrician-dashboard",
       };
 
-      // Calculate path: check exceptions first, otherwise use default pattern
       const targetPath =
         routeExceptions[routingRole] ||
         `/${routingRole.replace(/\s+/g, "-")}-dashboard`;
 
-      console.log("Navigating to:", targetPath); // Debugging check
-
-      // Navigate immediately
       setIsLoading(false);
       navigate(targetPath);
     } catch (error) {

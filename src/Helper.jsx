@@ -527,7 +527,7 @@ const Helper = () => {
             <FontAwesomeIcon icon={faUserPlus} style={baseStyles.sidebarNavIcon} />
             <span style={baseStyles.sidebarNavText}>{translations[lang]?.manageWork}</span>
           </div>
-          <div style={baseStyles.sidebarNavItem} className="sidebar-item">
+          {/* <div style={baseStyles.sidebarNavItem} className="sidebar-item">
             <FontAwesomeIcon icon={faCogs} style={baseStyles.sidebarNavIcon} />
             <span style={baseStyles.sidebarNavText}>{translations[lang]?.application}</span>
           </div>
@@ -538,7 +538,7 @@ const Helper = () => {
           <div style={baseStyles.sidebarNavItem} className="sidebar-item">
             <FontAwesomeIcon icon={faFileAlt} style={baseStyles.sidebarNavIcon} />
             <span style={baseStyles.sidebarNavText}>{translations[lang]?.reports}</span>
-          </div>
+          </div> */}
           <div
             style={baseStyles.sidebarNavItem}
             className="sidebar-item"

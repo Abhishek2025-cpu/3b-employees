@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import "./ViewTask.css";
 import { fetchAllMaterials } from "../../src/api/allApi/TaskController";
+import { useNavigate } from "react-router-dom";
 
 const ViewTask = () => {
   const [tasks, setTasks] = useState([]);
@@ -12,6 +13,7 @@ const ViewTask = () => {
   const [dropdownItems, setDropdownItems] = useState([]);
   const dropdownRef = useRef(null);
   const entriesPerPage = 12;
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -34,7 +36,7 @@ const ViewTask = () => {
         const employeeId = localStorage.getItem("_id");
         if (!employeeId) return;
         const res = await axios.get(
-          `https://threebapi-1067354145699.asia-south1.run.app/api/workers/employee-task/${employeeId}`
+          `https://threebapi-1067354145699.asia-south1.run.app/api/workers/employee-task/${employeeId}`,
         );
         setTasks(res.data.data || []);
       } catch (err) {
@@ -60,15 +62,15 @@ const ViewTask = () => {
 
   const totalBoxes = paginatedTasks.reduce(
     (sum, t) => sum + (parseFloat(t.numberOfBox) || 0),
-    0
+    0,
   );
   const totalBoxWeight = paginatedTasks.reduce(
     (sum, t) => sum + parseWeight(t.boxWeight),
-    0
+    0,
   );
   const totalFrameWeight = paginatedTasks.reduce(
     (sum, t) => sum + parseWeight(t.frameWeight),
-    0
+    0,
   );
 
   const formatTimeText = (timeData) => {
@@ -88,6 +90,8 @@ const ViewTask = () => {
     return durationHours > 0 ? durationHours * 60 : 0;
   };
 
+  console.log(paginatedTasks);
+
   const totalWorkingMinutes = paginatedTasks.reduce((sum, task) => {
     if (!task.time || task.time.length === 0) return sum;
     const firstTime = Array.isArray(task.time) ? task.time[0] : task.time;
@@ -95,9 +99,10 @@ const ViewTask = () => {
     return sum + duration;
   }, 0);
 
-  const totalWorkingHours = `${Math.floor(totalWorkingMinutes / 60)}h ${
-    totalWorkingMinutes % 60
-  }m`;
+  // const totalWorkingHours = `${Math.floor(totalWorkingMinutes / 60)}h ${
+  //   totalWorkingMinutes % 60
+  // }m`;
+  const totalWorkingHours = `${paginatedTasks.length}h`;
 
   const handleSelect = (item) => {
     setSelectedItem(item);
@@ -118,6 +123,7 @@ const ViewTask = () => {
         <div className="content-wrapper">
           <div className="task-header">
             <h2 className="page-title">Ongoing Tasks</h2>
+
             <div className="custom-dropdown-container" ref={dropdownRef}>
               <div
                 className={`custom-dropdown-btn ${isOpen ? "active" : ""}`}
@@ -126,6 +132,7 @@ const ViewTask = () => {
                 <span className="btn-text">{selectedItem}</span>
                 <span className="arrow-icon">▼</span>
               </div>
+
               {isOpen && (
                 <ul className="custom-dropdown-menu">
                   {dropdownItems.length > 0 ? (
@@ -144,6 +151,31 @@ const ViewTask = () => {
                 </ul>
               )}
             </div>
+          </div>
+
+          <div>
+            <button
+              onClick={() => navigate(-1)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                background: "linear-gradient(135deg, #4d42b3, #8b5cf6)",
+                color: "#fff",
+                border: "none",
+                padding: "5px 18px",
+                borderRadius: "12px",
+                fontSize: "0.9rem",
+                marginBottom: "10px",
+                fontWeight: "600",
+                cursor: "pointer",
+                boxShadow: "0 8px 20px rgba(106, 90, 249, 0.4)",
+                backdropFilter: "blur(10px)",
+                transition: "all 0.25s ease",
+              }}
+            >
+              ← Back
+            </button>
           </div>
 
           <div className="table-container">
